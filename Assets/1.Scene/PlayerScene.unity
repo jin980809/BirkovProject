@@ -129,8 +129,8 @@ GameObject:
   m_Component:
   - component: {fileID: 94956511}
   - component: {fileID: 94956514}
-  - component: {fileID: 94956513}
   - component: {fileID: 94956512}
+  - component: {fileID: 94956513}
   m_Layer: 0
   m_Name: Vision
   m_TagString: Untagged
@@ -214,7 +214,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVision
   viewAngle: 100
-  viewRadius: 15
+  viewRadius: 30
+  nearVisionRadius: 1.5
   obstacleMask:
     serializedVersion: 2
     m_Bits: 128
@@ -227,6 +228,8 @@ MonoBehaviour:
   meshResolution: 1
   edgeResolveIterations: 6
   edgeDistanceThreshold: 0.5
+  edgeFade: 0.8
+  angleFade: 25
 --- !u!33 &94956514
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -261,7 +264,7 @@ Transform:
   m_GameObject: {fileID: 165115211}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.03034, y: 1.42296, z: -0.27219}
+  m_LocalPosition: {x: 3.2, y: 1.42296, z: -4.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -571,7 +574,7 @@ Transform:
   m_GameObject: {fileID: 738328674}
   serializedVersion: 2
   m_LocalRotation: {x: 0.46174863, y: 0, z: 0, w: 0.8870109}
-  m_LocalPosition: {x: -0.03034, y: 9.61448, z: -6.007953}
+  m_LocalPosition: {x: 3.2, y: 9.614481, z: -10.545764}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1246,6 +1249,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 8e7ff905b10145c49b960864ae863d04, type: 2}
+  - {fileID: 2100000, guid: be43ba7a59cd17b44ada858483452207, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1475,7 +1479,7 @@ Transform:
   m_GameObject: {fileID: 1520107516}
   serializedVersion: 2
   m_LocalRotation: {x: 0.46174863, y: 0, z: 0, w: 0.8870109}
-  m_LocalPosition: {x: -0.03034, y: 9.61448, z: -6.007953}
+  m_LocalPosition: {x: 3.2, y: 9.614481, z: -10.545764}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
