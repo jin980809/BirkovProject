@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 플레이어 시야(부채꼴) 구현
-//  - 매 프레임 부채꼴로 레이캐스트해서 FOV 메시를 만든다 (벽에 맞물림)
+// 플레이어 시야 구현
+//  - 정면 부채꼴(viewAngle / viewRadius) + 플레이어 주변 360도 원(nearVisionRadius)
+//  - 매 프레임 레이캐스트해서 FOV 메시를 만든다 (벽에 맞물림)
 //  - FOV 메시는 스텐실 버퍼에 1을 써서 "보이는 영역" 을 표시한다 (VisionMask 셰이더)
-//  - 화면을 덮는 오버레이 쿼드가 스텐실 != 1 인 곳(시야 밖)만 어둡게 덮는다 (VisionOverlay 셰이더)
+//  - 화면을 덮는 오버레이 쿼드가 스텐실 != 1 인 곳(시야 밖) 바닥만 어둡게 덮는다 (VisionOverlay 셰이더)
 //  - hideableMask 레이어의 오브젝트는 시야 밖 / 벽에 가려짐이면 렌더러를 끈다
 //
 // 배치: 플레이어 자식으로 빈 오브젝트 "Vision" 을 만들고 (로컬 위치 0,0,0 / 회전 0)
@@ -15,6 +16,8 @@ public class PlayerVision : MonoBehaviour
     [Header("시야 범위")]
     [SerializeField, Range(0f, 360f)] private float viewAngle = 100f;
     [SerializeField] private float viewRadius = 15f;
+    [Tooltip("플레이어 주변 360도로 항상 보이는 반경 (0 이면 사용 안 함)")]
+    [SerializeField] private float nearVisionRadius = 3f;
 
     [Header("레이어")]
     [Tooltip("시야를 막는 벽")]
@@ -38,8 +41,19 @@ public class PlayerVision : MonoBehaviour
     [SerializeField] private int edgeResolveIterations = 6;
     [SerializeField] private float edgeDistanceThreshold = 0.5f;
 
+    [Header("경계 그라데이션")]
+    [Tooltip("거리 경계(부채꼴 끝 / 근접 원)에서 부드럽게 페이드되는 폭 (m)")]
+    [SerializeField] private float edgeFade = 2f;
+    [Tooltip("부채꼴 좌우 경계에서 부드럽게 페이드되는 각도 (deg)")]
+    [SerializeField] private float angleFade = 12f;
+
     private Mesh viewMesh;
-    private readonly List<Vector3> viewPoints = new List<Vector3>();
+
+    // 재사용 버퍼 (프레임당 힙 할당 방지)
+    private readonly List<Vector3> conePoints = new List<Vector3>();
+    private readonly List<Vector3> nearPoints = new List<Vector3>();
+    private readonly List<Vector3> meshVertices = new List<Vector3>();
+    private readonly List<int> meshTriangles = new List<int>();
 
     // 숨김 대상 하나
     private class Hideable
@@ -91,7 +105,25 @@ public class PlayerVision : MonoBehaviour
     private void LateUpdate()
     {
         DrawFieldOfView();
+        UpdateVisionShaderGlobals();
         UpdateHideableVisibility();
+    }
+
+    // 오버레이 셰이더(VisionOverlaySoft)가 경계 그라데이션을 계산하는 데 쓰는 전역 값
+    private void UpdateVisionShaderGlobals()
+    {
+        Vector3 forward = transform.forward;
+        forward.y = 0f;
+        forward.Normalize();
+
+        float half = viewAngle * 0.5f;
+        float cosOuter = Mathf.Cos(half * Mathf.Deg2Rad);
+        float cosInner = Mathf.Cos(Mathf.Max(0f, half - angleFade) * Mathf.Deg2Rad);
+
+        Shader.SetGlobalVector("_VisionPlayerPos", transform.position);
+        Shader.SetGlobalVector("_VisionPlayerDir", forward);
+        Shader.SetGlobalVector("_VisionParams", new Vector4(viewRadius, nearVisionRadius, edgeFade, groundY + meshHeight));
+        Shader.SetGlobalVector("_VisionConeAngles", new Vector4(cosOuter, cosInner, 0f, 0f));
     }
 
     // ---------- 숨김 대상 관리 ----------
@@ -172,7 +204,7 @@ public class PlayerVision : MonoBehaviour
         }
     }
 
-    // 특정 월드 좌표가 시야 안에 있고 벽에 가려지지 않았는지
+    // 특정 월드 좌표가 시야(정면 부채꼴 또는 근접 원) 안이고 벽에 가려지지 않았는지
     public bool CanSee(Vector3 worldPoint)
     {
         Vector3 origin = transform.position;
@@ -185,14 +217,18 @@ public class PlayerVision : MonoBehaviour
         {
             return true; // 거의 같은 위치
         }
-        if (distance > viewRadius)
+
+        bool inNear = distance <= nearVisionRadius;
+
+        bool inCone = false;
+        if (distance <= viewRadius)
         {
-            return false;
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            inCone = Vector3.Angle(forward, to) <= viewAngle * 0.5f;
         }
 
-        Vector3 forward = transform.forward;
-        forward.y = 0f;
-        if (Vector3.Angle(forward, to) > viewAngle * 0.5f)
+        if (!inNear && !inCone)
         {
             return false;
         }
@@ -211,83 +247,103 @@ public class PlayerVision : MonoBehaviour
 
     private void DrawFieldOfView()
     {
-        int stepCount = Mathf.Max(1, Mathf.RoundToInt(viewAngle * meshResolution));
-        float stepAngleSize = viewAngle / stepCount;
+        BuildArc(transform.eulerAngles.y - viewAngle * 0.5f, viewAngle, viewRadius, conePoints);
+        BuildArc(0f, 360f, nearVisionRadius, nearPoints);
 
-        viewPoints.Clear();
+        meshVertices.Clear();
+        meshTriangles.Clear();
+
+        // 정점 0 = 부채꼴 중심(플레이어 위치, 바닥 높이)
+        Vector3 centerWorld = new Vector3(transform.position.x, groundY + meshHeight, transform.position.z);
+        meshVertices.Add(transform.InverseTransformPoint(centerWorld));
+
+        AppendFan(conePoints);
+        AppendFan(nearPoints);
+
+        // List 오버로드는 내부 할당 없이 리스트 버퍼를 그대로 읽는다
+        viewMesh.Clear();
+        viewMesh.SetVertices(meshVertices);
+        viewMesh.SetTriangles(meshTriangles, 0);
+    }
+
+    // points 를 중심(정점 0) 기준 삼각형 부채꼴로 meshVertices/meshTriangles 에 이어붙인다
+    private void AppendFan(List<Vector3> points)
+    {
+        int startIndex = meshVertices.Count;
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            meshVertices.Add(transform.InverseTransformPoint(points[i]));
+
+            if (i < points.Count - 1)
+            {
+                int current = startIndex + i;
+                meshTriangles.Add(0);
+                meshTriangles.Add(current);
+                meshTriangles.Add(current + 1);
+            }
+        }
+    }
+
+    private void BuildArc(float startAngle, float sweepAngle, float radius, List<Vector3> output)
+    {
+        output.Clear();
+
+        if (radius <= 0.01f || sweepAngle <= 0.01f)
+        {
+            return;
+        }
+
+        int stepCount = Mathf.Max(1, Mathf.RoundToInt(sweepAngle * meshResolution));
+        float stepAngleSize = sweepAngle / stepCount;
+
         ViewCastInfo previous = new ViewCastInfo();
 
         for (int i = 0; i <= stepCount; i++)
         {
-            float angle = transform.eulerAngles.y - viewAngle * 0.5f + stepAngleSize * i;
-            ViewCastInfo current = ViewCast(angle);
+            float angle = startAngle + stepAngleSize * i;
+            ViewCastInfo current = ViewCast(angle, radius);
 
             if (i > 0)
             {
                 bool thresholdExceeded = Mathf.Abs(previous.distance - current.distance) > edgeDistanceThreshold;
                 if (previous.hit != current.hit || (previous.hit && current.hit && thresholdExceeded))
                 {
-                    EdgePoints edge = FindEdge(previous, current);
+                    EdgePoints edge = FindEdge(previous, current, radius);
                     if (edge.hasA)
                     {
-                        viewPoints.Add(edge.pointA);
+                        output.Add(edge.pointA);
                     }
                     if (edge.hasB)
                     {
-                        viewPoints.Add(edge.pointB);
+                        output.Add(edge.pointB);
                     }
                 }
             }
 
-            viewPoints.Add(current.point);
+            output.Add(current.point);
             previous = current;
         }
-
-        int vertexCount = viewPoints.Count + 1;
-
-        // 매 프레임 배열 할당 - 광선 수가 많지 않아 문제 없음. 필요하면 버퍼 재사용으로 최적화
-        Vector3[] vertices = new Vector3[vertexCount];
-        int[] triangles = new int[Mathf.Max(0, (vertexCount - 2) * 3)];
-
-        // 부채꼴 중심(플레이어 위치)도 바닥 높이로
-        Vector3 centerWorld = new Vector3(transform.position.x, groundY + meshHeight, transform.position.z);
-        vertices[0] = transform.InverseTransformPoint(centerWorld);
-
-        for (int i = 0; i < vertexCount - 1; i++)
-        {
-            vertices[i + 1] = transform.InverseTransformPoint(viewPoints[i]);
-
-            if (i < vertexCount - 2)
-            {
-                triangles[i * 3] = 0;
-                triangles[i * 3 + 1] = i + 1;
-                triangles[i * 3 + 2] = i + 2;
-            }
-        }
-
-        viewMesh.Clear();
-        viewMesh.vertices = vertices;
-        viewMesh.triangles = triangles;
     }
 
-    private ViewCastInfo ViewCast(float globalAngle)
+    private ViewCastInfo ViewCast(float globalAngle, float radius)
     {
         Vector3 direction = DirectionFromAngle(globalAngle);
         Vector3 origin = transform.position + Vector3.up * sightHeight;
 
         RaycastHit hit;
-        if (Physics.Raycast(origin, direction, out hit, viewRadius, obstacleMask, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(origin, direction, out hit, radius, obstacleMask, QueryTriggerInteraction.Ignore))
         {
             Vector3 point = new Vector3(hit.point.x, groundY + meshHeight, hit.point.z);
             return new ViewCastInfo(true, point, hit.distance, globalAngle);
         }
 
-        Vector3 endPoint = transform.position + direction * viewRadius;
+        Vector3 endPoint = transform.position + direction * radius;
         endPoint.y = groundY + meshHeight;
-        return new ViewCastInfo(false, endPoint, viewRadius, globalAngle);
+        return new ViewCastInfo(false, endPoint, radius, globalAngle);
     }
 
-    private EdgePoints FindEdge(ViewCastInfo minCast, ViewCastInfo maxCast)
+    private EdgePoints FindEdge(ViewCastInfo minCast, ViewCastInfo maxCast, float radius)
     {
         float minAngle = minCast.angle;
         float maxAngle = maxCast.angle;
@@ -297,7 +353,7 @@ public class PlayerVision : MonoBehaviour
         for (int i = 0; i < edgeResolveIterations; i++)
         {
             float angle = (minAngle + maxAngle) * 0.5f;
-            ViewCastInfo current = ViewCast(angle);
+            ViewCastInfo current = ViewCast(angle, radius);
 
             bool thresholdExceeded = Mathf.Abs(minCast.distance - current.distance) > edgeDistanceThreshold;
             if (current.hit == minCast.hit && !thresholdExceeded)
@@ -330,12 +386,16 @@ public class PlayerVision : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
         Vector3 origin = transform.position;
+
+        Gizmos.color = Color.yellow;
         float half = viewAngle * 0.5f;
         Vector3 left = Quaternion.Euler(0f, -half, 0f) * transform.forward;
         Vector3 right = Quaternion.Euler(0f, half, 0f) * transform.forward;
         Gizmos.DrawRay(origin, left * viewRadius);
         Gizmos.DrawRay(origin, right * viewRadius);
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(origin, nearVisionRadius);
     }
 }
