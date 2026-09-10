@@ -1,0 +1,12 @@
+{
+  "name": "Birdkov.NaYeongMin.Test.Editor",
+  "rootNamespace": "Birdkov.NaYeongMin.InventoryTest.EditorTools",
+  "references": [
+    "Birdkov.NaYeongMin",
+    "Birdkov.NaYeongMin.Test"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": false
+}

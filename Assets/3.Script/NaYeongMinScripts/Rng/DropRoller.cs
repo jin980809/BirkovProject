@@ -13,14 +13,19 @@ namespace Birdkov.NaYeongMin.Rng
             this.randomSource = randomSource ?? throw new ArgumentNullException(nameof(randomSource));
         }
 
-        public LootContainerData Roll(IEnumerable<DropTableEntry> entries, DropSourceType sourceType)
+        // sizePreset 은 결과를 담을 컨테이너 크기다. 적 사망 오브제는 기본값 Box2x4(8칸)를 쓴다.
+        // 컨테이너 칸 수를 넘긴 당첨분은 생성하지 않고 파기한다.
+        public LootContainerData Roll(
+            IEnumerable<DropTableEntry> entries,
+            DropSourceType sourceType,
+            LootContainerSize sizePreset = LootContainerSize.Box2x4)
         {
             if (entries == null)
             {
                 throw new ArgumentNullException(nameof(entries));
             }
 
-            LootContainerData loot = new LootContainerData();
+            LootContainerData loot = new LootContainerData(sizePreset);
             int lootIndex = 0;
 
             foreach (DropTableEntry entry in entries)
@@ -41,7 +46,7 @@ namespace Birdkov.NaYeongMin.Rng
                 int maximum = Math.Max(minimum, entry.maxAmount);
                 int amount = randomSource.NextInclusive(minimum, maximum);
 
-                if (lootIndex >= InventorySettings.LootSlotCount)
+                if (lootIndex >= loot.SlotCount)
                 {
                     continue;
                 }
@@ -54,6 +59,5 @@ namespace Birdkov.NaYeongMin.Rng
 
             return loot;
         }
-
     }
 }
