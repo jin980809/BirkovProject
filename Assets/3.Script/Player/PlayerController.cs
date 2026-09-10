@@ -34,8 +34,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Camera aimCamera;
     [SerializeField] private LayerMask groundMask = ~0;
 
+    [Header("애니메이션")]
+    [SerializeField] private Animator animator;
+    [Tooltip("블렌드 파라미터 감쇠 시간 (클수록 부드럽고 반응 느림)")]
+    [SerializeField] private float animDamp = 0.12f;
+
     private Rigidbody rb;
     private PlayerInputHandler input;
+    private PlayerVitals vitals; // 선택 - 있으면 스테미나로 달리기/구르기 게이트
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -55,10 +61,14 @@ public class PlayerController : MonoBehaviour
         get { return isDodging; }
     }
 
-    // Shift 를 누른 채로 실제 이동 중일 때만 달리기로 친다
+    // Shift 를 누른 채로 실제 이동 중 + 스테미나 여유가 있을 때만 달리기로 친다
     public bool IsSprinting
     {
-        get { return input.SprintHeld && input.MoveInput.sqrMagnitude > 0.01f; }
+        get
+        {
+            bool wantSprint = input.SprintHeld && input.MoveInput.sqrMagnitude > 0.01f;
+            return wantSprint && (vitals == null || vitals.CanSprint);
+        }
     }
 
     // 달리는 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
@@ -78,15 +88,31 @@ public class PlayerController : MonoBehaviour
         get { return hasAimPoint; }
     }
 
+    // 무기 장착 여부 (무기 시스템에서 SetArmed 로 설정)
+    private bool isArmed;
+
+    public void SetArmed(bool value)
+    {
+        isArmed = value;
+    }
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
+        // 넘어짐(X/Z 회전)만 막고 Y축 회전은 MoveRotation 으로 직접 돌린다
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
         if (aimCamera == null)
         {
             aimCamera = Camera.main;
         }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        TryGetComponent(out vitals);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
@@ -133,13 +159,29 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // 목표 방향만 계산한다. 트랜스폼/Rigidbody 는 FixedUpdate 에서만 건드린다.
         UpdateAimPoint();
         UpdateFacing();
-        ApplyRotation();
+        UpdateAnimator();
+
+        if (vitals != null)
+        {
+            vitals.SetSprinting(IsSprinting); // 스테미나 소모/회복 판정용
+        }
     }
 
     private void FixedUpdate()
     {
+        // Y축 회전은 전적으로 MoveRotation 이 담당한다.
+        // 벽 접촉 등에서 생긴 물리 각속도가 누적돼 회전이 이상해지는 것을 막는다.
+        rb.angularVelocity = Vector3.zero;
+
+        if (vitals != null && vitals.IsDead)
+        {
+            rb.linearVelocity = new Vector3(0f, VerticalVelocity(), 0f);
+            return; // TODO: 사망 처리 (입력 차단, 사망 애니 등)
+        }
+
         if (isDodging)
         {
             UpdateDodge();
@@ -148,9 +190,18 @@ public class PlayerController : MonoBehaviour
         {
             UpdateMovement();
         }
+
+        ApplyRotation();
     }
 
     // ---------- 이동 ----------
+
+    // 충돌로 생긴 위쪽 속도는 버리고, 중력에 의한 낙하만 유지한다
+    // (캡슐끼리 비비면 분리 방향에 위쪽 성분이 생겨 플레이어가 떠오르는 것 방지)
+    private float VerticalVelocity()
+    {
+        return Mathf.Min(rb.linearVelocity.y, 0f);
+    }
 
     private void UpdateMovement()
     {
@@ -163,7 +214,7 @@ public class PlayerController : MonoBehaviour
         float speed = IsSprinting ? sprintSpeed : moveSpeed;
 
         Vector3 velocity = move * speed;
-        velocity.y = rb.linearVelocity.y; // 중력에 의한 수직 속도는 유지
+        velocity.y = VerticalVelocity();
         rb.linearVelocity = velocity;
     }
 
@@ -174,6 +225,11 @@ public class PlayerController : MonoBehaviour
         if (isDodging || Time.time < dodgeReadyTime)
         {
             return;
+        }
+
+        if (vitals != null && !vitals.TryConsumeDodgeStamina())
+        {
+            return; // 스테미나 부족
         }
 
         // 이동 입력이 있으면 그 방향, 없으면 현재 바라보는 방향으로 구른다
@@ -193,12 +249,12 @@ public class PlayerController : MonoBehaviour
         {
             isDodging = false;
             // 구르기 끝나면 수평 속도 제거 (미끄러짐 방지)
-            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            rb.linearVelocity = new Vector3(0f, VerticalVelocity(), 0f);
             return;
         }
 
         Vector3 velocity = dodgeDirection * dodgeSpeed;
-        velocity.y = rb.linearVelocity.y;
+        velocity.y = VerticalVelocity();
         rb.linearVelocity = velocity;
     }
 
@@ -261,7 +317,41 @@ public class PlayerController : MonoBehaviour
         }
 
         Quaternion target = Quaternion.LookRotation(facingDirection, Vector3.up);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, target, rotationSpeed * Time.deltaTime);
+        rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, target, rotationSpeed * Time.fixedDeltaTime));
+    }
+
+    // ---------- 애니메이션 ----------
+
+    private void UpdateAnimator()
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        // 파라미터는 "측정된 물리 값" 이 아니라 "입력 의도" 로 만든다.
+        // 측정 속도는 정지 상태에서도 0이 아니라(바닥 접촉 노이즈) 파라미터가 계속 흔들린다.
+        // 이동 입력을 캐릭터가 바라보는 방향 기준으로 변환한다.
+        // 걷기(조준 모드)에서는 캐릭터가 마우스를 보고 있으므로
+        //   마우스 쪽으로 걸으면 +Y(FWD), 반대면 -Y(BWD), 옆이면 ±X 가 된다.
+        Vector3 worldMove = new Vector3(input.MoveInput.x, 0f, input.MoveInput.y);
+        bool moving = worldMove.sqrMagnitude > 0.01f;
+
+        Vector3 localMove = transform.InverseTransformDirection(worldMove);
+
+        float targetSpeed = 0f;
+        if (moving)
+        {
+            targetSpeed = IsSprinting ? 1f : moveSpeed / Mathf.Max(sprintSpeed, 0.01f);
+        }
+
+        // 정지 중엔 감쇠 없이 0으로 딱 고정 (감쇠는 목표에 정확히 도달 못 해서 잔떨림이 남는다)
+        float damp = moving ? animDamp : 0f;
+
+        animator.SetFloat("MoveX", localMove.x, damp, Time.deltaTime);
+        animator.SetFloat("MoveY", localMove.z, damp, Time.deltaTime);
+        animator.SetFloat("Speed", targetSpeed, damp, Time.deltaTime);
+        animator.SetBool("IsArmed", isArmed);
     }
 
     private bool TryGetAimPoint(out Vector3 point)

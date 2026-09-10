@@ -1,31 +1,28 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-// Cinemachine 카메라가 따라갈 타깃(followTarget)을 매 프레임 움직인다.
-//  - 기본: 플레이어 위치를 따라간다
-//  - 마우스 커서 방향으로 카메라를 조금 당긴다 (커서까지 거리에 비례, 최대치 클램프)
+// Cinemachine 카메라가 따라갈 타깃(followTarget)을 매 프레임 즉시 세팅한다.
+//  - 기본: 플레이어(보간된 transform)를 따라간다
+//  - 커서가 화면 중앙에서 벗어난 방향으로 타깃을 조금 당긴다
+//    (화면 좌표 기준 → 카메라 위치와 무관 → 조준 레이캐스트와 피드백 루프 없음)
+//  - 부드러움은 Cinemachine vcam 의 Follow 댐핑이 담당 (스크립트는 감쇠 안 함 → 이중 감쇠 없음)
 //
 // 이 스크립트는 Cinemachine 에 의존하지 않는다.
-// 씬 세팅:
-//  1) 빈 오브젝트 "CameraTarget" 을 만들고 이 스크립트를 붙인다 (followTarget 은 비워두면 자기 자신)
+// 씬 세팅 (Cinemachine 3.x):
+//  1) 빈 "CameraTarget" 오브젝트(최상위, 플레이어 자식 아님) + 이 스크립트
 //  2) CinemachineCamera 의 Tracking Target = CameraTarget
-//  3) 카메라 각도/높이/거리는 CinemachineFollow 의 Follow Offset 으로 맞춘다
-//     (기울어진 탑다운: 예) Offset (0, 18, -13), 카메라 X 회전 약 55도)
+//  3) CinemachineFollow 추가 → Follow Offset 으로 각도/거리 (예: (0, 13, -9)), Damping 0.2~0.4
+//  4) vcam Transform 회전 X ~55°, yaw 0 고정 (Rotation 컴포넌트 안 붙임)
+//  5) Main Camera CinemachineBrain → Update Method = Late Update
+//  6) 플레이어 Rigidbody Interpolate ON
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private PlayerController player;
     [SerializeField] private Transform followTarget;
 
     [Header("마우스 오프셋")]
-    [Tooltip("플레이어에서 커서까지 거리의 몇 배만큼 카메라를 당길지")]
-    [SerializeField] private float mouseInfluence = 0.35f;
-    [Tooltip("마우스 오프셋 최대 이동 거리")]
-    [SerializeField] private float maxOffset = 4f;
-
-    [Header("추적")]
-    [Tooltip("타깃이 목표 위치로 따라붙는 감쇠 시간 (작을수록 빠름)")]
-    [SerializeField] private float followSmoothTime = 0.15f;
-
-    private Vector3 followVelocity;
+    [Tooltip("커서가 화면 가장자리일 때 타깃이 당겨지는 최대 거리")]
+    [SerializeField] private float maxMouseOffset = 4f;
 
     private void Awake()
     {
@@ -47,24 +44,21 @@ public class CameraController : MonoBehaviour
             return;
         }
 
-        Vector3 basePosition = player.transform.position;
-        Vector3 desired = basePosition;
+        // 커서의 화면 중앙 대비 위치 (-1 ~ 1, 세로 기준 정규화)
+        Vector2 mouse = Mouse.current != null
+            ? Mouse.current.position.ReadValue()
+            : new Vector2(Screen.width, Screen.height) * 0.5f;
 
-        if (player.HasAimPoint)
-        {
-            Vector3 toAim = player.AimWorldPoint - basePosition;
-            toAim.y = 0f;
+        float halfH = Screen.height * 0.5f;
+        Vector2 norm = new Vector2(
+            (mouse.x - Screen.width * 0.5f) / halfH,
+            (mouse.y - halfH) / halfH);
+        norm = Vector2.ClampMagnitude(norm, 1f);
 
-            Vector3 offset = toAim * mouseInfluence;
-            if (offset.sqrMagnitude > maxOffset * maxOffset)
-            {
-                offset = offset.normalized * maxOffset;
-            }
+        // 카메라 yaw 0 고정 → 화면 X = 월드 X, 화면 Y = 월드 Z
+        Vector3 offset = new Vector3(norm.x, 0f, norm.y) * maxMouseOffset;
 
-            desired = basePosition + offset;
-        }
-
-        followTarget.position = Vector3.SmoothDamp(
-            followTarget.position, desired, ref followVelocity, followSmoothTime);
+        // 즉시 세팅. 부드러움은 CinemachineFollow 댐핑이 담당.
+        followTarget.position = player.transform.position + offset;
     }
 }

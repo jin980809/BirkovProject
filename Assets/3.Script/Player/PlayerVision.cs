@@ -47,6 +47,10 @@ public class PlayerVision : MonoBehaviour
     [Tooltip("부채꼴 좌우 경계에서 부드럽게 페이드되는 각도 (deg)")]
     [SerializeField] private float angleFade = 12f;
 
+    [Header("조준 방향")]
+    [Tooltip("설정하면 시야가 이 컨트롤러의 조준(마우스) 방향을 향한다. 비우면 자기 transform.forward. 부모에서 자동 탐색.")]
+    [SerializeField] private PlayerController aimSource;
+
     private Mesh viewMesh;
 
     // 재사용 버퍼 (프레임당 힙 할당 방지)
@@ -95,6 +99,11 @@ public class PlayerVision : MonoBehaviour
         viewMesh.name = "View Mesh";
         viewMesh.MarkDynamic();
         GetComponent<MeshFilter>().mesh = viewMesh;
+
+        if (aimSource == null)
+        {
+            aimSource = GetComponentInParent<PlayerController>();
+        }
     }
 
     private void Start()
@@ -112,9 +121,7 @@ public class PlayerVision : MonoBehaviour
     // 오버레이 셰이더(VisionOverlaySoft)가 경계 그라데이션을 계산하는 데 쓰는 전역 값
     private void UpdateVisionShaderGlobals()
     {
-        Vector3 forward = transform.forward;
-        forward.y = 0f;
-        forward.Normalize();
+        Vector3 forward = GetFacingDirection();
 
         float half = viewAngle * 0.5f;
         float cosOuter = Mathf.Cos(half * Mathf.Deg2Rad);
@@ -223,8 +230,7 @@ public class PlayerVision : MonoBehaviour
         bool inCone = false;
         if (distance <= viewRadius)
         {
-            Vector3 forward = transform.forward;
-            forward.y = 0f;
+            Vector3 forward = GetFacingDirection();
             inCone = Vector3.Angle(forward, to) <= viewAngle * 0.5f;
         }
 
@@ -247,7 +253,7 @@ public class PlayerVision : MonoBehaviour
 
     private void DrawFieldOfView()
     {
-        BuildArc(transform.eulerAngles.y - viewAngle * 0.5f, viewAngle, viewRadius, conePoints);
+        BuildArc(GetFacingYaw() - viewAngle * 0.5f, viewAngle, viewRadius, conePoints);
         BuildArc(0f, 360f, nearVisionRadius, nearPoints);
 
         meshVertices.Clear();
@@ -379,6 +385,36 @@ public class PlayerVision : MonoBehaviour
         return new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad));
     }
 
+    // 시야가 향하는 방향 (XZ 평면 정규화).
+    // aimSource 가 있으면 그 조준점(마우스) 방향, 없으면 몸통 방향.
+    // → 달릴 때 몸은 이동 방향을 봐도 시야는 마우스를 향한다.
+    private Vector3 GetFacingDirection()
+    {
+        if (aimSource != null && aimSource.HasAimPoint)
+        {
+            Vector3 dir = aimSource.AimWorldPoint - transform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                return dir.normalized;
+            }
+        }
+
+        Vector3 forward = transform.forward;
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            return Vector3.forward;
+        }
+        return forward.normalized;
+    }
+
+    private float GetFacingYaw()
+    {
+        Vector3 f = GetFacingDirection();
+        return Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+    }
+
     private bool IsInMask(int layer, LayerMask mask)
     {
         return (mask.value & (1 << layer)) != 0;
@@ -390,8 +426,9 @@ public class PlayerVision : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         float half = viewAngle * 0.5f;
-        Vector3 left = Quaternion.Euler(0f, -half, 0f) * transform.forward;
-        Vector3 right = Quaternion.Euler(0f, half, 0f) * transform.forward;
+        Vector3 facing = GetFacingDirection();
+        Vector3 left = Quaternion.Euler(0f, -half, 0f) * facing;
+        Vector3 right = Quaternion.Euler(0f, half, 0f) * facing;
         Gizmos.DrawRay(origin, left * viewRadius);
         Gizmos.DrawRay(origin, right * viewRadius);
 
