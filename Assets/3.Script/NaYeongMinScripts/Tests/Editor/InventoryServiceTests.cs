@@ -31,23 +31,6 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void Move_RejectsWrongDedicatedSlotTypes()
-        {
-            PlayerInventoryData playerData = new PlayerInventoryData();
-            playerData.inventory.slots[0].itemId = 1;
-            playerData.inventory.slots[0].amount = 1;
-            PlayerInventoryService service = new PlayerInventoryService(itemCatalog);
-
-            InventoryMoveResult weaponResult = service.Move(playerData, PlayerContainerType.Inventory, 0,
-                PlayerContainerType.Weapon, 0, 1);
-            InventoryMoveResult quickResult = service.Move(playerData, PlayerContainerType.Inventory, 0,
-                PlayerContainerType.Quick, 0, 1);
-
-            Assert.AreEqual(InventoryResult.DestinationRejected, weaponResult.Result);
-            Assert.AreEqual(InventoryResult.DestinationRejected, quickResult.Result);
-        }
-
-        [Test]
         public void AddItem_ForcesWeaponToSingleItemStacks()
         {
             GridContainerData container = new GridContainerData(2, 1);
@@ -59,21 +42,52 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void ClearOnDeath_ClearsAllCarriedContainers()
+        public void Move_RejectsNonWeaponIntoWeaponSlot()
+        {
+            PlayerInventoryData playerData = new PlayerInventoryData();
+            playerData.inventory.slots[0].itemId = 1;
+            playerData.inventory.slots[0].amount = 1;
+            PlayerInventoryService service = new PlayerInventoryService(itemCatalog);
+
+            InventoryMoveResult result = service.Move(
+                playerData,
+                PlayerContainerType.Inventory, 0,
+                PlayerContainerType.Equipment, EquipmentSlots.PrimaryWeapon, 1);
+
+            Assert.AreEqual(InventoryResult.DestinationRejected, result.Result);
+        }
+
+        [Test]
+        public void Move_WithinInventorySucceeds()
+        {
+            PlayerInventoryData playerData = new PlayerInventoryData();
+            playerData.inventory.slots[0].itemId = 1;
+            playerData.inventory.slots[0].amount = 4;
+            PlayerInventoryService service = new PlayerInventoryService(itemCatalog);
+
+            InventoryMoveResult result = service.Move(
+                playerData,
+                PlayerContainerType.Inventory, 0,
+                PlayerContainerType.Inventory, 9, 4);
+
+            Assert.AreEqual(InventoryResult.Success, result.Result);
+            Assert.AreEqual(4, playerData.inventory.slots[9].amount);
+            Assert.IsTrue(playerData.inventory.slots[0].IsEmpty());
+        }
+
+        [Test]
+        public void ClearOnDeath_ClearsBagAndEquipment()
         {
             PlayerInventoryData playerData = new PlayerInventoryData();
             playerData.inventory.slots[0].itemId = 1;
             playerData.inventory.slots[0].amount = 5;
-            playerData.weaponSlots.slots[0].itemId = 2;
-            playerData.weaponSlots.slots[0].amount = 1;
-            playerData.quickSlots.slots[0].itemId = 3;
-            playerData.quickSlots.slots[0].amount = 1;
+            playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].itemId = 2;
+            playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].amount = 1;
 
             new PlayerInventoryService(itemCatalog).ClearOnDeath(playerData);
 
             Assert.IsTrue(playerData.inventory.slots.TrueForAll(slot => slot.IsEmpty()));
-            Assert.IsTrue(playerData.weaponSlots.slots.TrueForAll(slot => slot.IsEmpty()));
-            Assert.IsTrue(playerData.quickSlots.slots.TrueForAll(slot => slot.IsEmpty()));
+            Assert.IsTrue(playerData.equipmentSlots.slots.TrueForAll(slot => slot.IsEmpty()));
         }
     }
 }

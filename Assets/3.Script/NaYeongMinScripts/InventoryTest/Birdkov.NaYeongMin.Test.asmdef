@@ -1,0 +1,9 @@
+{
+  "name": "Birdkov.NaYeongMin.Test",
+  "rootNamespace": "Birdkov.NaYeongMin.InventoryTest",
+  "references": [
+    "Birdkov.NaYeongMin"
+  ],
+  "includePlatforms": [],
+  "autoReferenced": false
+}

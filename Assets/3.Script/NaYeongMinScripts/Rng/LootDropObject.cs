@@ -10,6 +10,7 @@ namespace Birdkov.NaYeongMin.Rng
 
         public event Action<LootDropObject> Emptied;
 
+        // 원본의 크기 프리셋까지 그대로 따라간다. 상자 크기가 달라도 전량 전달된다.
         public void SetLoot(LootContainerData source)
         {
             if (source == null)
@@ -17,9 +18,8 @@ namespace Birdkov.NaYeongMin.Rng
                 throw new ArgumentNullException(nameof(source));
             }
 
-            Loot.Clear();
-            int count = Math.Min(Loot.loot.slots.Count, source.loot.slots.Count);
-            for (int index = 0; index < count; index++)
+            Loot.SetSize(source.sizePreset);
+            for (int index = 0; index < source.loot.slots.Count; index++)
             {
                 Loot.loot.slots[index].itemId = source.loot.slots[index].itemId;
                 Loot.loot.slots[index].amount = source.loot.slots[index].amount;
