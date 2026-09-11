@@ -25,6 +25,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public TextAsset itemCsv;
         public TextAsset dropCsv;
         public Font font;
+        [Tooltip("단독 테스트에서만 사용. 팀원 입력 이벤트 연결 시 끌 것.")]
+        public bool useStandaloneKeyboard = true;
         public TestIconBinding[] icons = Array.Empty<TestIconBinding>();
 
         private const int BagCell = 66;
@@ -575,16 +577,19 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) { selectedWeapon = 0; Refresh(); }
-            if (Input.GetKeyDown(KeyCode.Alpha2)) { selectedWeapon = 1; Refresh(); }
-            if (Input.GetKeyDown(KeyCode.Alpha3)) { UseItemQuickSlot(0); }
-            if (Input.GetKeyDown(KeyCode.Alpha4)) { UseItemQuickSlot(1); }
-            if (Input.GetKeyDown(KeyCode.Alpha5)) { UseItemQuickSlot(2); }
-
-            if (Input.GetKeyDown(KeyCode.E) && hovered != null &&
-                (hovered.container == TestContainer.Loot || hovered.container == TestContainer.Warehouse))
+            if (useStandaloneKeyboard)
             {
-                Take(hovered.container, hovered.index);
+                if (Input.GetKeyDown(KeyCode.Alpha1)) { selectedWeapon = 0; Refresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha2)) { selectedWeapon = 1; Refresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha3)) { UseItemQuickSlot(0); }
+                if (Input.GetKeyDown(KeyCode.Alpha4)) { UseItemQuickSlot(1); }
+                if (Input.GetKeyDown(KeyCode.Alpha5)) { UseItemQuickSlot(2); }
+
+                if (Input.GetKeyDown(KeyCode.E) && hovered != null &&
+                    (hovered.container == TestContainer.Loot || hovered.container == TestContainer.Warehouse))
+                {
+                    Take(hovered.container, hovered.index);
+                }
             }
 
             if (status != null && Time.unscaledTime > messageUntil)
