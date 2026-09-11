@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 68307480}
   - component: {fileID: 68307482}
   - component: {fileID: 68307481}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Eye01Polyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -248,7 +248,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 86139904}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: LowerLeg_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -282,7 +282,7 @@ GameObject:
   - component: {fileID: 90893260}
   - component: {fileID: 90893262}
   - component: {fileID: 90893261}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Beak10Polyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -370,7 +370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 138257338}
   - component: {fileID: 138257339}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Body07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -489,7 +489,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 196050172}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: UpperLeg_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -634,7 +634,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 247613098}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Hand_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -777,7 +777,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 269490096}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -920,7 +920,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 374165412}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: LowerLeg_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -952,7 +952,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 406787528}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Weapon_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1095,7 +1095,7 @@ GameObject:
   m_Component:
   - component: {fileID: 437428211}
   - component: {fileID: 437428212}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Feet06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1314,7 +1314,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 492298505}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Weapon_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1349,7 +1349,7 @@ GameObject:
   - component: {fileID: 542715769}
   - component: {fileID: 542715768}
   - component: {fileID: 542715767}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Vision
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1467,7 +1467,7 @@ GameObject:
   m_Component:
   - component: {fileID: 704543534}
   - component: {fileID: 704543535}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Body09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1586,7 +1586,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 743963194}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: LowerWing_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1618,7 +1618,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 788823186}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: BeakLower
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1650,7 +1650,7 @@ GameObject:
   m_Component:
   - component: {fileID: 793895673}
   - component: {fileID: 793895674}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Wing07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1841,7 +1841,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 913002724}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Pelvis
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1875,7 +1875,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 948879306}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2023,7 +2023,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1005897535
 Transform:
   m_ObjectHideFlags: 0
@@ -2053,7 +2053,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1013591412}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: UpperWing_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2085,7 +2085,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1039129512}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Toe_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2116,7 +2116,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1051793658}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Toe_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2147,7 +2147,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1070975668}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2185,13 +2185,13 @@ GameObject:
   - component: {fileID: 1092420356}
   - component: {fileID: 1092420355}
   - component: {fileID: 1092420354}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1092420354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2587,7 +2587,7 @@ Transform:
   m_GameObject: {fileID: 1092420353}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.99, y: -0.346, z: 4.32}
+  m_LocalPosition: {x: 4.17, y: -0.346, z: 2.59}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2607,7 +2607,7 @@ GameObject:
   - component: {fileID: 1098387498}
   - component: {fileID: 1098387500}
   - component: {fileID: 1098387499}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Armor03Polyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2741,7 +2741,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1179561438}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: HeadGear
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2773,7 +2773,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1184208426}
   - component: {fileID: 1184208427}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2892,7 +2892,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1188679630}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: BackPack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2926,7 +2926,7 @@ GameObject:
   - component: {fileID: 1228149488}
   - component: {fileID: 1228149490}
   - component: {fileID: 1228149489}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Hair05Polyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3239,7 +3239,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1251257537}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Wing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3816,7 +3816,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1371872555}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3848,7 +3848,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1414080208}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Body01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3882,7 +3882,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1426227711}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Hand_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3915,7 +3915,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1432990041}
   - component: {fileID: 1432990042}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4067,7 +4067,7 @@ GameObject:
   - component: {fileID: 1462051215}
   - component: {fileID: 1462051217}
   - component: {fileID: 1462051216}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: VisionOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4155,7 +4155,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1487219135}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Body02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4305,7 +4305,7 @@ GameObject:
   - component: {fileID: 1553700373}
   - component: {fileID: 1553700375}
   - component: {fileID: 1553700374}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: PistolPolyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4392,7 +4392,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1561584034}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Belly
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4424,7 +4424,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1661330145}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: UpperWing_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4456,7 +4456,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1672405944}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: LowerWing_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4488,7 +4488,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1675245306}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4532,7 +4532,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1690109462}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4598,7 +4598,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1733587503}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Feet_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4757,7 +4757,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1747446390}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Feet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4788,7 +4788,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1798717761}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4827,7 +4827,7 @@ GameObject:
   - component: {fileID: 1869995050}
   - component: {fileID: 1869995052}
   - component: {fileID: 1869995051}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Backpack01Polyart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4915,7 +4915,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1893496392}
   - component: {fileID: 1893496393}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Feet01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5034,7 +5034,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1964674821}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: UpperLeg_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5067,7 +5067,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1965873252}
   - component: {fileID: 1965873253}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Wing09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5186,7 +5186,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1972363056}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Tail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5217,7 +5217,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2045647671}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: Feet_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5249,7 +5249,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2103639562}
-  m_Layer: 8
+  m_Layer: 3
   m_Name: BeakUpper
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7826,7 +7826,11 @@ MonoBehaviour:
   targetLayer:
     serializedVersion: 2
     m_Bits: 0
-  wayPoints: []
+  wayPoints:
+  - {fileID: 1453738711}
+  - {fileID: 1274456482}
+  - {fileID: 1259838516}
+  - {fileID: 83429275}
   patrolWaitingTime: 10
 --- !u!136 &8916264762366977273
 CapsuleCollider:
@@ -7863,22 +7867,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b179227d3d028b4d9bc0974b8c5844a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDetect
+  enemyState: 0
   rayDistance: 10
-  viewAngle: 51
+  viewAngle: 90
   rayCount: 5
   detectInterval: 0.2
   targetMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 8
   obstacleMask:
     serializedVersion: 2
     m_Bits: 128
   visibleTargets: {fileID: 0}
   visibleTargetsV3: {x: 0, y: 0, z: 0}
   currentDetection: 0
-  decrease: 0
-  walkPoints: 10
-  runPoints: 15
+  decrease: 10
+  walkPoints: 30
+  runPoints: 40
+  shotPoints: 50
+  searchCheck: 1
 --- !u!4 &9057396531849466380
 Transform:
   m_ObjectHideFlags: 0
