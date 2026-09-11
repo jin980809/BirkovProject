@@ -86,12 +86,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             List<ItemData> items = ItemCsvLoader.Parse(itemCsv.text);
 
-            // CSV에 총기와 방어구가 아직 없어 슬롯 규칙을 볼 수 없다.
-            // 확인용 임시 데이터만 메모리에 추가한다. CSV 원본은 건드리지 않는다.
-            items.Add(new ItemData { itemId = 990001, itemType = ItemType.Weapon, displayName = "임시 기관권총", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990002, itemType = ItemType.Weapon, displayName = "임시 샷건", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990101, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Helmet, displayName = "임시 헬멧", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990102, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Armor, displayName = "임시 방탄복", maxStack = 1 });
 
             catalog = new ItemCatalog(items);
             inventoryService = new InventoryService(catalog);
@@ -126,14 +120,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
             }
 
-            playerService.AddToInventory(data.inventoryData, 990001, 1);
-            playerService.AddToInventory(data.inventoryData, 990002, 1);
-            playerService.AddToInventory(data.inventoryData, 990101, 1);
-            playerService.AddToInventory(data.inventoryData, 990102, 1);
+            // 무기 2종과 보호구 2종. 장비 슬롯 규칙을 눈으로 확인하는 용도다.
+            foreach (int id in new[] { 10001, 10002, 13001, 12001 })
+            {
+                playerService.AddToInventory(data.inventoryData, id, 1);
+            }
 
             inventoryService.AddItem(data.warehouseData, 23001, 5);
 
-            SetMessage("초기화 완료. 무기와 방어구는 가방에 들어갑니다. 자동 착용되지 않습니다.");
+            SetMessage("초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
             Refresh();
         }
 
@@ -654,9 +649,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (statsText != null)
             {
                 statsText.text = string.Format(
-                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    선택 무기 {3}번    창고 {4}",
+                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    지푸라기 {5}    선택 무기 {3}번    창고 {4}",
                     health, hunger, water, selectedWeapon + 1,
-                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘");
+                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘",
+                    data.inventoryData.currency);
             }
         }
 

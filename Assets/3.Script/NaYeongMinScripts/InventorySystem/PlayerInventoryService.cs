@@ -28,6 +28,18 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return new InventoryMoveResult(InventoryResult.InvalidSlot, 0, amount);
             }
 
+            // 화폐는 가방 칸을 쓰지 않고 보유 수치에 바로 합산한다. 기획서 10.1 [지푸라기에 대해].
+            if (itemCatalog.TryGetItem(itemId, out ItemData currencyItem) && currencyItem.itemType == ItemType.Currency)
+            {
+                if (amount <= 0)
+                {
+                    return new InventoryMoveResult(InventoryResult.InvalidAmount, 0, amount);
+                }
+
+                playerData.currency += amount;
+                return new InventoryMoveResult(InventoryResult.Success, amount, 0);
+            }
+
             InventoryMoveResult result = inventoryService.AddItem(playerData.inventory, itemId, amount);
             SanitizeItemQuickSlots(playerData);
             return result;
