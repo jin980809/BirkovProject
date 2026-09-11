@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f0cc5b442aece3944942ecd2afa4277f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 391816
+  packageName: Tiny Bird Duo PBR Polyart
+  packageVersion: 1.0
+  assetPath: Assets/TinyBirdDuo/Material/DefaultPolyart.mat
+  uploadId: 949218

@@ -1,0 +1,7 @@
+To test HDRP or Builtin, you have to do the following steps.
+
+1. Locate HDRP&BuiltIn folder.
+
+2. Double Click your target package.
+
+3. Click Import and you are all set.
