@@ -5,14 +5,14 @@ using UnityEngine.AI;
 
 public class EnemyBasicPatten : MonoBehaviour
 {
-    public enum EnemyState
-    {
-        Homing,
-        Patrol,
-        Search,
-        Battle,
-        Die
-    }
+    //public enum EnemyState
+    //{
+    //    Revert,
+    //    Patrol,
+    //    Search,
+    //    Battle,
+    //    Die
+    //}
 
     private Animator ani;
     private NavMeshAgent agent;
@@ -51,9 +51,22 @@ public class EnemyBasicPatten : MonoBehaviour
 
     private void Update()
     {
-        if (enemyDetect.enemyState.Equals(EnemyState.Patrol))
+
+        if (enemyDetect.enemyState.Equals(EnemyDetect.EnemyState.Patrol))
         {
             PatrolMove();
+        }
+        else if (enemyDetect.enemyState.Equals(EnemyDetect.EnemyState.Battle))
+        {
+            agent.destination = enemyDetect.VisibleTargets().position;
+        }
+        else if (enemyDetect.enemyState.Equals(EnemyDetect.EnemyState.Search))
+        {
+            agent.destination = enemyDetect.VisibleTargetsV3();
+        }
+        else if (enemyDetect.enemyState.Equals(EnemyDetect.EnemyState.Revert))
+        {
+            agent.destination = respawnPoint;
         }
     }
 
@@ -63,7 +76,7 @@ public class EnemyBasicPatten : MonoBehaviour
         if (canPatrol && !wayPoints.Length.Equals(0))
         {
             StartCoroutine(PatrolMove_co());
-
+            Debug.Log("2");
         }
 
         if (!agent.pathPending && agent.remainingDistance < 0.5f)
@@ -75,7 +88,7 @@ public class EnemyBasicPatten : MonoBehaviour
     private IEnumerator PatrolMove_co()
     {
         canPatrol = false;
-
+        Debug.Log("3");
         ani.SetBool("Walk", true);
 
         rnd = Random.Range(0, wayPoints.Length);
@@ -85,4 +98,18 @@ public class EnemyBasicPatten : MonoBehaviour
 
         canPatrol = true;
     }
+    //---------------------플레이어를 아직 발견하지 못했거나 놓쳤을 때  수색 상태-------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+    //----------------------------------플레이어를 발견해 전투 상태--------------------------------------
 }
