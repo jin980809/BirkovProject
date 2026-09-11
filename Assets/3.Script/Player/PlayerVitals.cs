@@ -5,7 +5,8 @@ using UnityEngine;
 //  - 체력: 자동 재생 없음. TakeDamage / Heal 로만 변동. 0 이면 사망.
 //  - 스테미나: 달리기로 소모, 안 달릴 때 회복.
 //             0 이 되면 exhausted → sprintRecoverThreshold 까지 차야 다시 달리기 가능.
-//  - 허기/수분: 시간에 따라 감소 (달릴 때 배속). 둘 중 하나라도 0 이면 초당 체력이 깎임.
+//  - 허기/수분: 시간에 따라 감소 (달릴 때 배속). 허기가 0 이면 초당 체력이 깎이고,
+//              수분이 0 이면 체력 대신 스테미나 회복 속도가 줄어든다.
 //  - 구르기: dodgeStaminaCost 만큼 소모, 부족하면 구르기 불가.
 public class PlayerVitals : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class PlayerVitals : MonoBehaviour
     [SerializeField] private float dodgeStaminaCost = 25f;
     [Tooltip("0 이 된 뒤 이 값까지 차야 다시 달리기 가능")]
     [SerializeField] private float sprintRecoverThreshold = 30f;
+    [Tooltip("수분이 0 일 때 스테미나 회복 속도 배율 (1 = 정상, 0.4 = 40%로 감소)")]
+    [SerializeField, Range(0f, 1f)] private float dehydratedStaminaRegenMultiplier = 0.4f;
 
     [Header("허기 / 수분")]
     [SerializeField] private float maxHunger = 100f;
@@ -30,7 +33,7 @@ public class PlayerVitals : MonoBehaviour
     [SerializeField] private float waterDrainPerSecond = 0.55f;
     [Tooltip("달리는 중 허기/수분 감소 배율")]
     [SerializeField] private float exertionMultiplier = 2f;
-    [Tooltip("허기 또는 수분이 0 일 때 초당 체력 감소량")]
+    [Tooltip("허기가 0 일 때 초당 체력 감소량")]
     [SerializeField] private float starvationDamagePerSecond = 2f;
 
     [Header("현재 체력 스테미나")]
@@ -176,7 +179,13 @@ public class PlayerVitals : MonoBehaviour
         }
         else if (stamina < maxStamina)
         {
-            stamina = Mathf.Min(maxStamina, stamina + staminaRegenPerSecond * dt);
+            // 수분이 0 이면 스테미나 회복 속도가 줄어든다
+            float regenRate = staminaRegenPerSecond;
+            if (water <= 0f)
+            {
+                regenRate *= dehydratedStaminaRegenMultiplier;
+            }
+            stamina = Mathf.Min(maxStamina, stamina + regenRate * dt);
         }
 
         if (exhausted && stamina >= sprintRecoverThreshold)
@@ -194,7 +203,8 @@ public class PlayerVitals : MonoBehaviour
 
     private void TickStarvation(float dt)
     {
-        if (hunger <= 0f || water <= 0f)
+        // 수분 부족은 체력이 아니라 스테미나 회복 속도에 영향을 준다 (TickStamina 참고)
+        if (hunger <= 0f)
         {
             ReduceHealth(starvationDamagePerSecond * dt);
         }

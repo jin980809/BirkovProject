@@ -42,6 +42,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private PlayerInputHandler input;
     private PlayerVitals vitals; // 선택 - 있으면 스테미나로 달리기/구르기 게이트
+    private WeaponController weapon; // 선택 - 있으면 발사/재장전/무기교체를 위임
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -113,6 +114,7 @@ public class PlayerController : MonoBehaviour
         }
 
         TryGetComponent(out vitals);
+        TryGetComponent(out weapon);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
@@ -389,22 +391,28 @@ public class PlayerController : MonoBehaviour
 
     private void HandleFireStart()
     {
-        if (!CanFire)
+        if (!CanFire || weapon == null)
         {
             return; // 달리는 중 / 구르는 중에는 사격 불가
         }
 
-        // TODO: 무기 발사 시작
+        weapon.TryFire();
     }
 
     private void HandleFireStop()
     {
-        // TODO: 무기 발사 중지 (자동 사격용)
+        if (weapon != null)
+        {
+            weapon.StopFiring();
+        }
     }
 
     private void HandleReload()
     {
-        // TODO: 재장전
+        if (weapon != null)
+        {
+            weapon.TryReload();
+        }
     }
 
     private void HandleInteract()
@@ -419,7 +427,10 @@ public class PlayerController : MonoBehaviour
 
     private void HandleWeaponSelected(int slotIndex)
     {
-        // TODO: 무기 교체 (0 = 1번 슬롯, 1 = 2번 슬롯)
+        if (weapon != null)
+        {
+            weapon.EquipSlot(slotIndex);
+        }
     }
 
     private void HandleQuickSlot(int slotIndex)
