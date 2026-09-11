@@ -263,6 +263,42 @@ namespace Birdkov.NaYeongMin.InventorySystem
             return result;
         }
 
+        public InventoryResult UseRecoveryItem(PlayerInventoryData playerData, int inventoryIndex, IRecoveryTarget target)
+        {
+            if (playerData?.inventory?.slots == null || inventoryIndex < 0 ||
+                inventoryIndex >= playerData.inventory.slots.Count)
+            {
+                return InventoryResult.InvalidSlot;
+            }
+
+            if (!TryGetItem(playerData.inventory, inventoryIndex, out ItemData item))
+            {
+                return InventoryResult.ItemNotFound;
+            }
+
+            if (target == null || item.itemType != ItemType.Consumable ||
+                !IsValidRecovery(item.healthRecovery) || !IsValidRecovery(item.hungerRecovery) ||
+                !IsValidRecovery(item.waterRecovery) ||
+                (item.healthRecovery == 0 && item.hungerRecovery == 0 && item.waterRecovery == 0))
+            {
+                return InventoryResult.DestinationRejected;
+            }
+
+            if (!target.TryApplyRecovery(item.healthRecovery, item.hungerRecovery, item.waterRecovery))
+            {
+                return InventoryResult.DestinationRejected;
+            }
+
+            InventoryMoveResult result = inventoryService.RemoveItem(playerData.inventory, inventoryIndex, 1);
+            SanitizeItemQuickSlots(playerData);
+            return result.Result;
+        }
+
+        private static bool IsValidRecovery(float amount)
+        {
+            return amount >= 0 && !float.IsNaN(amount) && !float.IsInfinity(amount);
+        }
+
         public void ClearOnDeath(PlayerInventoryData playerData)
         {
             playerData?.ClearAll();

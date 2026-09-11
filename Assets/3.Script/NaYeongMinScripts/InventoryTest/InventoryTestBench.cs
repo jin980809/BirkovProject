@@ -20,7 +20,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
     // 본 게임 UI가 아니라 검증용이며 씬 NaYeongMin.unity 에서만 쓴다.
     // Tools > NaYeongMin > 테스트 벤치 구성 으로 씬에 배치한다.
     [RequireComponent(typeof(Canvas))]
-    public sealed class InventoryTestBench : MonoBehaviour
+    public sealed class InventoryTestBench : MonoBehaviour, IRecoveryTarget
     {
         public TextAsset itemCsv;
         public TextAsset dropCsv;
@@ -413,26 +413,32 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            float nextHealth = Mathf.Min(30, health + item.healthRecovery);
-            float nextHunger = Mathf.Min(30, hunger + item.hungerRecovery);
-            float nextWater = Mathf.Min(30, water + item.waterRecovery);
+            InventoryResult result = playerService.UseRecoveryItem(data.inventoryData, bagIndex, this);
+            SetMessage(result == InventoryResult.Success
+                ? item.displayName + " 사용"
+                : "회복 효과가 없거나 사용할 수 없는 상태입니다.");
+            Refresh();
+        }
+
+        // 테스트 전용 수치. 실제 플레이어는 별도 IRecoveryTarget 구현으로 연결한다.
+        public bool TryApplyRecovery(float healthRecovery, float hungerRecovery, float waterRecovery)
+        {
+            float nextHealth = Mathf.Min(30, health + healthRecovery);
+            float nextHunger = Mathf.Min(30, hunger + hungerRecovery);
+            float nextWater = Mathf.Min(30, water + waterRecovery);
 
             if (Mathf.Approximately(nextHealth, health) &&
                 Mathf.Approximately(nextHunger, hunger) &&
                 Mathf.Approximately(nextWater, water))
             {
-                SetMessage("회복 효과가 없거나 이미 최대치입니다.");
-                return;
+                return false;
             }
 
             health = nextHealth;
             hunger = nextHunger;
             water = nextWater;
 
-            inventoryService.RemoveItem(data.inventoryData.inventory, bagIndex, 1);
-            playerService.SanitizeItemQuickSlots(data.inventoryData);
-            SetMessage(item.displayName + " 사용");
-            Refresh();
+            return true;
         }
 
         public void HoverSlot(TestSlotView slot)
