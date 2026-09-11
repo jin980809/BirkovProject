@@ -8,7 +8,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
         Weapon,
         Consumable,
         Material,
-        Other,
         Ammo,
         Currency,
         Sale,
@@ -50,16 +49,17 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public int gridWidth = 1;
         public int gridHeight = 1;
 
+        // 아래는 기획 확정 대기(B-1) 항목이다. 확정되면 CSV 열만 채우면 된다.
+        // 지금은 읽는 코드가 없고 총기와 탄약도 등록되어 있지 않다.
         public float attackDamage;
+        public float range;
+        public float fireRate;              // 발/초. 연사 간격이 필요하면 1f / fireRate 로 계산한다.
         public float reloadSpeed;
-        public float fireRate;
         public int magazineSize;
         public float projectileSpeed;
         public bool automatic;
-        public int pelletCount = 1;
+        public int pelletCount = 1;         // 샷건 산탄 수
         public float maxSpread;
-        public float range;
-        public float attacksPerSecond;
         public int maxDurability;
         public int durabilityCostPerHit;
         public int repairAmountPerCurrency;
