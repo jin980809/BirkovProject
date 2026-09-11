@@ -65,7 +65,7 @@ public class PlayerNoise : MonoBehaviour
                 continue;
             }
 
-            listener.OnHeardNoise(origin);
+            listener.OnHeardNoise(origin, 0);
         }
     }
 
