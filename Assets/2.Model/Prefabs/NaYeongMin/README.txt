@@ -18,3 +18,9 @@ LootDropPool.prefab (기존)
 ItemDatabase/DropTableDatabase는 아직 실제 사용 오브젝트가 없어 이번 프리팹화에서 제외.
 씬 공용 Camera/Light/EventSystem은 중복 배치를 피하려고 묶지 않음.
 CSV/아이콘 원본 경로는 이동하지 않음. 프리팹과 .meta 파일을 함께 커밋할 것.
+
+[2026-09-11] LootRuntime.prefab 추가
+드롭 시스템 단일 진입점. ItemDatabase + DropTableDatabase + LootDropPool + LootRuntime 이
+한 오브젝트에 묶여 있고 CSV 와 LootDropObject.prefab 이 이미 연결되어 있다.
+씬에 하나만 배치하면 되고 호출 측은 Spawn 또는 Roll 만 쓰면 된다.
+상세는 Assets/3.Script/NaYeongMinScripts/Rng/DropTableDatabase_README.txt 참고.

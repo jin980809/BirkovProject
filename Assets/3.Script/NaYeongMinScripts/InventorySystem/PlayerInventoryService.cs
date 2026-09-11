@@ -28,6 +28,18 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return new InventoryMoveResult(InventoryResult.InvalidSlot, 0, amount);
             }
 
+            // 화폐는 가방 칸을 쓰지 않고 보유 수치에 바로 합산한다. 기획서 10.1 [지푸라기에 대해].
+            if (itemCatalog.TryGetItem(itemId, out ItemData currencyItem) && currencyItem.itemType == ItemType.Currency)
+            {
+                if (amount <= 0)
+                {
+                    return new InventoryMoveResult(InventoryResult.InvalidAmount, 0, amount);
+                }
+
+                playerData.currency += amount;
+                return new InventoryMoveResult(InventoryResult.Success, amount, 0);
+            }
+
             InventoryMoveResult result = inventoryService.AddItem(playerData.inventory, itemId, amount);
             SanitizeItemQuickSlots(playerData);
             return result;
@@ -261,6 +273,42 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 playerData.inventory, sourceIndex, playerData.inventory, destinationIndex, amount);
             SanitizeItemQuickSlots(playerData);
             return result;
+        }
+
+        public InventoryResult UseRecoveryItem(PlayerInventoryData playerData, int inventoryIndex, IRecoveryTarget target)
+        {
+            if (playerData?.inventory?.slots == null || inventoryIndex < 0 ||
+                inventoryIndex >= playerData.inventory.slots.Count)
+            {
+                return InventoryResult.InvalidSlot;
+            }
+
+            if (!TryGetItem(playerData.inventory, inventoryIndex, out ItemData item))
+            {
+                return InventoryResult.ItemNotFound;
+            }
+
+            if (target == null || item.itemType != ItemType.Consumable ||
+                !IsValidRecovery(item.healthRecovery) || !IsValidRecovery(item.hungerRecovery) ||
+                !IsValidRecovery(item.waterRecovery) ||
+                (item.healthRecovery == 0 && item.hungerRecovery == 0 && item.waterRecovery == 0))
+            {
+                return InventoryResult.DestinationRejected;
+            }
+
+            if (!target.TryApplyRecovery(item.healthRecovery, item.hungerRecovery, item.waterRecovery))
+            {
+                return InventoryResult.DestinationRejected;
+            }
+
+            InventoryMoveResult result = inventoryService.RemoveItem(playerData.inventory, inventoryIndex, 1);
+            SanitizeItemQuickSlots(playerData);
+            return result.Result;
+        }
+
+        private static bool IsValidRecovery(float amount)
+        {
+            return amount >= 0 && !float.IsNaN(amount) && !float.IsInfinity(amount);
         }
 
         public void ClearOnDeath(PlayerInventoryData playerData)

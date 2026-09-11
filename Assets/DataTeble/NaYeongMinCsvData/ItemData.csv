@@ -1,22 +1,36 @@
-﻿itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlotType,gridWidth,gridHeight,stackable,maxStack,attackDamage,reloadSpeed,fireRate,magazineSize,projectileSpeed,automatic,pelletCount,maxSpread,range,attacksPerSecond,maxDurability,durabilityCostPerHit,repairAmountPerCurrency,defense,healthRecovery,hungerRecovery,waterRecovery
-20001,Currency,지푸라기,새들의 조직에서 사용하는 화폐. 상점에서 사고팔 수 없다.,,,,Assets/4.Sprite/Images/_Icons/Resources/icon_wheat_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-21001,Consumable,회복약,최대 체력의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Fantasy/icon_potion_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,6,0,0
-21002,Consumable,회복키트,최대 체력의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,12,0,0
-21003,Consumable,회복 왕꾸러미,최대 체력의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,27,0,0
-22001,Consumable,물,최대 수분의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,6
-22002,Consumable,중간 물,최대 수분의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,12
-22003,Consumable,대형 물,최대 수분의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,27
-23001,Consumable,밥,최대 허기의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,6,0
-23002,Consumable,중간 밥,최대 허기의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,12,0
-23003,Consumable,대형 밥,최대 허기의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,27,0
-24002,Special,알람시계,제한시간을 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,,0,0,0,0
-24003,Special,위고비,허기 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,,0,0,0,0
-24004,Special,알로에즙,수분 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,,0,0,0,0
-25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/Images/_Icons/Resources/icon_stone_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-27002,Material,파란 버섯,샷건 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-27003,Material,노란 버섯,돌격소총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
-27004,Material,검은 버섯,스나이퍼 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,,0,0,0,0
+﻿itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlotType,gridWidth,gridHeight,stackable,maxStack,attackDamage,reloadSpeed,fireRate,magazineSize,projectileSpeed,automatic,pelletCount,maxSpread,range,maxDurability,durabilityCostPerHit,repairAmountPerCurrency,defense,healthRecovery,hungerRecovery,waterRecovery
+10001,Weapon,기관권총,20발 연사. 탄속은 히트스캔 처리한다.,2,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_pistol_LP.png,,1,1,false,1,3,2,1,20,0,true,1,,1,50,2,10,0,0,0,0
+10002,Weapon,샷건,8발 단발. 1회 발사에 펠릿 6개가 나간다.,3,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_shotgun-shells_LP.png,,1,1,false,1,5,2,3,8,0,false,6,,0.8,50,3,25,0,0,0,0
+10003,Weapon,돌격소총,30발 연사.,5,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_m4_LP.png,,1,1,false,1,8,2,2.5,30,0,true,1,,2.5,90,5,30,0,0,0,0
+10004,Weapon,스나이퍼,5발 단발.,10,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_ak-47_LP.png,,1,1,false,1,12,2,0.8,5,0,false,1,,5,120,8,30,0,0,0,0
+11001,Ammo,기관권총 총알,1박스 20발. 사용 시 기관권총 탄약이 20발 늘어난다.,2,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_pistol-bullets_LP.png,,1,1,false,1,,,,20,,,,,,,,,0,0,0,0
+11002,Ammo,샷건 총알,1박스 20발. 사용 시 샷건 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_shotgun-shells_LP.png,,1,1,false,1,,,,20,,,,,,,,,0,0,0,0
+11003,Ammo,돌격소총 총알,1박스 20발. 사용 시 돌격소총 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_pistol-magazine_LP.png,,1,1,false,1,,,,20,,,,,,,,,0,0,0,0
+11004,Ammo,스나이퍼 총알,1박스 20발. 사용 시 스나이퍼 탄약이 20발 늘어난다.,5,,,Assets/4.Sprite/Images/_Icons/Weapons/icon_pistol-bullets-special_LP.png,,1,1,false,1,,,,20,,,,,,,,,0,0,0,0
+13001,Equipment,구형 헬멧,피격 데미지를 1 차감한다.,3,,,Assets/4.Sprite/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,false,1,,,,,,,,,,,,0,1,0,0,0
+13002,Equipment,튼튼 헬멧,피격 데미지를 2 차감한다.,5,,,Assets/4.Sprite/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,false,1,,,,,,,,,,,,0,2,0,0,0
+13003,Equipment,최고급 헬멧,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,false,1,,,,,,,,,,,,0,,0,0,0
+12001,Equipment,구형 조끼,기획서 표기는 피격 데미지 10% 감소. 감쇄 방식 확정 대기.,3,,,Assets/4.Sprite/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,false,1,,,,,,,,,,,,0,,0,0,0
+12002,Equipment,튼튼 조끼,기획서 표기는 피격 데미지 20% 감소. 감쇄 방식 확정 대기.,5,,,Assets/4.Sprite/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,false,1,,,,,,,,,,,,0,,0,0,0
+12003,Equipment,최고급 조끼,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,false,1,,,,,,,,,,,,0,,0,0,0
+20001,Currency,지푸라기,새들의 조직에서 사용하는 화폐. 상점에서 사고팔 수 없다.,,,,Assets/4.Sprite/Images/_Icons/Resources/icon_wheat_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+21001,Consumable,회복약,최대 체력의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Fantasy/icon_potion_LP.png,,1,1,true,5,,,,,,,,,,,,,0,6,0,0
+21002,Consumable,회복키트,최대 체력의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,true,5,,,,,,,,,,,,,0,12,0,0
+21003,Consumable,회복 왕꾸러미,최대 체력의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,true,5,,,,,,,,,,,,,0,27,0,0
+22001,Consumable,물,최대 수분의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,6
+22002,Consumable,중간 물,최대 수분의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,12
+22003,Consumable,대형 물,최대 수분의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,27
+23001,Consumable,밥,최대 허기의 20%를 회복한다.,1,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,6,0
+23002,Consumable,중간 밥,최대 허기의 40%를 회복한다.,2,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,12,0
+23003,Consumable,대형 밥,최대 허기의 90%를 회복한다.,5,,,Assets/4.Sprite/Images/_Icons/Food/icon_sushi_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,27,0
+24002,Special,알람시계,제한시간을 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,0,0,0,0
+24003,Special,위고비,허기 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,0,0,0,0
+24004,Special,알로에즙,수분 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,,,1,1,false,1,,,,,,,,,,,,,0,0,0,0
+25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/Images/_Icons/Resources/icon_stone_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+27002,Material,파란 버섯,샷건 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+27003,Material,노란 버섯,돌격소총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0
+27004,Material,검은 버섯,스나이퍼 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/Images/_Icons/Survival/icon_mushroom-boletus_LP.png,,1,1,true,5,,,,,,,,,,,,,0,0,0,0

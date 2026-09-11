@@ -20,11 +20,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
     // 본 게임 UI가 아니라 검증용이며 씬 NaYeongMin.unity 에서만 쓴다.
     // Tools > NaYeongMin > 테스트 벤치 구성 으로 씬에 배치한다.
     [RequireComponent(typeof(Canvas))]
-    public sealed class InventoryTestBench : MonoBehaviour
+    public sealed class InventoryTestBench : MonoBehaviour, IRecoveryTarget
     {
         public TextAsset itemCsv;
         public TextAsset dropCsv;
         public Font font;
+        [Tooltip("단독 테스트에서만 사용. 팀원 입력 이벤트 연결 시 끌 것.")]
+        public bool useStandaloneKeyboard = true;
         public TestIconBinding[] icons = Array.Empty<TestIconBinding>();
 
         private const int BagCell = 66;
@@ -84,12 +86,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             List<ItemData> items = ItemCsvLoader.Parse(itemCsv.text);
 
-            // CSV에 총기와 방어구가 아직 없어 슬롯 규칙을 볼 수 없다.
-            // 확인용 임시 데이터만 메모리에 추가한다. CSV 원본은 건드리지 않는다.
-            items.Add(new ItemData { itemId = 990001, itemType = ItemType.Weapon, displayName = "임시 기관권총", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990002, itemType = ItemType.Weapon, displayName = "임시 샷건", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990101, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Helmet, displayName = "임시 헬멧", maxStack = 1 });
-            items.Add(new ItemData { itemId = 990102, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Armor, displayName = "임시 방탄복", maxStack = 1 });
 
             catalog = new ItemCatalog(items);
             inventoryService = new InventoryService(catalog);
@@ -124,14 +120,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
             }
 
-            playerService.AddToInventory(data.inventoryData, 990001, 1);
-            playerService.AddToInventory(data.inventoryData, 990002, 1);
-            playerService.AddToInventory(data.inventoryData, 990101, 1);
-            playerService.AddToInventory(data.inventoryData, 990102, 1);
+            // 무기 2종과 보호구 2종. 장비 슬롯 규칙을 눈으로 확인하는 용도다.
+            foreach (int id in new[] { 10001, 10002, 13001, 12001 })
+            {
+                playerService.AddToInventory(data.inventoryData, id, 1);
+            }
 
             inventoryService.AddItem(data.warehouseData, 23001, 5);
 
-            SetMessage("초기화 완료. 무기와 방어구는 가방에 들어갑니다. 자동 착용되지 않습니다.");
+            SetMessage("초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
             Refresh();
         }
 
@@ -413,26 +410,32 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            float nextHealth = Mathf.Min(30, health + item.healthRecovery);
-            float nextHunger = Mathf.Min(30, hunger + item.hungerRecovery);
-            float nextWater = Mathf.Min(30, water + item.waterRecovery);
+            InventoryResult result = playerService.UseRecoveryItem(data.inventoryData, bagIndex, this);
+            SetMessage(result == InventoryResult.Success
+                ? item.displayName + " 사용"
+                : "회복 효과가 없거나 사용할 수 없는 상태입니다.");
+            Refresh();
+        }
+
+        // 테스트 전용 수치. 실제 플레이어는 별도 IRecoveryTarget 구현으로 연결한다.
+        public bool TryApplyRecovery(float healthRecovery, float hungerRecovery, float waterRecovery)
+        {
+            float nextHealth = Mathf.Min(30, health + healthRecovery);
+            float nextHunger = Mathf.Min(30, hunger + hungerRecovery);
+            float nextWater = Mathf.Min(30, water + waterRecovery);
 
             if (Mathf.Approximately(nextHealth, health) &&
                 Mathf.Approximately(nextHunger, hunger) &&
                 Mathf.Approximately(nextWater, water))
             {
-                SetMessage("회복 효과가 없거나 이미 최대치입니다.");
-                return;
+                return false;
             }
 
             health = nextHealth;
             hunger = nextHunger;
             water = nextWater;
 
-            inventoryService.RemoveItem(data.inventoryData.inventory, bagIndex, 1);
-            playerService.SanitizeItemQuickSlots(data.inventoryData);
-            SetMessage(item.displayName + " 사용");
-            Refresh();
+            return true;
         }
 
         public void HoverSlot(TestSlotView slot)
@@ -569,16 +572,19 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) { selectedWeapon = 0; Refresh(); }
-            if (Input.GetKeyDown(KeyCode.Alpha2)) { selectedWeapon = 1; Refresh(); }
-            if (Input.GetKeyDown(KeyCode.Alpha3)) { UseItemQuickSlot(0); }
-            if (Input.GetKeyDown(KeyCode.Alpha4)) { UseItemQuickSlot(1); }
-            if (Input.GetKeyDown(KeyCode.Alpha5)) { UseItemQuickSlot(2); }
-
-            if (Input.GetKeyDown(KeyCode.E) && hovered != null &&
-                (hovered.container == TestContainer.Loot || hovered.container == TestContainer.Warehouse))
+            if (useStandaloneKeyboard)
             {
-                Take(hovered.container, hovered.index);
+                if (Input.GetKeyDown(KeyCode.Alpha1)) { selectedWeapon = 0; Refresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha2)) { selectedWeapon = 1; Refresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha3)) { UseItemQuickSlot(0); }
+                if (Input.GetKeyDown(KeyCode.Alpha4)) { UseItemQuickSlot(1); }
+                if (Input.GetKeyDown(KeyCode.Alpha5)) { UseItemQuickSlot(2); }
+
+                if (Input.GetKeyDown(KeyCode.E) && hovered != null &&
+                    (hovered.container == TestContainer.Loot || hovered.container == TestContainer.Warehouse))
+                {
+                    Take(hovered.container, hovered.index);
+                }
             }
 
             if (status != null && Time.unscaledTime > messageUntil)
@@ -643,9 +649,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (statsText != null)
             {
                 statsText.text = string.Format(
-                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    선택 무기 {3}번    창고 {4}",
+                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    지푸라기 {5}    선택 무기 {3}번    창고 {4}",
                     health, hunger, water, selectedWeapon + 1,
-                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘");
+                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘",
+                    data.inventoryData.currency);
             }
         }
 

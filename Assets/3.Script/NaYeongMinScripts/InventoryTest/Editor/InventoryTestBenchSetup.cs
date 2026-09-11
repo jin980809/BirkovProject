@@ -13,18 +13,46 @@ namespace Birdkov.NaYeongMin.InventoryTest.EditorTools
     // 팀원 씬과 파일은 건드리지 않는다.
     public static class InventoryTestBenchSetup
     {
-        private const string ScenePath = "Assets/1.Scene/NaYeongMin.unity";
+        // 씬 위치는 정리 과정에서 바뀔 수 있으므로 경로를 박아두지 않고 이름으로 찾는다.
+        private const string SceneName = "NaYeongMin";
+
+        private static string FindScenePath()
+        {
+            foreach (string guid in AssetDatabase.FindAssets(SceneName + " t:Scene"))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (System.IO.Path.GetFileNameWithoutExtension(path) == SceneName)
+                {
+                    return path;
+                }
+            }
+
+            return string.Empty;
+        }
+
         private const string ItemCsvPath = "Assets/DataTeble/NaYeongMinCsvData/ItemData.csv";
         private const string DropCsvPath = "Assets/DataTeble/NaYeongMinCsvData/DropTable.csv";
 
         [MenuItem("Tools/NaYeongMin/테스트 벤치 구성")]
         public static void Build()
         {
-            if (EditorSceneManager.GetActiveScene().path != ScenePath)
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("Play를 종료한 뒤 테스트 벤치를 구성하세요.");
+                return;
+            }
+            string scenePath = FindScenePath();
+            if (string.IsNullOrEmpty(scenePath))
+            {
+                Debug.LogError(SceneName + " 씬을 찾지 못했습니다. 씬 이름이 바뀌었는지 확인하세요.");
+                return;
+            }
+
+            if (EditorSceneManager.GetActiveScene().path != scenePath)
             {
                 if (!EditorUtility.DisplayDialog(
                         "테스트 벤치 구성",
-                        "NaYeongMin 씬을 열고 진행할까요? 저장하지 않은 변경은 확인 후 처리됩니다.",
+                        scenePath + " 을(를) 열고 진행할까요? 저장하지 않은 변경은 확인 후 처리됩니다.",
                         "열고 진행", "취소"))
                 {
                     return;
@@ -35,10 +63,16 @@ namespace Birdkov.NaYeongMin.InventoryTest.EditorTools
                     return;
                 }
 
-                EditorSceneManager.OpenScene(ScenePath);
+                EditorSceneManager.OpenScene(scenePath);
             }
 
-            InventoryTestBench bench = Object.FindFirstObjectByType<InventoryTestBench>();
+            var scene = EditorSceneManager.GetActiveScene();
+            InventoryTestBench bench = null;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                bench = root.GetComponentInChildren<InventoryTestBench>(true);
+                if (bench != null) break;
+            }
             if (bench == null)
             {
                 GameObject canvasObject = new GameObject(
@@ -65,7 +99,11 @@ namespace Birdkov.NaYeongMin.InventoryTest.EditorTools
 
             EditorUtility.SetDirty(bench);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            EditorSceneManager.SaveOpenScenes();
+            if (PrefabUtility.IsPartOfPrefabInstance(bench))
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(bench);
+            }
+            EditorSceneManager.SaveScene(scene);
 
             Debug.Log($"테스트 벤치 구성 완료. 아이콘 {bench.icons.Length}개 연결. Play 를 눌러 확인하세요.");
         }

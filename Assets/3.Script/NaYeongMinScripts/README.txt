@@ -1,14 +1,14 @@
-NaYeongMin 담당 시스템 연결 지침
+﻿NaYeongMin 담당 시스템 연결 지침
 
 1. ItemDatabase 컴포넌트의 itemDataCsv에 Assets/DataTeble/NaYeongMinCsvData/ItemData.csv를 연결한다.
-2. UI는 PlayerInventoryService만 호출한다. 가방 25칸, 무기 5칸, 퀵슬롯 3칸은 PlayerInventoryData가 생성한다.
-3. 무기 슬롯 0~1은 장착, 2~4는 보관이다. 현재 데이터 계층은 5칸 모두 무기만 허용한다. 실제 장착 효과는 전투 시스템 연결 시 0~1만 사용한다.
-4. 적/상자 사망 또는 개봉 시 DropRoller.Roll을 호출한다. 결과는 최대 8칸이며 이후 성공분은 폐기된다.
-5. Assets/2.Model/Prefabs/NaYeongMin/LootDropPool.prefab은 LootDropObject.prefab과 연결되어 있고 30개를 선생성한다. 전리품이 비면 NotifyContentsChanged를 호출해 풀로 반환한다. 외형·콜라이더는 아트/상호작용 연결 시 추가한다.
+2. UI는 PlayerInventoryService만 호출한다. 가방 25칸, 장비 4칸, 아이템 퀵슬롯 3칸(가방 인덱스 매핑)을 PlayerInventoryData가 생성한다. 상세는 15·16항.
+3. 장비 슬롯은 0 주 무기 / 1 보조 무기 / 2 머리 / 3 몸통이다. 무기 퀵슬롯 2칸은 0·1을 그대로 비추는 링크다. 착용 전 무기와 방어구는 가방에 보관한다. 상세는 15·16항.
+4. 적 사망 또는 상자 개봉 시 LootRuntime.Spawn 또는 Roll을 호출한다. 결과 칸 수는 컨테이너 크기를 따르며 초과 당첨분은 폐기된다. 상세는 12·13항.
+5. Assets/2.Model/Prefabs/NaYeongMin/LootRuntime.prefab 하나만 씬에 올리면 CSV 로드와 풀 초기화까지 끝난다. 풀은 LootDropObject.prefab을 30개 선생성한다. 전리품이 비면 NotifyContentsChanged를 호출해 풀로 반환한다. 외형·콜라이더는 아트/상호작용 연결 시 추가한다.
 6. 플레이어 사망 이벤트에서 PlayerInventoryService.ClearOnDeath를 호출한다. 창고 데이터는 전달하지 않으므로 유지된다.
 7. JsonSaveSystem.Save/TryLoad를 사용한다. 주 파일 손상 시 .backup.json을 읽어 복구한다.
 8. 씬, 플레이어, 전투, UI와 직접 참조하지 않도록 작성됨. 연결 어댑터는 각 담당자 머지 후 추가한다.
-9. 기존 아이템 ID 엑셀은 분류·명칭 참고자료로 응용한다. ID를 그대로 복사하지 않고 프로젝트용 ID로 구성한다. CSV에는 비무기 21종이 등록되어 있다.
+9. 아이템 ID 체계는 Assets/DataTeble/NaYeongMinCsvData/ItemDataNotes.txt에 확정 기록되어 있다. 1xxxx 장비류(10 총기 / 11 탄약 / 12 방탄복 / 13 헬멧), 2xxxx 소모품과 재화. 탄약 ID는 무기 ID + 1000이다. ID는 저장 파일에 쓰이므로 변경하지 않는다. CSV에는 비무기 21종이 등록되어 있고 총기·탄약·방어구는 수치 확정 대기라 미등록이다.
 10. 드롭 풀은 기본 30개이며 고갈 시 Rent가 null을 반환한다. 호출 측은 null을 확인해야 한다. 자동 확장·기존 전리품 강제 회수는 하지 않는다. 추후 initialSize 설정을 늘려 확장할 수 있다.
 
 [2026-09-10 갱신] 창고 / 상자 가변 크기 / 드롭 테이블 / 장비 슬롯
@@ -94,3 +94,75 @@ NaYeongMin 담당 시스템 연결 지침
 20. 아이콘: 로우폴리 아이콘 에셋을 실험적으로 사용 중이며 추후 교체될 수 있다.
     교체 시 CSV 의 iconKey 열만 갱신하면 되고 코드 수정은 없다.
     미확보 항목은 임의 대체하지 않았다. 상세는 ItemDataNotes.txt 참고.
+
+[2026-09-11 갱신] 아이템 데이터 필드 정리와 ID 체계 확정
+
+23. ItemData 필드 정리
+    제거 : attacksPerSecond  -> fireRate 와 중복이었고, 로더의
+           GetAny("attacksPerSecond", "fireRate") 폴백이 값을 조용히 복제하고 있었다.
+           공격속도는 fireRate 단일 필드로 통일한다. 단위는 발/초이며
+           연사 간격이 필요하면 1f / fireRate 로 계산한다.
+    제거 : ItemType.Other    -> 코드와 CSV 양쪽에서 쓰이지 않았다.
+    유지 : weight, rarity, defense 는 현재 읽는 코드가 없지만 유지하기로 확정했다.
+    CSV 열 29개.
+
+24. 확정 대기(B-1) 상태로 남겨 둔 필드
+    attackDamage / range / fireRate / reloadSpeed / magazineSize / projectileSpeed /
+    automatic / pelletCount / maxSpread / maxDurability / durabilityCostPerHit /
+    repairAmountPerCurrency
+    전부 기획에 수치를 요청해 둔 항목이다. 확정되면 CSV 열만 채우면 되고 코드 수정은 없다.
+    기획서 10.2 의 공격속도 열 이름(초/횟수)과 해설(1초당 발사 횟수)이 서로 역수라
+    단위 확정이 함께 필요하다.
+
+25. 아이템 ID 체계 (확정)
+    1xxxx 장비류
+      10001~10004 총기 4종   10001 기관권총 / 10002 샷건 / 10003 돌격소총 / 10004 스나이퍼
+      11001~11004 탄약 4종   무기 ID + 1000. 10002 샷건 -> 11002 샷건 총알
+      12001~12009 방탄복     몸통. equipmentSlotType = Armor
+      13001~13009 헬멧       머리. equipmentSlotType = Helmet
+    2xxxx 소모품과 재화
+      20001 화폐 / 21001~21003 체력 / 22001~22003 수분 / 23001~23003 허기 /
+      24002~24004 특수 / 25001 화약 / 26001~26003 판매용 / 27001~27004 채집 버섯
+    버섯 하위 자리가 총기 인덱스와 같다. 27001 빨강 -> 10001 기관권총 / 11001 총알.
+    제작 레시피(버섯 5 + 화약 5 = 1박스)도 27000+n -> 11000+n 으로 유도된다.
+    ID 는 저장 파일에 쓰이므로 이름이나 아이콘이 바뀌어도 변경하지 않는다.
+    상세는 ItemDataNotes.txt 참고.
+
+26. 테스트 벤치 임시 아이템
+    990001 임시 기관권총 -> 10001 / 990002 임시 샷건 -> 10002
+    990101 임시 헬멧     -> 13001 / 990102 임시 방탄복 -> 12001
+    InventoryTestBench 가 메모리로만 추가하며 CSV 에는 없다.
+    실제 아이템이 등록되면 정식 ID 로 교체한다.
+
+[2026-09-11 갱신] 기획서 3차 수정 반영
+
+27. 지푸라기는 가방을 차지하지 않는다
+    PlayerInventoryData.currency 에 합산된다. AddToInventory 가 itemType 이 Currency 면
+    가방 대신 이 수치를 올리고 Success 를 돌려준다. 가방이 꽉 차 있어도 들어온다.
+    전리품 UI 에서는 한 칸을 차지하며, 획득하는 순간 가방을 거치지 않고 수치로 합산된다.
+    사망 시 ClearOnDeath 로 0 이 된다. 창고는 영향받지 않는다.
+    저장 포맷 saveVersion 4.
+
+28. 저장 시점 확정 (기획서 5.5)
+    탈출 성공 시 / 사망 처리 시 / 상점 매매 완료 시. 단일 슬롯 자동 저장.
+    게임 흐름 담당이 이 세 시점에 JsonSaveSystem.Save 를 호출한다.
+
+29. 등록된 아이템 35종
+    무기 4 (10001~10004) / 탄약 4 (11001~11004) /
+    조끼 3 (12001~12003) / 헬멧 3 (13001~13003) / 기존 비무기 21종.
+    드롭 테이블 81행. 보호구는 확률표 미비로 아직 넣지 않았다.
+
+30. magazineSize 열의 이중 의미
+    무기 행에서는 탄창 용량, 탄약 행에서는 1박스당 발수(20)를 뜻한다.
+    열을 새로 만들지 않으려고 재사용했으니 읽는 쪽에서 itemType 으로 구분할 것.
+
+31. 테스트 벤치가 정식 아이템을 쓴다
+    임시 아이템 990001·990002·990101·990102 는 제거했다.
+    이제 10001 기관권총 / 10002 샷건 / 13001 구형 헬멧 / 12001 구형 조끼 를 지급한다.
+    화면 스탯 줄에 지푸라기 보유 수치가 표시된다.
+
+32. 확정 대기 (ItemDataNotes.txt 에 상세)
+    - 보호구 감쇄 방식: 고정 차감과 비율이 섞여 있어 defense 를 2종만 채웠다.
+    - 보호구 최대 내구도 수치 없음.
+    - 10.3 보호구 드롭 확률 불완전.
+    - 공격속도 단위(초/횟수 vs 발/초)가 여전히 역수로 충돌.

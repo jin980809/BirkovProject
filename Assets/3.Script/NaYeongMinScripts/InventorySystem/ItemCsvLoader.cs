@@ -53,7 +53,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
                     pelletCount = Math.Max(1, ParseInt(Get(row, headers, "pelletCount"), 1)),
                     maxSpread = ParseFloat(Get(row, headers, "maxSpread")),
                     range = ParseFloat(Get(row, headers, "range")),
-                    attacksPerSecond = ParseFloat(GetAny(row, headers, "attacksPerSecond", "fireRate")),
                     maxDurability = ParseInt(Get(row, headers, "maxDurability")),
                     durabilityCostPerHit = ParseInt(Get(row, headers, "durabilityCostPerHit")),
                     repairAmountPerCurrency = ParseInt(Get(row, headers, "repairAmountPerCurrency")),

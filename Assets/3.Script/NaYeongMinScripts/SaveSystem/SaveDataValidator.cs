@@ -7,8 +7,14 @@ namespace Birdkov.NaYeongMin.SaveSystem
     {
         // 2: 퀵슬롯이 컨테이너에서 가방 인덱스 매핑으로 바뀜.
         // 3: 무기 슬롯 5칸이 장비 슬롯 4칸(무기2 / 머리 / 몸)으로 바뀜.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
+        // 4: 지푸라기가 가방을 쓰지 않는 화폐 수치(currency)로 분리됨.
         // 이전 버전 세이브는 로드하지 않는다. 마이그레이션은 만들지 않았다.
-        public const int CurrentSaveVersion = 3;
+        public const int CurrentSaveVersion = 4;
 
         public static bool IsValid(PlayerSaveData data)
         {
@@ -23,6 +29,12 @@ namespace Birdkov.NaYeongMin.SaveSystem
                        InventorySettings.EquipmentSlotCount,
                        1) &&
                    AreItemQuickSlotsValid(data.inventoryData) &&
+                   data.inventoryData.currency >= 0 &&
+                   data.inventoryData.currency >= 0 &&
+                   data.inventoryData.currency >= 0 &&
+                   data.inventoryData.currency >= 0 &&
+                   data.inventoryData.currency >= 0 &&
+                   data.inventoryData.currency >= 0 &&
                    IsContainerValid(data.warehouseData);
         }
 
