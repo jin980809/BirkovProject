@@ -1400,6 +1400,7 @@ MonoBehaviour:
   edgeDistanceThreshold: 0.5
   edgeFade: 0.8
   angleFade: 25
+  aimSource: {fileID: 0}
 --- !u!23 &542715768
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2213,6 +2214,8 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  animator: {fileID: 0}
+  animDamp: 0.12
 --- !u!114 &1092420355
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2584,7 +2587,7 @@ Transform:
   m_GameObject: {fileID: 1092420353}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.5, y: -0.346, z: -5.39}
+  m_LocalPosition: {x: 1.99, y: -0.346, z: 4.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2713,9 +2716,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   player: {fileID: 1092420354}
   followTarget: {fileID: 0}
-  mouseInfluence: 0.35
-  maxOffset: 2
-  followSmoothTime: 0.15
+  maxMouseOffset: 4
 --- !u!4 &1159571711
 Transform:
   m_ObjectHideFlags: 0
@@ -6556,7 +6557,7 @@ Transform:
   m_GameObject: {fileID: 2744684451697714230}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: 0.22037995, y: 0.45, z: -1.6626701}
+  m_LocalPosition: {x: -3.01, y: 0.45, z: -6.06}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7862,8 +7863,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b179227d3d028b4d9bc0974b8c5844a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDetect
-  viewRadius: 10
-  viewAngle: 77
+  rayDistance: 10
+  viewAngle: 51
+  rayCount: 5
+  detectInterval: 0.2
   targetMask:
     serializedVersion: 2
     m_Bits: 256
@@ -7871,10 +7874,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   visibleTargets: {fileID: 0}
-  targetsInViewRadius:
-  - {fileID: 0}
+  visibleTargetsV3: {x: 0, y: 0, z: 0}
   currentDetection: 0
   decrease: 0
+  walkPoints: 10
+  runPoints: 15
 --- !u!4 &9057396531849466380
 Transform:
   m_ObjectHideFlags: 0
