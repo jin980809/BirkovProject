@@ -12,7 +12,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
         Die         //사망
     }
 
-    public EnemyState enemyState { get; private set; }
+    public EnemyState enemyState; // { get; private set; }
 
     [Header("시야")]
     [SerializeField] private float rayDistance = 10f;
@@ -64,7 +64,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
     private void Update()
     {
-        if (currentDetection > 0f && searchCheck)
+        if ((currentDetection > 0f && searchCheck) || currentDetection > 60f)
         {
             currentDetection -= decrease * Time.deltaTime;
         }
@@ -90,6 +90,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
         switch (a)
         {
             case 0: //걷기
+                
                 currentDetection += walkPoints;
                 break;
             case 1: //뛰기
@@ -99,6 +100,13 @@ public class EnemyDetect : MonoBehaviour, IHearing
                 currentDetection += shotPoints;
                 break;
         }
+
+        if (currentDetection > 100f)
+        {
+            currentDetection = 100f;
+        }
+
+        visibleTargetsV3 = source;
     }
 
     //-------------------------적 시야 메서드 -----------------------------
@@ -153,7 +161,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
                 dirToTarget = (target.position - transform.position).normalized; //실제로 플레이어가 있는 방향 저장
 
                 visibleTargets = target; //현재 발견한 플레이어를 저장
-                visibleTargetsV3 = target.position;
+                visibleTargetsV3 = target.position; //마지막으로 본 플레이어 위치
 
                currentDetection = 100f; //감지도 변경
 
@@ -199,7 +207,27 @@ public class EnemyDetect : MonoBehaviour, IHearing
     {
         return visibleTargetsV3;
     }
+
+    public EnemyState EnemyStatePatrolChange()
+    {
+        return enemyState = EnemyState.Patrol;
+    }
+
     //--------------------------- 기타 메서드 -----------------------------
+    public void PositionReset()
+    {
+        visibleTargets = null;
+    }
+
+    public void SearchCheckOn()
+    {
+        searchCheck = true;
+    }
+
+    public void SearchCheckOff()
+    {
+        searchCheck = false;
+    }
 
     //각도 변환
     public Vector3 DirFromAngle(float angleDegrees, bool angleIsGlobal)
