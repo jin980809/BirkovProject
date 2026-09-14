@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b7c70c968fdf7c34db64bd6eaaafd0d4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 391816
+  packageName: Tiny Bird Duo PBR Polyart
+  packageVersion: 1.0
+  assetPath: Assets/TinyBirdDuo/Animator&Mask/DefaultAnimator.controller
+  uploadId: 949218

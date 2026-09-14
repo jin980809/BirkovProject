@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9a866041aa07b0a4191cf29ad9205aad
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 391816
+  packageName: Tiny Bird Duo PBR Polyart
+  packageVersion: 1.0
+  assetPath: Assets/TinyBirdDuo/Animator&Mask/RootMotion&AnimBlending/AnimBlendingAnimator.controller
+  uploadId: 949218
