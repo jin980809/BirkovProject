@@ -51,6 +51,9 @@ public class PlayerVision : MonoBehaviour
     [Tooltip("설정하면 시야가 이 컨트롤러의 조준(마우스) 방향을 향한다. 비우면 자기 transform.forward. 부모에서 자동 탐색.")]
     [SerializeField] private PlayerController aimSource;
 
+    private bool directionLocked;
+    private Vector3 frozenFacingDirection = Vector3.forward; // 잠근 순간의 방향
+
     private Mesh viewMesh;
 
     // 재사용 버퍼 (프레임당 힙 할당 방지)
@@ -111,11 +114,42 @@ public class PlayerVision : MonoBehaviour
         RefreshHideables();
     }
 
+    private void OnEnable()
+    {
+        if (aimSource != null)
+        {
+            aimSource.ControlLockChanged += HandleControlLockChanged;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (aimSource != null)
+        {
+            aimSource.ControlLockChanged -= HandleControlLockChanged;
+        }
+    }
+
     private void LateUpdate()
     {
+        // 잠긴 동안에도 시야각 표시/판정은 그대로 계속 돈다 - 방향만 고정된 채로 (다가오는 적을
+        // 놓치지 않기 위해서다). GetFacingDirection() 이 잠금 여부를 알아서 처리한다.
         DrawFieldOfView();
         UpdateVisionShaderGlobals();
         UpdateHideableVisibility();
+    }
+
+    // PlayerController.ControlLockChanged 구독 - 상자 UI 등으로 조작이 잠기면 호출된다.
+    // 잠그면: 시야각 "방향"이 그 순간 방향으로 고정되고(마우스를 더 이상 안 따라감) 그 상태로
+    // 계속 표시/판정된다. 화면 표시 자체는 끄지 않는다 - 다가오는 적을 계속 볼 수 있어야 하기 때문.
+    private void HandleControlLockChanged(bool locked)
+    {
+        if (locked && !directionLocked)
+        {
+            frozenFacingDirection = GetFacingDirection(); // 잠그는 순간의 방향을 그대로 고정
+        }
+
+        directionLocked = locked;
     }
 
     // 오버레이 셰이더(VisionOverlaySoft)가 경계 그라데이션을 계산하는 데 쓰는 전역 값
@@ -390,6 +424,11 @@ public class PlayerVision : MonoBehaviour
     // → 달릴 때 몸은 이동 방향을 봐도 시야는 마우스를 향한다.
     private Vector3 GetFacingDirection()
     {
+        if (directionLocked)
+        {
+            return frozenFacingDirection; // 잠긴 동안에는 마우스를 더 이상 따라가지 않고 고정된 방향을 쓴다
+        }
+
         if (aimSource != null && aimSource.HasAimPoint)
         {
             Vector3 dir = aimSource.AimWorldPoint - transform.position;

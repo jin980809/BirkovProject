@@ -23,11 +23,29 @@ public class WeaponController : MonoBehaviour
     [Header("연결")]
     [SerializeField] private WeaponInventoryBridge inventoryBridge;
     [SerializeField] private Transform firePoint;
-    [SerializeField] private Projectile projectilePrefab;
+    [SerializeField] private BulletPool bulletPool;
     [SerializeField] private Collider ownerCollider; // 자기 자신과의 충돌 무시용, 비우면 자동 탐색
 
     [Header("탄약 매핑 (나중에 여기서 자유롭게 추가/수정)")]
     [SerializeField] private WeaponAmmoMapping[] ammoMappings = Array.Empty<WeaponAmmoMapping>();
+
+    [Header("테스트용 무기 (실제 CSV 총기 데이터 나오기 전 임시)")]
+    [Tooltip("가방에 장착된 무기가 없을 때 이 임시 스펙으로 대신 장착한다")]
+    [SerializeField] private bool useDebugWeapon;
+    [SerializeField] private float debugFireRate = 5f;
+    [SerializeField] private int debugMagazineSize = 12;
+    [SerializeField] private float debugDamage = 10f;
+    [SerializeField] private float debugProjectileSpeed = 40f;
+    [SerializeField] private float debugRange = 30f;
+    [SerializeField] private float debugMaxSpread = 3f;
+    [SerializeField] private int debugPelletCount = 1;
+    [SerializeField] private bool debugAutomatic = true;
+
+    [Header("블룸 (연사할수록 퍼지고, 안 쏘면 다시 좁혀짐)")]
+    [Tooltip("한 발 쏠 때마다 maxSpread 의 이 비율만큼 현재 퍼짐이 늘어난다")]
+    [SerializeField] private float bloomGrowthFraction = 0.25f;
+    [Tooltip("초당 maxSpread 의 이 비율만큼 현재 퍼짐이 줄어든다")]
+    [SerializeField] private float bloomRecoverFraction = 1.5f;
 
     private PlayerController player;
     private PlayerNoise noise;
@@ -38,6 +56,7 @@ public class WeaponController : MonoBehaviour
 
     private bool fireHeld;
     private float nextFireReadyTime;
+    private float currentSpreadDegrees; // 0(완전 정조준) ~ equippedWeapon.maxSpread
 
     public bool HasWeaponEquipped
     {
@@ -49,6 +68,20 @@ public class WeaponController : MonoBehaviour
         get { return equippedSlotIndex >= 0 ? ammoInMagazine[equippedSlotIndex] : 0; }
     }
 
+    // 크로스헤어 UI 가 읽는 값. 0(정조준) ~ 1(그 무기의 최대 퍼짐)
+    public float CurrentSpreadNormalized
+    {
+        get
+        {
+            if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01(currentSpreadDegrees / equippedWeapon.maxSpread);
+        }
+    }
+
     private void Awake()
     {
         TryGetComponent(out player);
@@ -57,6 +90,12 @@ public class WeaponController : MonoBehaviour
         if (inventoryBridge == null)
         {
             inventoryBridge = GetComponent<WeaponInventoryBridge>();
+        }
+
+        if (bulletPool == null)
+        {
+            // BulletPool 은 이제 Player 가 아니라 별도 최상위 오브젝트에 있으므로 씬에서 찾는다
+            bulletPool = FindAnyObjectByType<BulletPool>();
         }
 
         if (ownerCollider == null)
@@ -72,6 +111,8 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        RecoverBloom();
+
         // 자동 사격 무기는 발사 버튼을 누르고 있는 동안 쿨다운마다 계속 나간다
         if (fireHeld && equippedWeapon != null && equippedWeapon.automatic)
         {
@@ -84,23 +125,46 @@ public class WeaponController : MonoBehaviour
     // slotIndex: 0 = 주 무기, 1 = 보조 무기
     public void EquipSlot(int slotIndex)
     {
-        if (inventoryBridge == null || !inventoryBridge.TryGetEquippedWeapon(slotIndex, out ItemData weapon))
+        ItemData weapon = null;
+        if (inventoryBridge != null)
         {
-            equippedWeapon = null;
-            equippedSlotIndex = -1;
-        }
-        else
-        {
-            equippedWeapon = weapon;
-            equippedSlotIndex = slotIndex;
+            inventoryBridge.TryGetEquippedWeapon(slotIndex, out weapon);
         }
 
+        if (weapon == null && useDebugWeapon)
+        {
+            weapon = BuildDebugWeapon();
+            ammoInMagazine[slotIndex] = weapon.magazineSize; // 테스트 편의상 가득 채워서 시작
+        }
+
+        equippedWeapon = weapon;
+        equippedSlotIndex = weapon != null ? slotIndex : -1;
         nextFireReadyTime = 0f; // 무기를 바꾸면 발사 쿨다운은 리셋
+        currentSpreadDegrees = 0f; // 이전 무기의 블룸은 안 이어받는다
 
         if (player != null)
         {
             player.SetArmed(equippedWeapon != null);
         }
+    }
+
+    // 실제 CSV에 총기 데이터가 없을 때 발사 로직만 검증하기 위한 임시 무기
+    private ItemData BuildDebugWeapon()
+    {
+        return new ItemData
+        {
+            itemId = -1,
+            displayName = "디버그 테스트 무기",
+            itemType = ItemType.Weapon,
+            fireRate = debugFireRate,
+            magazineSize = debugMagazineSize,
+            attackDamage = debugDamage,
+            projectileSpeed = debugProjectileSpeed,
+            range = debugRange,
+            maxSpread = debugMaxSpread,
+            pelletCount = Mathf.Max(1, debugPelletCount),
+            automatic = debugAutomatic,
+        };
     }
 
     public void TryFire()
@@ -160,11 +224,15 @@ public class WeaponController : MonoBehaviour
 
         ammoInMagazine[equippedSlotIndex]--;
 
+        // 이번 발사는 지금까지 쌓인 퍼짐(currentSpreadDegrees) 을 그대로 쓰고,
+        // 다음 발사를 위한 증가는 쏜 뒤에 적용한다
         int pellets = Mathf.Max(1, equippedWeapon.pelletCount);
         for (int i = 0; i < pellets; i++)
         {
             FireProjectile();
         }
+
+        GrowBloom();
 
         if (noise != null)
         {
@@ -172,9 +240,31 @@ public class WeaponController : MonoBehaviour
         }
     }
 
+    private void GrowBloom()
+    {
+        if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f)
+        {
+            return;
+        }
+
+        float growth = equippedWeapon.maxSpread * bloomGrowthFraction;
+        currentSpreadDegrees = Mathf.Min(equippedWeapon.maxSpread, currentSpreadDegrees + growth);
+    }
+
+    private void RecoverBloom()
+    {
+        if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f || currentSpreadDegrees <= 0f)
+        {
+            return;
+        }
+
+        float recover = equippedWeapon.maxSpread * bloomRecoverFraction * Time.deltaTime;
+        currentSpreadDegrees = Mathf.Max(0f, currentSpreadDegrees - recover);
+    }
+
     private void FireProjectile()
     {
-        if (projectilePrefab == null)
+        if (bulletPool == null)
         {
             return;
         }
@@ -187,9 +277,9 @@ public class WeaponController : MonoBehaviour
         }
         baseDirection.Normalize();
 
-        Vector3 direction = ApplySpread(baseDirection, equippedWeapon.maxSpread);
+        Vector3 direction = ApplySpread(baseDirection, currentSpreadDegrees);
 
-        Projectile projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.LookRotation(direction));
+        Projectile projectile = bulletPool.Rent(firePoint.position, Quaternion.LookRotation(direction));
         projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider);
     }
 

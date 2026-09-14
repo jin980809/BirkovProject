@@ -1,12 +1,17 @@
 using UnityEngine;
 
-// 순수 투사체(Rigidbody)로 날아가는 총알.
+// 순수 투사체(Rigidbody)로 날아가는 총알. BulletPool 로 재사용된다.
 // 콜라이더는 Is Trigger 체크 - 물리적으로 튕기지 않고 지나가면서 판정만 한다.
+// 적이 아니어도 IDamageable 을 구현한 대상이면 전부 맞는다 (범용).
 [RequireComponent(typeof(Rigidbody))]
 public class Projectile : MonoBehaviour
 {
+    [Tooltip("총알 궤적 이펙트. 비우면 자동 탐색")]
+    [SerializeField] private TrailRenderer trail;
+
     private Rigidbody rb;
     private Collider ownCollider;
+    private BulletPool pool;
 
     private float damage;
     private float maxDistance;
@@ -17,9 +22,29 @@ public class Projectile : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
         TryGetComponent(out ownCollider);
+
+        if (trail == null)
+        {
+            trail = GetComponent<TrailRenderer>();
+        }
+
+        // 씬에 하나뿐인 BulletPool 을 스스로 찾는다 (Awake 는 재사용 시 다시 안 불림 - 한 번만 찾으면 됨)
+        pool = FindAnyObjectByType<BulletPool>();
     }
 
-    // direction 은 정규화된 방향, range 는 이 거리를 넘어가면 자동 소멸한다 (0 이하면 무제한)
+    // 풀에서 빌려줄 때 호출: 위치/회전 세팅 + 활성화 + 이전 사용 흔적 제거
+    public void PrepareForRent(Vector3 position, Quaternion rotation)
+    {
+        transform.SetPositionAndRotation(position, rotation);
+        gameObject.SetActive(true);
+
+        if (trail != null)
+        {
+            trail.Clear(); // 이전 위치에서 여기로 선이 이어져 보이는 것 방지
+        }
+    }
+
+    // direction 은 정규화된 방향, range 는 이 거리를 넘어가면 자동으로 풀에 반환한다 (0 이하면 무제한)
     public void Launch(Vector3 direction, float speed, float damageAmount, float range, Collider ownerCollider)
     {
         startPosition = transform.position;
@@ -39,7 +64,7 @@ public class Projectile : MonoBehaviour
     {
         if (maxDistance > 0f && Vector3.Distance(startPosition, transform.position) >= maxDistance)
         {
-            Destroy(gameObject);
+            ReturnToPool();
         }
     }
 
@@ -51,7 +76,21 @@ public class Projectile : MonoBehaviour
             target.TakeDamage(damage);
         }
 
-        // 대미지 대상이 아니어도(벽 등) 부딪히면 소멸한다
-        Destroy(gameObject);
+        // 대미지 대상이 아니어도(벽 등) 부딪히면 소멸(반환)한다
+        ReturnToPool();
+    }
+
+    private void ReturnToPool()
+    {
+        rb.linearVelocity = Vector3.zero;
+
+        if (pool != null)
+        {
+            pool.Return(this);
+        }
+        else
+        {
+            Destroy(gameObject); // 풀 연결 없이 테스트할 때를 위한 안전장치
+        }
     }
 }
