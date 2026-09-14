@@ -1,7 +1,35 @@
-using System;
+﻿using System;
 
+// 컨테이너 종류를 가리지 않는 순수 인벤토리 로직. 추가·이동·제거·스택.
 namespace Birdkov.NaYeongMin.InventorySystem
 {
+        // ---- InventoryResult ----
+    public enum InventoryResult
+    {
+        Success,
+        Partial,
+        InvalidAmount,
+        InvalidSlot,
+        ItemNotFound,
+        DestinationRejected,
+        DestinationFull
+    }
+
+    public readonly struct InventoryMoveResult
+    {
+        public InventoryResult Result { get; }
+        public int MovedAmount { get; }
+        public int RemainingAmount { get; }
+
+        public InventoryMoveResult(InventoryResult result, int movedAmount, int remainingAmount)
+        {
+            Result = result;
+            MovedAmount = movedAmount;
+            RemainingAmount = remainingAmount;
+        }
+    }
+
+        // ---- InventoryService ----
     public sealed class InventoryService
     {
         private readonly IItemCatalog itemCatalog;

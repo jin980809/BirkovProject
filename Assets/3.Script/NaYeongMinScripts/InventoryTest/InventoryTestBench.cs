@@ -7,6 +7,7 @@ using Birdkov.NaYeongMin.SaveSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 인벤토리 기능을 눈으로 확인하는 테스트 UI. 본 게임 UI 가 아니다.
 namespace Birdkov.NaYeongMin.InventoryTest
 {
     [Serializable]
@@ -17,8 +18,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
     }
 
     // 인벤토리 계열 기능을 육안으로 확인하는 테스트 벤치.
-    // 본 게임 UI가 아니라 검증용이며 씬 NaYeongMin.unity 에서만 쓴다.
-    // Tools > NaYeongMin > 테스트 벤치 구성 으로 씬에 배치한다.
     [RequireComponent(typeof(Canvas))]
     public sealed class InventoryTestBench : MonoBehaviour, IRecoveryTarget
     {
@@ -59,6 +58,73 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private float health = 10, hunger = 10, water = 10;
         private int selectedWeapon;
+        private IRecoveryTarget recoveryTarget;
+        private string externalStats;
+        private LootDropObject openedDrop;
+
+        public bool IsReady => data != null && EnsureServices();
+        public PlayerInventoryData PlayerData => data?.inventoryData;
+
+        public void BindRecoveryTarget(IRecoveryTarget target)
+        {
+            recoveryTarget = target;
+            if (target == null) externalStats = null;
+        }
+
+        public void SetVitalsDisplay(string text)
+        {
+            externalStats = text;
+            Refresh();
+        }
+
+        public void SelectWeapon(int index)
+        {
+            if (!IsReady || index < 0 || index >= InventorySettings.WeaponQuickSlotCount) return;
+            selectedWeapon = index;
+            Refresh();
+        }
+
+        public void ToggleInventory()
+        {
+            if (!IsReady || screen == null) return;
+            EndDrag();
+            hovered = null;
+            screen.gameObject.SetActive(!screen.gameObject.activeSelf);
+            if (!screen.gameObject.activeSelf) warehouseService.Close();
+        }
+
+        public bool InteractWithHoveredItem()
+        {
+            if (!IsReady || screen == null || !screen.gameObject.activeSelf || hovered == null ||
+                !hovered.gameObject.activeInHierarchy) return false;
+            if (hovered.container != TestContainer.Loot && hovered.container != TestContainer.Warehouse) return false;
+            Take(hovered.container, hovered.index);
+            return true;
+        }
+
+        public void OpenLoot(LootDropObject drop)
+        {
+            if (!IsReady || drop == null || !drop.gameObject.activeInHierarchy) return;
+            CloseLoot();
+            openedDrop = drop;
+            loot = drop.Loot;
+            lootPreset = loot.sizePreset;
+            warehouseService.Close();
+            warehousePanel.SetActive(false);
+            lootPanel.SetActive(true);
+            screen.gameObject.SetActive(true);
+            BuildLootGrid();
+            Refresh();
+        }
+
+        public void CloseLoot()
+        {
+            openedDrop = null;
+            loot = new LootContainerData(lootPreset);
+            EndDrag();
+            hovered = null;
+            Refresh();
+        }
 
         private string SaveDirectory => Path.Combine(Application.persistentDataPath, "NaYeongMinTestBench");
 
@@ -108,6 +174,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void ResetAll()
         {
+            openedDrop = null;
             EndDrag();
             data = new PlayerSaveData();
             warehouseService = new WarehouseService(catalog, data.warehouseData);
@@ -115,7 +182,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             health = hunger = water = 10;
             selectedWeapon = 0;
 
-            foreach (int id in new[] { 21001, 21002, 22001, 23001, 24002, 20001 })
+            foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
             {
                 playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
             }
@@ -385,8 +452,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
             Refresh();
         }
 
-        private void UseItemQuickSlot(int quickIndex)
+        public void UseItemQuickSlot(int quickIndex)
         {
+            if (!IsReady) return;
             if (!playerService.TryGetItemQuickSlot(data.inventoryData, quickIndex, out int bagIndex, out _))
             {
                 SetMessage("퀵슬롯에 지정된 아이템이 없습니다.");
@@ -410,7 +478,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            InventoryResult result = playerService.UseRecoveryItem(data.inventoryData, bagIndex, this);
+            InventoryResult result = playerService.UseRecoveryItem(data.inventoryData, bagIndex, recoveryTarget ?? this);
             SetMessage(result == InventoryResult.Success
                 ? item.displayName + " 사용"
                 : "회복 효과가 없거나 사용할 수 없는 상태입니다.");
@@ -418,11 +486,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
         }
 
         // 테스트 전용 수치. 실제 플레이어는 별도 IRecoveryTarget 구현으로 연결한다.
-        public bool TryApplyRecovery(float healthRecovery, float hungerRecovery, float waterRecovery)
+        public bool TryApplyRecovery(float healthPercent, float hungerPercent, float waterPercent)
         {
-            float nextHealth = Mathf.Min(30, health + healthRecovery);
-            float nextHunger = Mathf.Min(30, hunger + hungerRecovery);
-            float nextWater = Mathf.Min(30, water + waterRecovery);
+            float nextHealth = Mathf.Min(30, health + 30 * healthPercent / 100);
+            float nextHunger = Mathf.Min(30, hunger + 30 * hungerPercent / 100);
+            float nextWater = Mathf.Min(30, water + 30 * waterPercent / 100);
 
             if (Mathf.Approximately(nextHealth, health) &&
                 Mathf.Approximately(nextHunger, hunger) &&
@@ -445,6 +513,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void NotifyLootChanged()
         {
+            if (openedDrop != null)
+            {
+                bool empty = loot.IsEmpty();
+                openedDrop.NotifyContentsChanged();
+                if (empty) CloseLoot();
+                return;
+            }
             if (loot.IsEmpty())
             {
                 SetMessage("전리품을 모두 비웠습니다. 실제 게임에서는 이 시점에 오브제가 풀로 반환됩니다.");
@@ -454,6 +529,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // ---------- 버튼 동작 ----------
         public void RollLoot(LootContainerSize preset)
         {
+            CloseLoot();
             lootPreset = preset;
 
             if (dropEntries.Count == 0)
@@ -510,6 +586,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void KillPlayer()
         {
+            if (!IsReady) return;
+            CloseLoot();
+            warehouseService.Close();
+            if (warehousePanel != null) warehousePanel.SetActive(false);
             playerService.ClearOnDeath(data.inventoryData);
             SetMessage("사망 처리. 가방과 장비와 퀵슬롯이 비었고 창고는 유지됩니다.");
             Refresh();
@@ -602,10 +682,28 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
         }
 
+        // 플레이 중 스크립트 재컴파일 시 직렬화되지 않는 서비스 필드가 null 로 돌아온다. 데이터는 두고 서비스만 재구성한다.
+        private bool EnsureServices()
+        {
+            if (playerService != null && warehouseService != null)
+            {
+                return true;
+            }
+
+            if (itemCsv == null || data == null)
+            {
+                return false;
+            }
+
+            Initialize();
+            warehouseService = new WarehouseService(catalog, data.warehouseData);
+            return true;
+        }
+
         // ---------- 표시 갱신 ----------
         public void Refresh()
         {
-            if (data == null)
+            if (!IsReady)
             {
                 return;
             }
@@ -653,6 +751,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     health, hunger, water, selectedWeapon + 1,
                     warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘",
                     data.inventoryData.currency);
+                if (externalStats != null)
+                    statsText.text = externalStats + "    지푸라기 " + data.inventoryData.currency + "    선택 무기 " + (selectedWeapon + 1);
             }
         }
 
@@ -802,7 +902,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             LootContainerSize[] presets =
             {
                 LootContainerSize.Box2x4, LootContainerSize.Box3x3,
-                LootContainerSize.Box3x5, LootContainerSize.Box4x1
+                LootContainerSize.Box3x5, LootContainerSize.Box4x2
             };
             string[] names = { "2 x 4", "3 x 3", "3 x 5", "4 x 1" };
 
