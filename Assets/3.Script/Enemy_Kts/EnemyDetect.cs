@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 public class EnemyDetect : MonoBehaviour, IHearing
 {
+    [SerializeField] private EnemyData enemyData;
+
     public enum EnemyState
     {
         Revert,     //복귀
@@ -12,47 +14,60 @@ public class EnemyDetect : MonoBehaviour, IHearing
         Die         //사망
     }
 
-    public EnemyState enemyState; // { get; private set; }
+    public EnemyState enemyState; // { get; private set; } 
+
 
     [Header("시야")]
-    [SerializeField] private float rayDistance = 10f;
+    [SerializeField] private float rayDistance;
     [Range(0f, 360f)]
-    [SerializeField] private float viewAngle = 90f;
-
+    [SerializeField] private float viewAngle;
+    
     [Header("Raycast 설정")]
-    [SerializeField] private int rayCount = 5;
-    [SerializeField] private float detectInterval = 0.2f;
+    [SerializeField] private int rayCount;
+    [SerializeField] private float detectInterval;
 
     [Header("포착 마스크")]
     [SerializeField] private LayerMask targetMask;
     [SerializeField] private LayerMask obstacleMask;
-
+    
     [Header("감지된 타겟")]
     [SerializeField] private Transform visibleTargets;
     [SerializeField] private Vector3 visibleTargetsV3;
-
+    
     private Vector3 dirToTarget;
-
+   
     [Header("감지도")]
     [SerializeField] private float currentDetection;
-    [SerializeField] private float decrease = 10f;
-    [SerializeField] private float walkPoints = 30f;
-    [SerializeField] private float runPoints = 40f;
-    [SerializeField] private float shotPoints = 50f;
     [SerializeField] private bool searchCheck = true;
+    [SerializeField] private float decrease;
+    [SerializeField] private float walkPoints;
+    [SerializeField] private float runPoints;
+    [SerializeField] private float shotPoints;
+
 
     //시야용 변수들
-    int count; //Ray 개수
-    float startAngle; //첫 각도
-    float angleStep; //Ray 사이 각도
-    float currentAngle; //발사되고 있는 Ray 각도
-    bool isHit; //맞았는지 확인용
-    Vector3 rayDirection; //각도 벡터값으로 변환용
-    RaycastHit hit; //타겟
-    Transform target; //타겟 위치값
+    int count;              //Ray 개수
+    float startAngle;       //첫 각도
+    float angleStep;        //Ray 사이 각도
+    float currentAngle;     //발사되고 있는 Ray 각도
+    bool isHit;             //맞았는지 확인용
+    Vector3 rayDirection;   //각도 벡터값으로 변환용
+    RaycastHit hit;         //타겟
+    Transform target;       //타겟 위치값
 
     private void Awake()
     {
+        //적 데이타 캐싱---------------------------------------
+        rayDistance = enemyData.rayDistance;
+        viewAngle = enemyData.viewAngle;
+        rayCount = enemyData.rayCount;
+        detectInterval = enemyData.detectInterval;
+        decrease = enemyData.decrease;
+        walkPoints = enemyData.walkPoints;
+        runPoints = enemyData.runPoints;
+        shotPoints = enemyData.shotPoints;
+        //-----------------------------------------------------
+
         enemyState = EnemyState.Patrol;
         rayDistance = Mathf.Max(0f, rayDistance);
     }
@@ -90,7 +105,6 @@ public class EnemyDetect : MonoBehaviour, IHearing
         switch (a)
         {
             case 0: //걷기
-                
                 currentDetection += walkPoints;
                 break;
             case 1: //뛰기
