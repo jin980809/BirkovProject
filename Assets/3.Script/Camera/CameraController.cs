@@ -15,6 +15,11 @@ using UnityEngine.InputSystem;
 //  4) vcam Transform 회전 X ~55°, yaw 0 고정 (Rotation 컴포넌트 안 붙임)
 //  5) Main Camera CinemachineBrain → Update Method = Late Update
 //  6) 플레이어 Rigidbody Interpolate ON
+//
+// 실행 순서: 이 스크립트(-100) → CinemachineBrain(기본 0) → PlayerController(+100).
+// 이 스크립트가 먼저 타깃을 옮겨야 Brain 이 이번 프레임에 그 위치를 반영하고,
+// PlayerController 는 그 뒤에 최종 카메라 위치로 조준 레이를 계산할 수 있다.
+[DefaultExecutionOrder(-100)]
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private PlayerController player;
@@ -44,14 +49,22 @@ public class CameraController : MonoBehaviour
             return;
         }
 
+        // 상자/인벤토리 등 UI 로 조작이 잠긴 동안에는 마우스로 카메라를 당기지 않는다 (플레이어 위치 그대로)
+        if (player.IsControlLocked)
+        {
+            followTarget.position = player.transform.position;
+            return;
+        }
+
         // 커서의 화면 중앙 대비 위치 (-1 ~ 1, 세로 기준 정규화)
         Vector2 mouse = Mouse.current != null
             ? Mouse.current.position.ReadValue()
             : new Vector2(Screen.width, Screen.height) * 0.5f;
 
+        float halfW = Screen.width * 0.5f;
         float halfH = Screen.height * 0.5f;
         Vector2 norm = new Vector2(
-            (mouse.x - Screen.width * 0.5f) / halfH,
+            (mouse.x - halfW) / halfW,
             (mouse.y - halfH) / halfH);
         norm = Vector2.ClampMagnitude(norm, 1f);
 

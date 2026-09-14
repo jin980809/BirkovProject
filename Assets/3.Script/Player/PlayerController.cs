@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // 플레이어 이동 / 회전 / 구르기 처리
@@ -8,6 +9,16 @@ using UnityEngine;
 //  - 달리는 중(Shift + 이동): 키보드 입력 방향으로 회전
 //  - Shift 를 떼면 다시 마우스 방향 회전
 //  - 달리는 중에는 사격 불가
+//
+// 조준 계산(UpdateAimPoint/UpdateFacing)은 Update 가 아니라 LateUpdate 에서 한다.
+// 카메라(CameraController → CinemachineBrain)가 이번 프레임에 다 움직인 "뒤"에
+// 그 최종 카메라 위치로 화면→월드 레이를 쏴야 하기 때문이다.
+// (Update 에서 계산하면 아직 이번 프레임 카메라 이동이 반영 안 된, 한 프레임 뒤처진
+//  카메라 위치를 쓰게 되고, 카메라가 지면에 얕은 각도로 기울어져 있을수록
+//  그 위치 오차가 조준점에서 크게 증폭된다.)
+// 실행 순서는 [DefaultExecutionOrder] 로 강제한다: CameraController(-100) → CinemachineBrain(기본 0)
+// → PlayerController(+100).
+[DefaultExecutionOrder(100)]
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
@@ -33,6 +44,8 @@ public class PlayerController : MonoBehaviour
     [Header("조준")]
     [SerializeField] private Camera aimCamera;
     [SerializeField] private LayerMask groundMask = ~0;
+    [Tooltip("총구 높이(WeaponController의 firePoint 로컬 Y와 맞춰야 함). 조준점을 이 높이의 수평면에서 계산한다.")]
+    [SerializeField] private float aimHeightOffset = 0.5f;
 
     [Header("애니메이션")]
     [SerializeField] private Animator animator;
@@ -43,6 +56,7 @@ public class PlayerController : MonoBehaviour
     private PlayerInputHandler input;
     private PlayerVitals vitals; // 선택 - 있으면 스테미나로 달리기/구르기 게이트
     private WeaponController weapon; // 선택 - 있으면 발사/재장전/무기교체를 위임
+    private PlayerInteraction interaction; // 선택 - 있으면 상호작용 중 이동/회전/사격을 막음
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -50,6 +64,11 @@ public class PlayerController : MonoBehaviour
     // 조준점 (마우스 커서가 가리키는 월드 좌표) - 카메라/무기 시스템이 참조
     private Vector3 aimWorldPoint;
     private bool hasAimPoint;
+
+    // 조준 레이가 실제 바닥 콜라이더 범위를 벗어났을 때 쓰는 평면 높이.
+    // 플레이어 피벗(transform.position.y)은 콜라이더 중심이라 실제 바닥보다 위에 있으므로
+    // 그대로 쓰면 안 되고, 시작 시 실제 바닥을 한 번 레이캐스트해서 구한 값을 쓴다.
+    private float groundPlaneY;
 
     // 구르기 상태
     private bool isDodging;
@@ -72,10 +91,37 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // 달리는 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
+    // 상호작용 중인지 (상호작용 시스템이 없으면 항상 false)
+    public bool IsInteracting
+    {
+        get { return interaction != null && interaction.IsInteracting; }
+    }
+
+    // 상자 UI 등 외부 UI 가 SetMovementLocked 로 잠근 상태
+    private bool movementLocked;
+
+    // 이동/회전/사격이 전부 막혀야 하는 상태 (상호작용 중이거나, 외부 UI 가 잠갔거나)
+    public bool IsControlLocked
+    {
+        get { return IsInteracting || movementLocked; }
+    }
+
+    // IsControlLocked 가 실제로 바뀌는 순간(예: 상호작용 시작/취소, 상자 UI 열기/닫기)에만 발생한다.
+    // 이동/회전은 이미 IsControlLocked 를 직접 읽으니 구독할 필요 없고, PlayerVision 처럼
+    // "잠기는 순간에 한 번 반응해야 하는" 외부 시스템이 구독한다 (OnEnable/OnDisable 로 직접 구독).
+    public event Action<bool> ControlLockChanged;
+    private bool wasControlLocked;
+
+    // 상자 UI 등에서 호출한다 - 열려 있는 동안 이동/회전/사격을 막는다
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
+    }
+
+    // 달리는 중 / 구르는 중 / 상호작용 중 / 외부 UI 로 잠긴 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
     public bool CanFire
     {
-        get { return !IsSprinting && !isDodging; }
+        get { return !IsSprinting && !isDodging && !IsControlLocked; }
     }
 
     // 마우스 커서가 가리키는 월드 좌표
@@ -115,9 +161,11 @@ public class PlayerController : MonoBehaviour
 
         TryGetComponent(out vitals);
         TryGetComponent(out weapon);
+        TryGetComponent(out interaction);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
+        groundPlaneY = FindGroundPlaneY();
 
         if (!TryGetComponent(out input))
         {
@@ -137,6 +185,7 @@ public class PlayerController : MonoBehaviour
         input.DodgePressed += HandleDodge;
         input.ReloadPressed += HandleReload;
         input.InteractPressed += HandleInteract;
+        input.CancelPressed += HandleCancel;
         input.InventoryToggled += HandleInventory;
         input.WeaponSelected += HandleWeaponSelected;
         input.QuickSlotUsed += HandleQuickSlot;
@@ -154,6 +203,7 @@ public class PlayerController : MonoBehaviour
         input.DodgePressed -= HandleDodge;
         input.ReloadPressed -= HandleReload;
         input.InteractPressed -= HandleInteract;
+        input.CancelPressed -= HandleCancel;
         input.InventoryToggled -= HandleInventory;
         input.WeaponSelected -= HandleWeaponSelected;
         input.QuickSlotUsed -= HandleQuickSlot;
@@ -161,15 +211,27 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        // 목표 방향만 계산한다. 트랜스폼/Rigidbody 는 FixedUpdate 에서만 건드린다.
-        UpdateAimPoint();
-        UpdateFacing();
+        // 트랜스폼/Rigidbody 는 FixedUpdate 에서만 건드린다.
         UpdateAnimator();
 
         if (vitals != null)
         {
             vitals.SetSprinting(IsSprinting); // 스테미나 소모/회복 판정용
         }
+
+        bool locked = IsControlLocked;
+        if (locked != wasControlLocked)
+        {
+            wasControlLocked = locked;
+            ControlLockChanged?.Invoke(locked);
+        }
+    }
+
+    private void LateUpdate()
+    {
+        // 카메라가 이번 프레임에 다 움직인 뒤에 그 최종 위치로 조준 레이를 계산한다.
+        UpdateAimPoint();
+        UpdateFacing();
     }
 
     private void FixedUpdate()
@@ -182,6 +244,14 @@ public class PlayerController : MonoBehaviour
         {
             rb.linearVelocity = new Vector3(0f, VerticalVelocity(), 0f);
             return; // TODO: 사망 처리 (입력 차단, 사망 애니 등)
+        }
+
+        if (IsControlLocked)
+        {
+            // 상호작용 중이거나 외부 UI(상자 등)가 잠근 동안에는 이동/회전 다 멈춘다
+            // (구르기 중 진입은 없음 - 구르는 동안엔 상호작용 못 함)
+            rb.linearVelocity = new Vector3(0f, VerticalVelocity(), 0f);
+            return;
         }
 
         if (isDodging)
@@ -336,7 +406,9 @@ public class PlayerController : MonoBehaviour
         // 이동 입력을 캐릭터가 바라보는 방향 기준으로 변환한다.
         // 걷기(조준 모드)에서는 캐릭터가 마우스를 보고 있으므로
         //   마우스 쪽으로 걸으면 +Y(FWD), 반대면 -Y(BWD), 옆이면 ±X 가 된다.
-        Vector3 worldMove = new Vector3(input.MoveInput.x, 0f, input.MoveInput.y);
+        Vector3 worldMove = IsControlLocked
+            ? Vector3.zero // 잠긴 동안에는 입력이 있어도 실제로는 멈춰 있으므로 애니메이션도 정지 취급
+            : new Vector3(input.MoveInput.x, 0f, input.MoveInput.y);
         bool moving = worldMove.sqrMagnitude > 0.01f;
 
         Vector3 localMove = transform.InverseTransformDirection(worldMove);
@@ -367,24 +439,32 @@ public class PlayerController : MonoBehaviour
 
         Ray ray = aimCamera.ScreenPointToRay(input.LookScreenPosition);
 
-        // 먼저 실제 지형 콜라이더와 충돌 검사
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 200f, groundMask, QueryTriggerInteraction.Ignore))
-        {
-            point = hit.point;
-            return true;
-        }
-
-        // 충돌이 없으면 플레이어 높이의 수평면과 교차점을 사용
-        Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
+        // 조준점은 "실제 바닥 높이"가 아니라 "총구 높이"의 수평면에서 계산한다.
+        // 총알은 총구 높이의 수평면으로만 날아가므로(baseDirection.y = 0), 조준점도 같은 높이여야
+        // 화면상 커서 위치와 실제 탄착 방향이 일치한다. 두 높이가 다르면 카메라가 비스듬할수록
+        // (수직 90도가 아닐수록) 원근 때문에 화면에서 어긋나 보인다.
+        Plane aimPlane = new Plane(Vector3.up, new Vector3(0f, groundPlaneY + aimHeightOffset, 0f));
         float enter;
-        if (groundPlane.Raycast(ray, out enter))
+        if (aimPlane.Raycast(ray, out enter))
         {
             point = ray.GetPoint(enter);
             return true;
         }
 
         return false;
+    }
+
+    // 실제 바닥 콜라이더의 Y 값을 한 번 구해서 캐싱한다.
+    // 플레이어 피벗(transform.position.y)은 콜라이더 중심이라 바닥보다 위에 있어서 그대로 쓰면 안 된다.
+    private float FindGroundPlaneY()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position + Vector3.up * 2f, Vector3.down, out hit, 20f, groundMask, QueryTriggerInteraction.Ignore))
+        {
+            return hit.point.y;
+        }
+
+        return transform.position.y; // 못 찾으면 기존 방식으로 대체
     }
 
     // ---------- 다른 시스템 연결 지점 ----------
@@ -417,7 +497,20 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteract()
     {
-        // TODO: 상호작용 (루팅, 문 등)
+        if (isDodging || interaction == null)
+        {
+            return; // 구르는 중에는 상호작용 시작 불가
+        }
+
+        interaction.TryStartInteract();
+    }
+
+    private void HandleCancel()
+    {
+        if (interaction != null)
+        {
+            interaction.CancelInteract(); // 진행 중인 상호작용을 취소하고 원상태로 되돌린다 (ESC)
+        }
     }
 
     private void HandleInventory()

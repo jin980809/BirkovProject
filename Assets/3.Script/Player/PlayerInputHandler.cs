@@ -22,6 +22,7 @@ public class PlayerInputHandler : MonoBehaviour
     public event Action DodgePressed;
     public event Action ReloadPressed;
     public event Action InteractPressed;
+    public event Action CancelPressed;
     public event Action InventoryToggled;
     public event Action<int> WeaponSelected; // 0 = 1번, 1 = 2번
     public event Action<int> QuickSlotUsed;  // 0~2 = 3, 4, 5번 키
@@ -91,6 +92,14 @@ public class PlayerInputHandler : MonoBehaviour
         if (context.performed && InteractPressed != null)
         {
             InteractPressed();
+        }
+    }
+
+    public void OnCancel(InputAction.CallbackContext context)
+    {
+        if (context.performed && CancelPressed != null)
+        {
+            CancelPressed();
         }
     }
 
