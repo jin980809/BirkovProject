@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 228461d86df10164bb89ed5314818d70
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 22100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 391816
+  packageName: Tiny Bird Duo PBR Polyart
+  packageVersion: 1.0
+  assetPath: Assets/TinyBirdDuo/Animator&Mask/OneHandAutoShot.overrideController
+  uploadId: 949218
