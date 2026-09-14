@@ -1,18 +1,11 @@
-using System;
+﻿using System;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
+// 드롭 시스템 단일 진입점. 상자와 적 담당은 Spawn 또는 Roll 만 호출하면 된다.
 namespace Birdkov.NaYeongMin.Rng
 {
     // 상자 담당과 적 담당이 쓰는 단일 진입점.
-    // ItemDatabase -> DropTableDatabase -> LootDropPool 초기화 순서를 여기서 보장한다.
-    // 호출 측은 Spawn 하나만 알면 되고 CSV 로드나 풀 관리는 신경 쓰지 않는다.
-    //
-    // 연결 방법:
-    //   1. Assets/2.Model/Prefabs/NaYeongMin/LootRuntime.prefab 을 씬에 배치한다.
-    //   2. 적 사망이 확정되면 Spawn(사망 위치, 회전, 적 유형, LootContainerSize.Box2x4) 를 호출한다.
-    //   3. 상자를 열면 Spawn 대신 Roll 로 결과만 받아 상자 UI에 채워도 된다.
-    //   4. 반환값이 null 이면 풀이 고갈된 것이다. 호출 측에서 반드시 확인한다.
     [RequireComponent(typeof(ItemDatabase))]
     [RequireComponent(typeof(DropTableDatabase))]
     [RequireComponent(typeof(LootDropPool))]

@@ -1,7 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+// 테스트 UI 슬롯 하나. 입력 이벤트를 벤치로 넘기기만 한다.
 namespace Birdkov.NaYeongMin.InventoryTest
 {
     // 테스트 UI의 슬롯 하나. 어느 컨테이너의 몇 번 칸인지만 들고 있고

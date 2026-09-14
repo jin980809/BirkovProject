@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 
+// 드롭 테이블로 아이템별 독립 추첨. 컨테이너 칸 수를 넘기면 파기한다.
 namespace Birdkov.NaYeongMin.Rng
 {
     public sealed class DropRoller

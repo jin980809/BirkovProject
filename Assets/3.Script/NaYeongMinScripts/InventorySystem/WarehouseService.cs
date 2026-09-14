@@ -1,14 +1,9 @@
-using System;
+﻿using System;
 
+// 허브 창고. 거점 오브젝트와 상호작용해 Open 한 뒤에만 입출고가 된다.
 namespace Birdkov.NaYeongMin.InventorySystem
 {
     // 허브 창고(거점 보관함).
-    // 연결 방법:
-    //   1. 거점 창고 오브젝트의 상호작용(E) 담당이 Open()을 호출한다. 창을 닫을 때 Close()를 호출한다.
-    //   2. Open() 이전에는 Store/Withdraw/MoveWithin 이 모두 InventoryResult.DestinationRejected 로 거부된다.
-    //   3. UI는 좌측에 Warehouse, 우측에 PlayerInventoryData.inventory 를 배치한다.
-    //   4. 창고 데이터는 PlayerSaveData.warehouseData 를 그대로 넘겨 저장/복구한다.
-    //   5. 플레이어 사망(ClearOnDeath)은 창고를 건드리지 않는다. 창고 전리품은 유지된다.
     public sealed class WarehouseService
     {
         private readonly InventoryService inventoryService;

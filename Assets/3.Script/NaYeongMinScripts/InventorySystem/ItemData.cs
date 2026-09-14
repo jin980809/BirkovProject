@@ -1,5 +1,6 @@
 using System;
 
+// 아이템 한 건의 스탯 정의와 분류 enum.
 namespace Birdkov.NaYeongMin.InventorySystem
 {
     public enum ItemType
@@ -52,6 +53,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
         // 아래는 기획 확정 대기(B-1) 항목이다. 확정되면 CSV 열만 채우면 된다.
         // 지금은 읽는 코드가 없고 총기와 탄약도 등록되어 있지 않다.
         public float attackDamage;
+        // 사거리. 1 Unit = 1m, Vector3.Distance 기준. 기획서 7.3.
         public float range;
         public float fireRate;              // 발/초. 연사 간격이 필요하면 1f / fireRate 로 계산한다.
         public float reloadSpeed;
@@ -64,6 +66,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public int durabilityCostPerHit;
         public int repairAmountPerCurrency;
 
+        // 피격 데미지 감소 비율(%). 머리+몸통 합산, 둘 다 최고급이면 60%. 기획서 6.7.
         public float defense;
         public float healthRecovery;
         public float hungerRecovery;

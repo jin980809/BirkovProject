@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
+// DropTable.csv 를 로드하고 아이템 참조 무결성을 검사하는 컴포넌트.
 namespace Birdkov.NaYeongMin.Rng
 {
     // 호출 측에서 ItemDatabase.Load() 후 Load(itemDatabase.Catalog)를 호출한다.

@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
+// 전리품 오브제 풀. 기본 30개를 선생성하고 비면 회수한다.
 namespace Birdkov.NaYeongMin.Rng
 {
     public sealed class LootDropPool : MonoBehaviour

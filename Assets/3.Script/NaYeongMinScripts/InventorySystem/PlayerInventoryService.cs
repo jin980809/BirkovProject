@@ -1,7 +1,18 @@
 using System;
 
+// 플레이어 인벤토리. 장비 착용, 퀵슬롯 매핑, 회복 사용, 사망 처리.
 namespace Birdkov.NaYeongMin.InventorySystem
 {
+        // ---- IRecoveryTarget ----
+    public interface IRecoveryTarget
+    {
+        // 절대 회복량. 실제 회복 적용 시에만 true. false이면 상태를 변경하지 않는다.
+        // 동기 호출이며 인벤토리 변경/재진입은 금지. 최대치 판정은 구현 측 담당.
+        // 인자는 최대치 대비 백분율(0~100)이다. 기획서 10.1 회복량 표기 기준.
+        bool TryApplyRecovery(float healthPercent, float hungerPercent, float waterPercent);
+    }
+
+        // ---- PlayerInventoryService ----
     // 퀵슬롯은 컨테이너가 아니므로 이 enum 에 없다.
     public enum PlayerContainerType
     {
@@ -46,11 +57,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
         }
 
         // 장비 착용 -------------------------------------------------------------
-        // 가방 -> 장비 슬롯.
-        // 기획 확정: 대상 장비 슬롯이 비어 있다는 전제에서만 안착한다.
-        // 슬롯이 차 있으면 DestinationRejected 이며 교환하지 않는다.
-        // 바꿔 끼우려면 UnequipToInventory 로 먼저 빼야 한다.
-        // 무기 슬롯 두 칸이 모두 비어 있으면 어느 칸에 놓든 주 무기(0번)로 들어간다.
         public InventoryMoveResult EquipFromInventory(
             PlayerInventoryData playerData,
             int inventoryIndex,
@@ -308,7 +314,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         private static bool IsValidRecovery(float amount)
         {
-            return amount >= 0 && !float.IsNaN(amount) && !float.IsInfinity(amount);
+            return amount >= 0 && amount <= 100 && !float.IsNaN(amount) && !float.IsInfinity(amount);
         }
 
         public void ClearOnDeath(PlayerInventoryData playerData)

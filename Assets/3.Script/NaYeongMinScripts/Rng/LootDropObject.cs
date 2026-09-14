@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
+// 적 사망 자리에 남는 노란 전리품 오브제.
 namespace Birdkov.NaYeongMin.Rng
 {
     public sealed class LootDropObject : MonoBehaviour

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEditor;
@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+// 테스트 벤치를 씬에 배치하고 CSV 와 아이콘을 연결하는 에디터 메뉴.
 namespace Birdkov.NaYeongMin.InventoryTest.EditorTools
 {
     // NaYeongMin 씬에 테스트 벤치를 만들고 CSV와 아이콘을 연결한다.
