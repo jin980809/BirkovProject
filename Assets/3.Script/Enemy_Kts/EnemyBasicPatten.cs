@@ -5,14 +5,7 @@ using UnityEngine.AI;
 
 public class EnemyBasicPatten : MonoBehaviour
 {
-    //public enum EnemyState
-    //{
-    //    Revert,
-    //    Patrol,
-    //    Search,
-    //    Battle,
-    //    Die
-    //}
+    [SerializeField] private EnemyData enemyData;
 
     private Animator ani;
     private NavMeshAgent agent;
@@ -26,25 +19,22 @@ public class EnemyBasicPatten : MonoBehaviour
     private bool canBattle = true;
     private WaitForSeconds wfs;
 
-    [Header("추적할 대상 레이어")]
-    [SerializeField] private LayerMask targetLayer;
-
     [Header("순찰 정보")]
     [SerializeField] private Transform[] wayPoints;
     [SerializeField] private float patrolWaitingTime;
 
     [Header("속도")]
-    [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private float angleSpeed = 360f;
-
-    [Header("사거리")]
-    [SerializeField] private float maximumRange = 7f;
-    [SerializeField] private float effectiveRange = 3f;
+    [SerializeField] private float moveSpeed;
+    [SerializeField] private float angleSpeed;
 
     private float moveDistance = 3f;
 
     private void Awake()
     {
+        //적 데이타 캐싱---------------------------------------
+        moveSpeed = enemyData.moveSpeed;
+        angleSpeed = enemyData.angleSpeed;
+        //-----------------------------------------------------
         TryGetComponent(out agent);
         TryGetComponent(out ani);
         TryGetComponent(out enemyDetect);
@@ -55,19 +45,15 @@ public class EnemyBasicPatten : MonoBehaviour
     {
         agent.speed = moveSpeed;
         agent.angularSpeed = angleSpeed;
-
-        respawnPoint = transform.position;
-
+        patrolWaitingTime = enemyData.patrolWaitingTime;
         wfs = new WaitForSeconds(patrolWaitingTime);
 
-        //적 기본 데이터 추가해야함
-
-
+        respawnPoint = transform.position;
     }
 
     private void Update()
     {
-
+        
         if (enemyDetect.enemyState.Equals(EnemyDetect.EnemyState.Patrol))
         {
             PatrolMove();
@@ -117,6 +103,7 @@ public class EnemyBasicPatten : MonoBehaviour
 
     public void SearchMove()
     {
+        agent.isStopped = false;
         ani.SetBool("Walk", true);
         enemyDetect.SearchCheckOff();
         agent.destination = enemyDetect.VisibleTargetsV3();
@@ -131,11 +118,9 @@ public class EnemyBasicPatten : MonoBehaviour
 
     public void BattleMove()
     {
+        //agent.ResetPath();
         LookAtTarget();
 
-        agent.ResetPath();
-        ani.SetBool("Walk", false);
-        
         if (canBattle)
         {
             StartCoroutine(BattleActionLoop_co());
@@ -146,79 +131,48 @@ public class EnemyBasicPatten : MonoBehaviour
     {
         canBattle = false;
     
-        int a = Random.Range(0, 4);
-    
+        int a = Random.Range(0, 2);
+        
         switch (a)
         {
             case 0:
-                yield return StartCoroutine(Shoot_co());
+                yield return StartCoroutine(Patten1_co());
                 break;
             case 1:
-                yield return StartCoroutine(Wait_co());
-                break;
-            case 2:
-                yield return StartCoroutine(MoveForward());
-                break;
-            case 3:
-                yield return StartCoroutine(MoveBackward());
+                yield return StartCoroutine(Patten2_co());
                 break;
         }
         canBattle = true ;
     
     }
-        private IEnumerator Shoot_co()
+    private IEnumerator Patten1_co()
     {
-        Debug.Log("총 쏘기 시작");
+        ani.SetBool("Walk", true);
+        agent.isStopped = false;
+
+        agent.destination = enemyDetect.VisibleTargets().position;
+        
+        yield return new WaitForSeconds(1.5f);
+
+        agent.isStopped = true;
+
+        ani.SetBool("Walk", false);
+
         ani.SetBool("Shot", true);
-        // Fire();
+        yield return new WaitForSeconds(1.0f);
+        ani.SetBool("Shot", false);
+    }
+    private IEnumerator Patten2_co()
+    {
 
         yield return new WaitForSeconds(1.5f);
+
+        ani.SetBool("Shot", true);
+        yield return new WaitForSeconds(1.0f);
         ani.SetBool("Shot", false);
-    
-        Debug.Log("총 쏘기 끝");
-    }
-    private IEnumerator Wait_co()
-    {
-        Debug.Log("대기 시작");
-    
-        float waitTime = Random.Range(3f, 5f);
-    
-        yield return new WaitForSeconds(waitTime);
-    
-        Debug.Log("대기 끝");
-    }
-    private IEnumerator MoveForward()
-    {
-        Debug.Log("앞으로 이동 시작");
-    
-        Vector3 startPosition = transform.position;
-        Vector3 targetPosition = startPosition + transform.forward * moveDistance;
-    
-        while (Vector3.Distance(transform.position, targetPosition) > 0.05f)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
 
-            yield return null;
-        }
 
-        Debug.Log("앞으로 이동 끝");
     }
-    private IEnumerator MoveBackward()
-    {
-        Debug.Log("뒤로 이동 시작");
-    
-        Vector3 startPosition = transform.position;
-        Vector3 targetPosition = startPosition - transform.forward * moveDistance;
-    
-        while (Vector3.Distance(transform.position, targetPosition) > 0.05f)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-        Debug.Log("뒤로 이동 끝");
-    }
-
-    
 
 
     //----------------------------------플레이어를 발견해 전투 상태--------------------------------------
