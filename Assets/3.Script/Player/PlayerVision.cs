@@ -118,7 +118,7 @@ public class PlayerVision : MonoBehaviour
     {
         if (aimSource != null)
         {
-            aimSource.ControlLockChanged += HandleControlLockChanged;
+            aimSource.MovementLockChanged += HandleMovementLockChanged;
         }
     }
 
@@ -126,7 +126,7 @@ public class PlayerVision : MonoBehaviour
     {
         if (aimSource != null)
         {
-            aimSource.ControlLockChanged -= HandleControlLockChanged;
+            aimSource.MovementLockChanged -= HandleMovementLockChanged;
         }
     }
 
@@ -139,10 +139,12 @@ public class PlayerVision : MonoBehaviour
         UpdateHideableVisibility();
     }
 
-    // PlayerController.ControlLockChanged 구독 - 상자 UI 등으로 조작이 잠기면 호출된다.
+    // PlayerController.MovementLockChanged 구독 - 상자/인벤토리 UI 로 조작이 잠기면 호출된다.
+    // (상호작용 게이지가 도는 동안(IsInteracting)은 포함되지 않는다 - 그동안은 시야가 계속
+    // 마우스를 따라가야 한다는 요구사항이라 일부러 movementLocked 에만 반응한다.)
     // 잠그면: 시야각 "방향"이 그 순간 방향으로 고정되고(마우스를 더 이상 안 따라감) 그 상태로
     // 계속 표시/판정된다. 화면 표시 자체는 끄지 않는다 - 다가오는 적을 계속 볼 수 있어야 하기 때문.
-    private void HandleControlLockChanged(bool locked)
+    private void HandleMovementLockChanged(bool locked)
     {
         if (locked && !directionLocked)
         {

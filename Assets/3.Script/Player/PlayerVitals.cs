@@ -8,7 +8,7 @@ using UnityEngine;
 //  - 허기/수분: 시간에 따라 감소 (달릴 때 배속). 허기가 0 이면 초당 체력이 깎이고,
 //              수분이 0 이면 체력 대신 스테미나 회복 속도가 줄어든다.
 //  - 구르기: dodgeStaminaCost 만큼 소모, 부족하면 구르기 불가.
-public class PlayerVitals : MonoBehaviour
+public class PlayerVitals : MonoBehaviour, IDamageable
 {
     [Header("체력")]
     [SerializeField] private float maxHealth = 100f;
