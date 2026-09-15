@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
 
 // 저장되는 인벤토리 데이터 구조. 로직은 서비스 쪽에 있다.
@@ -11,6 +11,9 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public int itemId = -1;
         public int amount;
 
+        // 탄약 전용. 이 슬롯의 박스 중 하나가 뜯다 만 박스일 때 그 잔탄 수다. 0 이면 전부 미개봉.
+        public int remainingRounds;
+
         public bool IsEmpty()
         {
             return itemId < 0 || amount <= 0;
@@ -20,6 +23,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
         {
             itemId = -1;
             amount = 0;
+            remainingRounds = 0;
         }
     }
 
