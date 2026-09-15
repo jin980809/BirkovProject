@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5df7b4c9fd2576b4391b37c93dc1d9c1, type: 3}
+  m_Name: Chest_Normal
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.ContainerDropSettings
+  containerSize: 0
+  entries:
+  - itemId: 20001
+    chancePercent: 30
+    minAmount: 1
+    maxAmount: 5
+  - itemId: 26001
+    chancePercent: 12
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 21001
+    chancePercent: 10
+    minAmount: 1
+    maxAmount: 4
+  - itemId: 22001
+    chancePercent: 10
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 23001
+    chancePercent: 10
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 26002
+    chancePercent: 6
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 10001
+    chancePercent: 5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 11001
+    chancePercent: 5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13001
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12001
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 21002
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 22002
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 23002
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 26003
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10002
+    chancePercent: 3
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 11002
+    chancePercent: 3
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 22003
+    chancePercent: 2
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 23003
+    chancePercent: 2
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10003
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 11003
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13002
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12002
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 21003
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 24002
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 24003
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 24004
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10004
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 11004
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13003
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12003
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1

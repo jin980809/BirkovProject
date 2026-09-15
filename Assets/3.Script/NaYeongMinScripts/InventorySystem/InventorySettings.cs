@@ -20,10 +20,10 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public const int DefaultStackLimit = 5;
         public const int SingleItemStackLimit = 1;
         public const int DropObjectPoolSize = 30;
-
-        // 허브 창고. 기획서에 칸 수 규정이 없어 원작(Escape from Duckov) 참조로 잠정 확정했다.
-        public const int WarehouseWidth = 10;
-        public const int WarehouseHeight = 12;
+        // 허브 창고. 기획서에 칸 수 규정이 없어 가로는 기획서 6.3 가방과 같은 5칸으로 맞추고,
+        // 보관량은 원작(Escape from Duckov) 참조 120칸을 유지해 세로 24칸으로 둔다. UI 는 세로 스크롤한다.
+        public const int WarehouseWidth = 5;
+        public const int WarehouseHeight = 24;
 
         public const int InventorySlotCount = InventoryWidth * InventoryHeight;
     }
@@ -83,14 +83,14 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         // ---- LootContainerSize ----
     // 파밍 컨테이너 크기 프리셋. 기획서 8.1.1 상자 규격표 기준.
-    // 무기 3x5 Box_Gun / 탄약 4x2 Box_Ammo / 방어구 3x3 Box_Arm / 회복약 2x4 Box_Med / 식량 2x4 Box_Food / 일반 2x4 Box_Norm
+    // 무기 3x5 Box_Gun / 탄약 4x1 Box_Ammo / 방어구 3x3 Box_Arm / 회복약 2x4 Box_Med / 식량 2x4 Box_Food / 일반 2x4 Box_Norm
     // 적 사망 노란 오브제는 Box2x4(8칸)를 사용해 기획서 전리품 8칸 규칙과 일치시킨다.
     public enum LootContainerSize
     {
         Box2x4,
         Box3x3,
         Box3x5,
-        Box4x2
+        Box4x1
     }
 
     public static class LootContainerSizes
@@ -109,9 +109,9 @@ namespace Birdkov.NaYeongMin.InventorySystem
                     width = 3;
                     height = 5;
                     break;
-                case LootContainerSize.Box4x2:
+                case LootContainerSize.Box4x1:
                     width = 4;
-                    height = 2;
+                    height = 1;
                     break;
                 default:
                     width = 2;

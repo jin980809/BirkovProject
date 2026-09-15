@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb8eaa3c1b465c449ad57b39e22d819, type: 3}
+  m_Name: InventoryUiTheme
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Ui.InventoryUiTheme
+  windowSprite: {fileID: 21300000, guid: ea1393289b29df044a60b0e675fbe855, type: 3}
+  panelSprite: {fileID: 21300000, guid: 06e38d939e8c7cc4fa3b3d531f29156f, type: 3}
+  titleSprite: {fileID: 21300000, guid: 8239e7b0d9807454bbc2f81bac5fc60c, type: 3}
+  separatorSprite: {fileID: 21300000, guid: f15329934961cc04ea7a9d8e71e8c2f8, type: 3}
+  bagSlotSprite: {fileID: 21300000, guid: 0bbded730842b5246afdc4e0b070d0fe, type: 3}
+  equipmentSlotSprite: {fileID: 21300000, guid: 0bbded730842b5246afdc4e0b070d0fe, type: 3}
+  quickSlotSprite: {fileID: 21300000, guid: 0bbded730842b5246afdc4e0b070d0fe, type: 3}
+  externalSlotSprite: {fileID: 21300000, guid: 0bbded730842b5246afdc4e0b070d0fe, type: 3}
+  buttonSprite: {fileID: 21300000, guid: 6a76082a9f108f64684af2571a00b2fd, type: 3}
+  buttonHoverSprite: {fileID: 21300000, guid: 0bf8fed37a3ce8545ab9abca57072ec3, type: 3}
+  buttonDownSprite: {fileID: 21300000, guid: ab767e50496365948b5509b5c87e4af4, type: 3}
+  tooltipSprite: {fileID: 21300000, guid: eda70f2c827352b4ab3ac8c249ba4a0f, type: 3}
+  normalColor: {r: 0.28, g: 0.34, b: 0.38, a: 1}
+  hoverColor: {r: 0.46, g: 0.56, b: 0.61, a: 1}
+  dropAllowedColor: {r: 0.62, g: 0.93, b: 0.68, a: 1}
+  dropBlockedColor: {r: 0.94, g: 0.58, b: 0.48, a: 1}
+  emptyIconColor: {r: 1, g: 1, b: 1, a: 0}

@@ -29,7 +29,7 @@ namespace Birdkov.NaYeongMin.Rng
             switch (sourceType)
             {
                 case DropSourceType.WeaponBox: return LootContainerSize.Box3x5;  // Box_Gun
-                case DropSourceType.AmmoBox: return LootContainerSize.Box4x2;    // Box_Ammo
+                case DropSourceType.AmmoBox: return LootContainerSize.Box4x1;    // Box_Ammo
                 case DropSourceType.ArmorBox: return LootContainerSize.Box3x3;   // Box_Arm
                 default: return LootContainerSize.Box2x4;                        // Box_Med / Box_Food / Box_Norm / 적 시체
             }
