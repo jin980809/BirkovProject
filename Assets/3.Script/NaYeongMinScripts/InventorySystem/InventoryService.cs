@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 // 컨테이너 종류를 가리지 않는 순수 인벤토리 로직. 추가·이동·제거·스택.
 namespace Birdkov.NaYeongMin.InventorySystem
@@ -135,13 +135,28 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 int moved = Math.Min(requested, stackLimit);
                 destinationSlot.itemId = sourceSlot.itemId;
                 destinationSlot.amount = moved;
+                // 뜯다 만 박스는 슬롯을 통째로 옮길 때만 따라간다.
+                destinationSlot.remainingRounds = moved == sourceSlot.amount ? sourceSlot.remainingRounds : 0;
                 RemoveFromSlot(sourceSlot, moved);
                 return CreateResult(requested, moved);
             }
 
-            if (destinationSlot.itemId == sourceSlot.itemId)
+            // 양쪽 다 미개봉일 때만 합친다. 뜯다 만 박스끼리는 합치지 않는다.
+            if (destinationSlot.itemId == sourceSlot.itemId &&
+                (destinationSlot.remainingRounds == 0 || sourceSlot.remainingRounds == 0))
             {
+                if (destinationSlot.remainingRounds == 0 && sourceSlot.remainingRounds > 0 &&
+                    requested != sourceSlot.amount)
+                {
+                    return new InventoryMoveResult(InventoryResult.DestinationFull, 0, requested);
+                }
+
                 int moved = Math.Min(requested, Math.Max(0, stackLimit - destinationSlot.amount));
+                if (moved == sourceSlot.amount && sourceSlot.remainingRounds > 0)
+                {
+                    destinationSlot.remainingRounds = sourceSlot.remainingRounds;
+                }
+
                 destinationSlot.amount += moved;
                 RemoveFromSlot(sourceSlot, moved);
                 return CreateResult(requested, moved);
@@ -154,10 +169,13 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
             int destinationItemId = destinationSlot.itemId;
             int destinationAmount = destinationSlot.amount;
+            int destinationRounds = destinationSlot.remainingRounds;
             destinationSlot.itemId = sourceSlot.itemId;
             destinationSlot.amount = sourceSlot.amount;
+            destinationSlot.remainingRounds = sourceSlot.remainingRounds;
             sourceSlot.itemId = destinationItemId;
             sourceSlot.amount = destinationAmount;
+            sourceSlot.remainingRounds = destinationRounds;
 
             return new InventoryMoveResult(InventoryResult.Success, requested, 0);
         }

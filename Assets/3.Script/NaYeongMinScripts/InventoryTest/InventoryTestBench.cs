@@ -26,6 +26,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Font font;
         [Tooltip("단독 테스트에서만 사용. 팀원 입력 이벤트 연결 시 끌 것.")]
         public bool useStandaloneKeyboard = true;
+        [Tooltip("프리팹 기반 새 UI 로 전환하면 끈다. 끄면 이 벤치는 UI 를 만들지 않는다.")]
+        public bool buildLegacyUi = true;
         public TestIconBinding[] icons = Array.Empty<TestIconBinding>();
 
         private const int BagCell = 66;
@@ -38,6 +40,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private InventoryService inventoryService;
         private PlayerInventoryService playerService;
         private WarehouseService warehouseService;
+        private CraftingService craftingService;
         private JsonSaveSystem saves;
         private List<DropTableEntry> dropEntries = new List<DropTableEntry>();
 
@@ -49,7 +52,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private readonly Dictionary<int, Sprite> spriteMap = new Dictionary<int, Sprite>();
 
         private RectTransform screen;
-        private GameObject lootPanel, warehousePanel;
+        private GameObject lootPanel, warehousePanel, craftPanel;
+        private Text[] craftLabels;
         private RectTransform lootGridRoot, warehouseGridRoot;
         private Text status, statsText, hint;
         private Image dragIcon;
@@ -93,6 +97,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (!screen.gameObject.activeSelf) warehouseService.Close();
         }
 
+        public bool IsLootOpen => openedDrop != null && screen != null && screen.gameObject.activeSelf;
+
         public bool InteractWithHoveredItem()
         {
             if (!IsReady || screen == null || !screen.gameObject.activeSelf || hovered == null ||
@@ -130,6 +136,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void Start()
         {
+            // 새 UI 가 켜져 있으면 벤치는 화면을 만들지 않는다. UI 중복 생성 방지.
+            if (!buildLegacyUi)
+            {
+                enabled = false;
+                return;
+            }
+
             if (itemCsv == null)
             {
                 Debug.LogError("ItemData.csv 를 itemCsv 에 연결해야 한다.", this);
@@ -156,6 +169,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             catalog = new ItemCatalog(items);
             inventoryService = new InventoryService(catalog);
             playerService = new PlayerInventoryService(catalog);
+            craftingService = new CraftingService(catalog);
             saves = new JsonSaveSystem(SaveDirectory);
 
             if (dropCsv != null)
@@ -685,7 +699,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // 플레이 중 스크립트 재컴파일 시 직렬화되지 않는 서비스 필드가 null 로 돌아온다. 데이터는 두고 서비스만 재구성한다.
         private bool EnsureServices()
         {
-            if (playerService != null && warehouseService != null)
+            if (playerService != null && warehouseService != null && craftingService != null)
             {
                 return true;
             }
@@ -754,6 +768,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 if (externalStats != null)
                     statsText.text = externalStats + "    지푸라기 " + data.inventoryData.currency + "    선택 무기 " + (selectedWeapon + 1);
             }
+
+            RefreshCraftPanel();
         }
 
         private static string PlaceholderCaption(TestSlotView view)
@@ -849,6 +865,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             warehouseGridRoot = MakeRect("WarehouseGrid", warehousePanel.transform, 22, 60, 380, 390);
             warehousePanel.SetActive(false);
 
+            BuildCraftPanel();
             BuildLootSizeButtons();
 
             // 우측: 장비 + 가방
@@ -884,16 +901,125 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void BuildButtons()
         {
-            string[] labels = { "초기화", "창고 상호작용", "가방 채우기", "사망", "저장", "불러오기", "손상 복구 검사" };
+            string[] labels = { "초기화", "창고 상호작용", "제작대", "가방 채우기", "사망", "저장", "불러오기", "손상 복구 검사" };
             Action[] actions =
             {
-                ResetAll, ToggleWarehouse, FillBag, KillPlayer, SaveGame, LoadGame, TestCorruptionRecovery
+                ResetAll, ToggleWarehouse, ToggleCraftingTable, FillBag, KillPlayer, SaveGame, LoadGame, TestCorruptionRecovery
             };
 
             for (int index = 0; index < labels.Length; index++)
             {
                 Action action = actions[index];
-                MakeButton(screen, labels[index], 30 + index * 152, 92, 144, 34, action);
+                MakeButton(screen, labels[index], 30 + index * 134, 92, 126, 34, action);
+            }
+        }
+
+        // 제작대 상호작용 시 전리품 자리에 제작 UI 를 띄운다. 기획서 5.3.
+        private void BuildCraftPanel()
+        {
+            craftPanel = MakePanel("CraftPanel", 30, 150, 430, 470, "총알 제작대");
+            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 1박스", 22, 52, 390, 24, 14);
+        
+            IList<int> mushrooms = CraftingService.MushroomItemIds;
+            craftLabels = new Text[mushrooms.Count];
+            for (int index = 0; index < mushrooms.Count; index++)
+            {
+                int mushroomItemId = mushrooms[index];
+                float y = 92 + index * 74;
+                craftLabels[index] = MakeLabel(craftPanel.transform, string.Empty, 22, y, 260, 44, 13);
+                MakeButton(craftPanel.transform, "제작", 300, y + 4, 100, 34, () => CraftAmmo(mushroomItemId));
+            }
+        
+            craftPanel.SetActive(false);
+        }
+
+        public void ToggleCraftingTable()
+        {
+            if (!IsReady || craftPanel == null)
+            {
+                return;
+            }
+
+            bool opening = !craftPanel.activeSelf;
+            if (opening)
+            {
+                CloseLoot();
+                warehouseService.Close();
+                if (warehousePanel != null) warehousePanel.SetActive(false);
+                if (lootPanel != null) lootPanel.SetActive(false);
+            }
+            else if (lootPanel != null)
+            {
+                lootPanel.SetActive(true);
+            }
+
+            craftPanel.SetActive(opening);
+            SetMessage(opening ? "제작대를 열었습니다." : "제작대를 닫았습니다.");
+            Refresh();
+        }
+
+        public CraftResult CraftAmmo(int mushroomItemId)
+        {
+            if (!IsReady)
+            {
+                return CraftResult.InvalidData;
+            }
+
+            CraftResult result = craftingService.Craft(data.inventoryData, mushroomItemId);
+            SetMessage(CraftMessage(result, mushroomItemId));
+            Refresh();
+            return result;
+        }
+
+        private string CraftMessage(CraftResult result, int mushroomItemId)
+        {
+            switch (result)
+            {
+                case CraftResult.Success:
+                    int ammoItemId;
+                    CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
+                    return "제작 완료. " + DisplayName(ammoItemId) + " 1박스를 가방에 넣었습니다.";
+                case CraftResult.NotEnoughMushroom:
+                    return DisplayName(mushroomItemId) + "이(가) " + CraftingService.MushroomCost + "개 필요합니다.";
+                case CraftResult.NotEnoughGunpowder:
+                    return "화약이 " + CraftingService.GunpowderCost + "개 필요합니다.";
+                case CraftResult.NoSpace:
+                    return "가방이 꽉 찼습니다. 재료는 그대로 유지됩니다.";
+                case CraftResult.UnknownRecipe:
+                    return "제작법이 없는 재료입니다.";
+                default:
+                    return "제작할 수 없습니다.";
+            }
+        }
+
+        private string DisplayName(int itemId)
+        {
+            ItemData item;
+            return catalog != null && catalog.TryGetItem(itemId, out item) ? item.displayName : itemId.ToString();
+        }
+
+        private void RefreshCraftPanel()
+        {
+            if (craftPanel == null || !craftPanel.activeSelf || craftLabels == null)
+            {
+                return;
+            }
+
+            IList<int> mushrooms = CraftingService.MushroomItemIds;
+            int gunpowder = craftingService.Count(data.inventoryData.inventory, CraftingService.GunpowderItemId);
+            for (int index = 0; index < craftLabels.Length && index < mushrooms.Count; index++)
+            {
+                int mushroomItemId = mushrooms[index];
+                int ammoItemId;
+                CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
+                int owned = craftingService.Count(data.inventoryData.inventory, mushroomItemId);
+                bool ready = craftingService.CanCraft(data.inventoryData, mushroomItemId) == CraftResult.Success;
+        
+                craftLabels[index].text = DisplayName(mushroomItemId) + " " + owned + " / " + CraftingService.MushroomCost +
+                    "   화약 " + gunpowder + " / " + CraftingService.GunpowderCost + "\n-> " + DisplayName(ammoItemId);
+                craftLabels[index].color = ready
+                    ? new Color(0.65f, 0.92f, 0.7f)
+                    : new Color(0.62f, 0.64f, 0.66f);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using Birdkov.NaYeongMin.InventorySystem;
+using Birdkov.NaYeongMin.InventorySystem;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -25,8 +25,8 @@ namespace Birdkov.NaYeongMin.SaveSystem
         // ---- SaveDataValidator ----
     public static class SaveDataValidator
     {
-        // 2: 퀵슬롯이 컨테이너에서 가방 인덱스 매핑으로 바뀜.
-        public const int CurrentSaveVersion = 4;
+        // 2: 퀵슬롯이 컨테이너에서 가방 인덱스 매핑으로 바뀜. 3: 장비 슬롯. 4: 지푸라기 분리. 5: 탄약 잔탄.
+        public const int CurrentSaveVersion = 5;
 
         public static bool IsValid(PlayerSaveData data)
         {
@@ -41,11 +41,6 @@ namespace Birdkov.NaYeongMin.SaveSystem
                        InventorySettings.EquipmentSlotCount,
                        1) &&
                    AreItemQuickSlotsValid(data.inventoryData) &&
-                   data.inventoryData.currency >= 0 &&
-                   data.inventoryData.currency >= 0 &&
-                   data.inventoryData.currency >= 0 &&
-                   data.inventoryData.currency >= 0 &&
-                   data.inventoryData.currency >= 0 &&
                    data.inventoryData.currency >= 0 &&
                    IsContainerValid(data.warehouseData);
         }

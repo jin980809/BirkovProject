@@ -108,6 +108,13 @@ namespace Birdkov.NaYeongMin.Integration
         private void Interact()
         {
             if (!IsConnected || playerVitals.IsDead) return;
+            if (inventoryBench.IsLootOpen)
+            {
+                inventoryBench.CloseLoot();
+                inventoryBench.ToggleInventory();
+                openedDrop = null;
+                return;
+            }
             if (inventoryBench.InteractWithHoveredItem()) return;
             LootDropObject nearest = null;
             float nearestDistance = interactionDistance;
