@@ -100,22 +100,38 @@ public class PlayerController : MonoBehaviour
     // 상자 UI 등 외부 UI 가 SetMovementLocked 로 잠근 상태
     private bool movementLocked;
 
+    // 줌(조준) 등에서 SetSpeedMultiplier 로 거는 이동속도 배율. 1 = 정상 속도
+    private float speedMultiplier = 1f;
+
     // 이동/회전/사격이 전부 막혀야 하는 상태 (상호작용 중이거나, 외부 UI 가 잠갔거나)
     public bool IsControlLocked
     {
         get { return IsInteracting || movementLocked; }
     }
 
-    // IsControlLocked 가 실제로 바뀌는 순간(예: 상호작용 시작/취소, 상자 UI 열기/닫기)에만 발생한다.
-    // 이동/회전은 이미 IsControlLocked 를 직접 읽으니 구독할 필요 없고, PlayerVision 처럼
-    // "잠기는 순간에 한 번 반응해야 하는" 외부 시스템이 구독한다 (OnEnable/OnDisable 로 직접 구독).
-    public event Action<bool> ControlLockChanged;
-    private bool wasControlLocked;
+    // movementLocked 가 실제로 바뀌는 순간(상자/인벤토리 UI 열기/닫기)에만 발생한다.
+    // 상호작용 중(IsInteracting, 게이지 도는 동안)은 포함하지 않는다 - 그동안은 시야가
+    // 계속 마우스를 따라가도 된다는 요구사항 때문에 일부러 나눴다. 이동/회전은 이미
+    // IsControlLocked 를 직접 읽으니 구독할 필요 없고, PlayerVision 처럼 "UI 로 잠기는
+    // 순간에만 방향을 고정해야 하는" 외부 시스템이 구독한다 (OnEnable/OnDisable 로 직접 구독).
+    public event Action<bool> MovementLockChanged;
 
     // 상자 UI 등에서 호출한다 - 열려 있는 동안 이동/회전/사격을 막는다
     public void SetMovementLocked(bool locked)
     {
+        if (locked == movementLocked)
+        {
+            return;
+        }
+
         movementLocked = locked;
+        MovementLockChanged?.Invoke(locked);
+    }
+
+    // 줌(조준) 등 이동속도에 배율을 걸어야 하는 시스템에서 호출한다. 1 = 정상 속도
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        speedMultiplier = multiplier;
     }
 
     // 달리는 중 / 구르는 중 / 상호작용 중 / 외부 UI 로 잠긴 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
@@ -218,13 +234,6 @@ public class PlayerController : MonoBehaviour
         {
             vitals.SetSprinting(IsSprinting); // 스테미나 소모/회복 판정용
         }
-
-        bool locked = IsControlLocked;
-        if (locked != wasControlLocked)
-        {
-            wasControlLocked = locked;
-            ControlLockChanged?.Invoke(locked);
-        }
     }
 
     private void LateUpdate()
@@ -283,7 +292,7 @@ public class PlayerController : MonoBehaviour
             move.Normalize();
         }
 
-        float speed = IsSprinting ? sprintSpeed : moveSpeed;
+        float speed = (IsSprinting ? sprintSpeed : moveSpeed) * speedMultiplier;
 
         Vector3 velocity = move * speed;
         velocity.y = VerticalVelocity();

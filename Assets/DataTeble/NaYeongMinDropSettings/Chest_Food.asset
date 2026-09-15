@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5df7b4c9fd2576b4391b37c93dc1d9c1, type: 3}
+  m_Name: Chest_Food
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.ContainerDropSettings
+  containerSize: 0
+  entries:
+  - itemId: 22001
+    chancePercent: 40
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 23001
+    chancePercent: 40
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 22002
+    chancePercent: 20
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 23002
+    chancePercent: 20
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 22003
+    chancePercent: 10
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 23003
+    chancePercent: 10
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 26001
+    chancePercent: 50
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 26002
+    chancePercent: 25
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 26003
+    chancePercent: 15
+    minAmount: 1
+    maxAmount: 1

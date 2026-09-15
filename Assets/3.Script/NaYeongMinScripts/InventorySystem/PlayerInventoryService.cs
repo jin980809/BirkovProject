@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 
 // 플레이어 인벤토리. 장비 착용, 퀵슬롯 매핑, 회복 사용, 사망 처리.
@@ -315,6 +316,109 @@ namespace Birdkov.NaYeongMin.InventorySystem
         private static bool IsValidRecovery(float amount)
         {
             return amount >= 0 && amount <= 100 && !float.IsNaN(amount) && !float.IsInfinity(amount);
+        }
+
+        // 탄약 1박스에 든 발 수. CSV 의 magazineSize 를 박스 용량으로 읽는다. 기획서 9.2 : 1박스 = 20발.
+        public int GetRoundsPerBox(int ammoItemId)
+        {
+            ItemData ammo;
+            if (itemCatalog == null || !itemCatalog.TryGetItem(ammoItemId, out ammo) ||
+                ammo.itemType != ItemType.Ammo || ammo.magazineSize <= 0)
+            {
+                return 0;
+            }
+
+            return ammo.magazineSize;
+        }
+
+        // 가방에 남은 총 발 수. 뜯다 만 박스의 잔탄까지 합산한다.
+        public int GetAmmoRounds(PlayerInventoryData playerData, int ammoItemId)
+        {
+            int roundsPerBox = GetRoundsPerBox(ammoItemId);
+            if (playerData == null || playerData.inventory == null || playerData.inventory.slots == null ||
+                roundsPerBox <= 0)
+            {
+                return 0;
+            }
+
+            int total = 0;
+            foreach (GridSlotData slot in playerData.inventory.slots)
+            {
+                if (slot.itemId != ammoItemId || slot.amount <= 0)
+                {
+                    continue;
+                }
+
+                total += slot.remainingRounds > 0
+                    ? (slot.amount - 1) * roundsPerBox + slot.remainingRounds
+                    : slot.amount * roundsPerBox;
+            }
+
+            return total;
+        }
+
+        // 발 단위로 소비한다. 반환값은 탄창에 채울 발 수.
+        // 뜯다 만 박스를 먼저 쓰고, 새로 뜯은 박스에 남는 발은 같은 슬롯에 되돌린다. 기획 승인 b안.
+        public int ConsumeAmmoRounds(PlayerInventoryData playerData, int ammoItemId, int requestedRounds)
+        {
+            int roundsPerBox = GetRoundsPerBox(ammoItemId);
+            if (playerData == null || playerData.inventory == null || playerData.inventory.slots == null ||
+                requestedRounds <= 0 || roundsPerBox <= 0)
+            {
+                return 0;
+            }
+
+            List<GridSlotData> slots = playerData.inventory.slots;
+            int gained = 0;
+
+            for (int index = 0; index < slots.Count && gained < requestedRounds; index++)
+            {
+                GridSlotData slot = slots[index];
+                if (slot.itemId != ammoItemId || slot.remainingRounds <= 0)
+                {
+                    continue;
+                }
+
+                int taken = Math.Min(slot.remainingRounds, requestedRounds - gained);
+                gained += taken;
+                slot.remainingRounds -= taken;
+                if (slot.remainingRounds == 0)
+                {
+                    DiscardOneBox(slot);
+                }
+            }
+
+            for (int index = 0; index < slots.Count && gained < requestedRounds; index++)
+            {
+                GridSlotData slot = slots[index];
+                while (slot.itemId == ammoItemId && slot.amount > 0 && slot.remainingRounds == 0 &&
+                       gained < requestedRounds)
+                {
+                    int taken = Math.Min(roundsPerBox, requestedRounds - gained);
+                    gained += taken;
+
+                    if (taken < roundsPerBox)
+                    {
+                        slot.remainingRounds = roundsPerBox - taken;
+                        break;
+                    }
+
+                    DiscardOneBox(slot);
+                }
+            }
+
+            return gained;
+        }
+
+        // 다 쓴 박스 하나를 슬롯에서 덜어낸다. 마지막 박스였다면 슬롯을 비운다.
+        private static void DiscardOneBox(GridSlotData slot)
+        {
+            slot.remainingRounds = 0;
+            slot.amount--;
+            if (slot.amount <= 0)
+            {
+                slot.Clear();
+            }
         }
 
         public void ClearOnDeath(PlayerInventoryData playerData)

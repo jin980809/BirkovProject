@@ -43,6 +43,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Zoom",
+                    "type": "Button",
+                    "id": "3f7a1c2e-6b4d-4a9f-8e2a-1d5c9f0b7a3e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Dodge",
                     "type": "Button",
                     "id": "99ee8e66-9202-4fef-841f-16dcd50a8395",
@@ -82,7 +91,7 @@
                     "name": "Inventory",
                     "type": "Button",
                     "id": "8b7fb269-52c8-4bb4-83af-42f066a0283a",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -224,6 +233,17 @@
                 },
                 {
                     "name": "",
+                    "id": "8b2d4e6f-1a3c-4f5e-9d7b-2c8a6e4f0b1d",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "PC",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "a8b65210-54f2-4e8e-bd60-860a002779dc",
                     "path": "<Keyboard>/space",
                     "interactions": "",
@@ -258,7 +278,7 @@
                 {
                     "name": "",
                     "id": "f99623c2-2d27-4998-a06a-5d9ea1832cb0",
-                    "path": "<Keyboard>/e",
+                    "path": "<Keyboard>/tab",
                     "interactions": "",
                     "processors": "",
                     "groups": "PC",

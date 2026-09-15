@@ -47,14 +47,24 @@ namespace Birdkov.NaYeongMin.Tests
             UnityEngine.Object.DestroyImmediate(ui);
         }
 
+        // 회복약 21001 의 CSV 값에서 기대치를 계산한다. 수치가 바뀌어도 환산 계약만 검증한다.
+        private float ExpectedHealthAfterPotion(float damage)
+        {
+            ItemCatalog catalog = (ItemCatalog)Get(bench, "catalog");
+            catalog.TryGetItem(21001, out ItemData potion);
+            float maxHealth = (float)Get(vitals, "maxHealth");
+            return Mathf.Min(maxHealth, maxHealth - damage + maxHealth * potion.healthRecovery / 100f);
+        }
+
         [Test]
         public void Recovery_UsesCsvPercent_AndConsumesOnce()
         {
             Call(vitals, "TakeDamage", 40f);
             PlayerSaveData data = (PlayerSaveData)Get(bench, "data");
             int before = data.inventoryData.inventory.slots[0].amount;
+            float expected = ExpectedHealthAfterPotion(40f);
             Call(bench, "UseBagItem", 0);
-            Assert.AreEqual(80f, Get(vitals, "health"));
+            Assert.AreEqual(expected, Get(vitals, "health"));
             Assert.AreEqual(before - 1, data.inventoryData.inventory.slots[0].amount);
         }
 
@@ -87,9 +97,10 @@ namespace Birdkov.NaYeongMin.Tests
             PlayerSaveData data = (PlayerSaveData)Get(bench, "data");
             ((PlayerInventoryService)Get(bench, "playerService")).AssignItemQuickSlot(data.inventoryData, 0, 0);
             Call(vitals, "TakeDamage", 40f);
+            float expected = ExpectedHealthAfterPotion(40f);
             ((Action<int>)Get(input, "QuickSlotUsed"))(0);
             ((Action<int>)Get(input, "WeaponSelected"))(1);
-            Assert.AreEqual(80f, Get(vitals, "health"));
+            Assert.AreEqual(expected, Get(vitals, "health"));
             Assert.AreEqual(3, data.inventoryData.inventory.slots[0].amount);
             Assert.AreEqual(1, Get(bench, "selectedWeapon"));
             Assert.AreEqual(false, Get(bench, "useStandaloneKeyboard"));
