@@ -89,11 +89,6 @@ namespace Birdkov.NaYeongMin.Rng
 
             foreach (ContainerDropSettings.DropEntry entry in settings.Entries)
             {
-                if (nextSlot >= loot.SlotCount)
-                {
-                    break;
-                }
-
                 if (entry.chancePercent <= 0f || entry.chancePercent > 100f || float.IsNaN(entry.chancePercent) ||
                     entry.minAmount < 1 || entry.maxAmount < entry.minAmount)
                 {
@@ -110,8 +105,17 @@ namespace Birdkov.NaYeongMin.Rng
                     continue;
                 }
 
+                int amount = random.NextInclusive(entry.minAmount, entry.maxAmount);
+
+                // 기획서 10.3 : 칸을 넘겨 당첨된 아이템은 생성하지 않고 파기한다.
+                // 목록은 끝까지 굴린다. 중간에 멈추면 뒤쪽 항목이 추첨 기회를 잃는다.
+                if (nextSlot >= loot.SlotCount)
+                {
+                    continue;
+                }
+
                 loot.loot.slots[nextSlot].itemId = entry.itemId;
-                loot.loot.slots[nextSlot].amount = random.NextInclusive(entry.minAmount, entry.maxAmount);
+                loot.loot.slots[nextSlot].amount = amount;
                 nextSlot++;
             }
 

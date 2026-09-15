@@ -105,8 +105,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1921577357601716002}
+  - component: {fileID: 423743808829021754}
   m_Layer: 0
-  m_Name: DragGhost_PENDING_COMPONENT
+  m_Name: DragGhost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -133,6 +134,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 54, y: 54}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &423743808829021754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 746307291971935668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57b5078d98da9674e97c11587e701797, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Ui.DragGhostView
+  root: {fileID: 1921577357601716002}
+  icon: {fileID: 5985995748719494899}
+  amountLabel: {fileID: 1468718434789028123}
 --- !u!1 &857711418452241606
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,8 +318,9 @@ GameObject:
   - component: {fileID: 1747443872808869742}
   - component: {fileID: 2232792136750503432}
   - component: {fileID: 4702365294688895227}
+  - component: {fileID: 8933565819473403447}
   m_Layer: 0
-  m_Name: Tooltip_PENDING_COMPONENT
+  m_Name: Tooltip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -368,6 +385,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8933565819473403447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1469759543417805762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dff2d5c76f3f73149b4f615b1ce26bda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Ui.ItemTooltipView
+  root: {fileID: 1747443872808869742}
+  background: {fileID: 4702365294688895227}
+  titleLabel: {fileID: 6218858677091020067}
+  bodyLabel: {fileID: 8469313128429825158}
+  pointerOffset: {x: 18, y: -18}
 --- !u!1 &1925614714572147235
 GameObject:
   m_ObjectHideFlags: 0
@@ -886,8 +920,8 @@ MonoBehaviour:
   externalView: {fileID: 3007233216972780172}
   statusLabel: {fileID: 7038980763045375338}
   currencyLabel: {fileID: 1757147519269311306}
-  tooltip: {fileID: 0}
-  dragGhost: {fileID: 0}
+  tooltip: {fileID: 8933565819473403447}
+  dragGhost: {fileID: 423743808829021754}
   playerAnchor: {fileID: 0}
   interactionDistance: 2.5
 --- !u!1 &4048236834988356004
