@@ -94,7 +94,8 @@ namespace Birdkov.NaYeongMin.Rng
                     break;
                 }
 
-                if (entry.chancePercent <= 0f || entry.minAmount < 1 || entry.maxAmount < entry.minAmount)
+                if (entry.chancePercent <= 0f || entry.chancePercent > 100f || float.IsNaN(entry.chancePercent) ||
+                    entry.minAmount < 1 || entry.maxAmount < entry.minAmount)
                 {
                     continue;
                 }
