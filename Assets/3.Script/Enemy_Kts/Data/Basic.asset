@@ -15,8 +15,8 @@ MonoBehaviour:
   maxHealth: 100
   damage: 20
   moveSpeed: 3
-  angleSpeed: 360
-  rayDistance: 10
+  angleSpeed: 720
+  rayDistance: 15
   viewAngle: 90
   rayCount: 10
   detectInterval: 0.1
