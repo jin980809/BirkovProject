@@ -58,10 +58,11 @@ namespace Birdkov.NaYeongMin.Integration
         private void Update()
         {
             if (!IsConnected || playerVitals == null) return;
-            if (openedDrop != null && (!openedDrop.gameObject.activeInHierarchy ||
-                Vector3.Distance(playerVitals.transform.position, openedDrop.transform.position) > interactionDistance))
+            Transform anchor = inventoryBench.ExternalAnchor;
+            if (inventoryBench.IsExternalOpen && (anchor == null || !anchor.gameObject.activeInHierarchy ||
+                Vector3.Distance(playerVitals.transform.position, anchor.position) > interactionDistance))
             {
-                inventoryBench.CloseLoot();
+                inventoryBench.CloseCurrent();
                 openedDrop = null;
             }
             string stats = $"체력 {playerVitals.Health:0}/{playerVitals.MaxHealth:0}    허기 {playerVitals.Hunger:0}/{playerVitals.MaxHunger:0}    수분 {playerVitals.Water:0}/{playerVitals.MaxWater:0}";
@@ -108,22 +109,38 @@ namespace Birdkov.NaYeongMin.Integration
         private void Interact()
         {
             if (!IsConnected || playerVitals.IsDead) return;
-            if (inventoryBench.IsLootOpen)
+            if (inventoryBench.IsExternalOpen)
             {
-                inventoryBench.CloseLoot();
-                inventoryBench.ToggleInventory();
+                inventoryBench.CloseCurrent();
                 openedDrop = null;
                 return;
             }
-            if (inventoryBench.InteractWithHoveredItem()) return;
             LootDropObject nearest = null;
+            InventoryWorldContainer nearestContainer = null;
             float nearestDistance = interactionDistance;
             foreach (Collider hit in Physics.OverlapSphere(playerVitals.transform.position, interactionDistance))
             {
+                InventoryWorldContainer container = hit.GetComponentInParent<InventoryWorldContainer>();
+                if (container != null && container.isActiveAndEnabled)
+                {
+                    float containerDistance = Vector3.Distance(playerVitals.transform.position, container.transform.position);
+                    if (containerDistance <= nearestDistance)
+                    {
+                        nearestContainer = container;
+                        nearest = null;
+                        nearestDistance = containerDistance;
+                    }
+                    continue;
+                }
                 LootDropObject drop = hit.GetComponentInParent<LootDropObject>();
                 if (drop == null || !drop.gameObject.activeInHierarchy) continue;
                 float distance = Vector3.Distance(playerVitals.transform.position, drop.transform.position);
-                if (distance <= nearestDistance) { nearest = drop; nearestDistance = distance; }
+                if (distance <= nearestDistance) { nearest = drop; nearestContainer = null; nearestDistance = distance; }
+            }
+            if (nearestContainer != null)
+            {
+                nearestContainer.Open(inventoryBench);
+                return;
             }
             if (nearest == null) return;
             openedDrop = nearest;

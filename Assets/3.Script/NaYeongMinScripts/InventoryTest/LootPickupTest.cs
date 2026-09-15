@@ -21,7 +21,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
             while (!lootRuntime.IsReady || !inventoryBench.IsReady) yield return null;
             SpawnDrop();
-            if (activeDrop != null) inventoryBench.ToggleInventory();
+            inventoryBench.OpenInventory();
         }
 
         [ContextMenu("Spawn Test Drop")]
