@@ -13,4 +13,40 @@ MonoBehaviour:
   m_Name: Chest_Armor
   m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.ContainerDropSettings
   containerSize: 1
-  entries: []
+  entries:
+  - itemId: 13001
+    chancePercent: 25
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13002
+    chancePercent: 15
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13003
+    chancePercent: 5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12001
+    chancePercent: 25
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12002
+    chancePercent: 15
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12003
+    chancePercent: 5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 26001
+    chancePercent: 50
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 26002
+    chancePercent: 25
+    minAmount: 1
+    maxAmount: 2
+  - itemId: 26003
+    chancePercent: 15
+    minAmount: 1
+    maxAmount: 1
