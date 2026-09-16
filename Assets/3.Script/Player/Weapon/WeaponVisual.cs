@@ -9,28 +9,24 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerController))]
 public class WeaponVisual : MonoBehaviour
 {
+    // 무기 itemId -> 총 모델 프리팹. 손 소켓 기준 위치/회전/크기는 프리팹 루트 Transform 에 직접 맞춰 둔다
+    // (스폰할 때 프리팹의 로컬 Transform 값이 그대로 소켓 기준으로 적용된다).
     [Serializable]
     public struct WeaponModelMapping
     {
         public int weaponItemId;
         public GameObject modelPrefab;
-
-        [Tooltip("손 소켓(Weapon_R) 기준 위치 오프셋 - 모델 원본 좌표가 소켓 기준이 아니라서 직접 맞춰야 한다")]
-        public Vector3 positionOffset;
-        [Tooltip("손 소켓 기준 회전 오프셋 (오일러 각)")]
-        public Vector3 rotationOffsetEuler;
-        [Tooltip("크기 배율")]
-        public Vector3 scale;
     }
 
     [Tooltip("총 모델을 붙일 손 소켓 (Player 프리팹의 Weapon_R)")]
     [SerializeField] private Transform weaponSocket;
-    [SerializeField] private WeaponModelMapping[] models = Array.Empty<WeaponModelMapping>();
+    [SerializeField] private WeaponModelMapping[] models;
 
     private PlayerController player;
     private WeaponController weaponController;
 
     private readonly Dictionary<int, GameObject> spawnedModels = new Dictionary<int, GameObject>();
+    private readonly Dictionary<int, Transform> firePoints = new Dictionary<int, Transform>(); // 모델에 FirePoint 가 없으면 null
     private int currentShownItemId = -1;
 
     private void Awake()
@@ -59,42 +55,80 @@ public class WeaponVisual : MonoBehaviour
         currentShownItemId = wantItemId;
     }
 
+    // 해당 무기 모델의 FirePoint 를 돌려준다 (모델이나 FirePoint 가 없으면 null).
+    // WeaponController 가 발사할 때 호출한다. 아직 스폰 전이면 여기서 먼저 스폰하므로,
+    // 무기를 바꾼 직후 이 컴포넌트의 Update 보다 발사가 먼저 와도 올바른 총구에서 나간다.
+    public Transform GetFirePoint(int itemId)
+    {
+        Transform point = null;
+
+        if (itemId >= 0 && weaponSocket != null)
+        {
+            EnsureModel(itemId);
+            firePoints.TryGetValue(itemId, out point);
+        }
+
+        return point;
+    }
+
     private void ShowOnly(int itemId)
     {
+        if (itemId >= 0)
+        {
+            EnsureModel(itemId);
+        }
+
         foreach (KeyValuePair<int, GameObject> entry in spawnedModels)
         {
             entry.Value.SetActive(entry.Key == itemId);
         }
+    }
 
-        if (itemId < 0 || spawnedModels.ContainsKey(itemId))
+    // 처음 필요할 때 한 번만 스폰하고, 프리팹 루트의 WeaponModel 에 연결된 FirePoint 를 같이 캐시한다.
+    // 새로 만든 모델은 일단 숨겨두고, 보일지 말지는 ShowOnly 가 정한다.
+    private void EnsureModel(int itemId)
+    {
+        if (!spawnedModels.ContainsKey(itemId))
         {
-            return;
-        }
+            GameObject model = SpawnModel(itemId);
+            if (model != null)
+            {
+                model.SetActive(itemId == currentShownItemId);
+                spawnedModels.Add(itemId, model);
 
-        GameObject model = SpawnModel(itemId);
-        if (model != null)
-        {
-            spawnedModels.Add(itemId, model);
+                Transform point = null;
+                if (model.TryGetComponent(out WeaponModel weaponModel) && weaponModel.FirePoint != null)
+                {
+                    point = weaponModel.FirePoint;
+                }
+                else
+                {
+                    Debug.LogWarning("WeaponVisual: '" + model.name + "' 프리팹 루트에 WeaponModel(FirePoint 연결)이 없어 " +
+                                     "WeaponController 의 기본 firePoint 에서 발사합니다.", model);
+                }
+
+                firePoints[itemId] = point;
+            }
         }
     }
 
     private GameObject SpawnModel(int itemId)
     {
-        for (int i = 0; i < models.Length; i++)
-        {
-            if (models[i].weaponItemId != itemId || models[i].modelPrefab == null)
-            {
-                continue;
-            }
+        GameObject instance = null;
 
-            GameObject instance = Instantiate(models[i].modelPrefab, weaponSocket);
-            instance.transform.localPosition = models[i].positionOffset;
-            instance.transform.localRotation = Quaternion.Euler(models[i].rotationOffsetEuler);
-            // scale 을 인스펙터에서 세팅 안 했으면(기본값 0,0,0) 원본 크기(1,1,1)를 그대로 쓴다
-            instance.transform.localScale = models[i].scale == Vector3.zero ? Vector3.one : models[i].scale;
-            return instance;
+        if (models != null)
+        {
+            for (int i = 0; i < models.Length; i++)
+            {
+                if (models[i].weaponItemId == itemId && models[i].modelPrefab != null)
+                {
+                    // 프리팹에 맞춰 둔 위치/회전/크기를 소켓 기준 로컬 값으로 그대로 쓴다
+                    instance = Instantiate(models[i].modelPrefab, weaponSocket);
+                    break;
+                }
+            }
         }
 
-        return null;
+        return instance;
     }
 }

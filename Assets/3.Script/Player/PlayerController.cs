@@ -52,7 +52,21 @@ public class PlayerController : MonoBehaviour
     [Tooltip("블렌드 파라미터 감쇠 시간 (클수록 부드럽고 반응 느림)")]
     [SerializeField] private float animDamp = 0.12f;
 
+    [Header("발사 애니메이션 (Fire 레이어)")]
+    [Tooltip("단발 발사 클립. 비우면 Animator 에서 이름(ShootSingleshotOneWeapon)으로 찾는다")]
+    [SerializeField] private AnimationClip singleShotClip;
+    [Tooltip("연사 무기로 쏘는 동안 반복 재생되는 발사 모션의 배속 (1 = 원본 속도). 발사 속도(fireRate)와는 무관하다")]
+    [SerializeField, Min(0.01f)] private float autoFireAnimSpeed = 1f;
+
+    private const string SingleShotClipName = "ShootSingleshotOneWeapon";
+    private static readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
+    private static readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
+    private static readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
+
     private int fireLayerIndex = -1; // 상체 전용 발사 포즈 레이어 인덱스 (Awake 에서 이름으로 찾음, 없으면 -1)
+    private float singleShotClipLength = 1f;
+    private float singleShotVisibleUntil; // 단발 무기 - 이 시각까지 발사 포즈(클립 1회분)를 보여준다
+    private bool wasAutoFiring;
 
     private Rigidbody rb;
     private PlayerInputHandler input;
@@ -160,6 +174,13 @@ public class PlayerController : MonoBehaviour
         get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading; }
     }
 
+    // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI 중에는 불가.
+    // 실제 장착(HandleWeaponSelected)과 인벤토리 UI 의 선택 표시(InventoryTestBenchLink)가 같은 조건을 쓰도록 한 곳에 둔다.
+    public bool CanSwapWeapon
+    {
+        get { return !IsControlLocked && !IsUsingItem && !IsReloading; }
+    }
+
     // 마우스 커서가 가리키는 월드 좌표
     public Vector3 AimWorldPoint
     {
@@ -203,6 +224,7 @@ public class PlayerController : MonoBehaviour
         if (animator != null)
         {
             fireLayerIndex = animator.GetLayerIndex("Fire"); // 상체 전용 발사 포즈 레이어 (없으면 -1)
+            singleShotClipLength = FindClipLength(singleShotClip, SingleShotClipName);
         }
 
         TryGetComponent(out vitals);
@@ -222,6 +244,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (weapon != null)
+        {
+            weapon.ShotFired += HandleShotFired;
+        }
+
         if (input == null)
         {
             return;
@@ -240,6 +267,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (weapon != null)
+        {
+            weapon.ShotFired -= HandleShotFired;
+        }
+
         if (input == null)
         {
             return;
@@ -470,10 +502,81 @@ public class PlayerController : MonoBehaviour
         // Fire 레이어(상체 전용 마스크)로 발사 포즈를 덮어씌운다 - 하체(걷기/달리기)는 그대로 유지된다.
         if (fireLayerIndex >= 0 && weapon != null)
         {
-            animator.SetBool("IsAutomaticWeapon", weapon.IsAutomaticWeaponEquipped);
-            animator.SetFloat("FireSpeed", weapon.FireAnimSpeed);
-            animator.SetLayerWeight(fireLayerIndex, weapon.IsFiringVisual ? 1f : 0f);
+            UpdateFireLayer();
         }
+    }
+
+    // 발사 상태(FireSingle/FireAuto)는 Animator 의 Entry 전이에 맡기지 않고 여기서 직접 Play 한다.
+    // Entry 전이는 레이어에 처음 들어갈 때 한 번만 평가돼서, 게임 중 무기가 바뀌어도 상태가 안 바뀌기 때문이다.
+    //  - 연사 무기: 쏘는 동안 FireAuto 를 autoFireAnimSpeed 배속으로 루프. 발사 속도에 맞추지 않는다 -
+    //    초당 10발 같은 연사 속도에 반동 1회를 맞추면 모션이 너무 빨라 눈에 안 보이기 때문이다.
+    //    (한 발 한 발의 느낌은 크로스헤어 블룸/총구 화염/소리 쪽이 담당한다)
+    //    쏘기 시작하는 순간 클립을 처음부터 틀어서 첫 발과 첫 반동을 맞춘다.
+    //  - 단발 무기: HandleShotFired 가 한 발마다 FireSingle 을 기본 속도로 처음부터 1회 재생하고,
+    //    여기서는 그 클립 길이만큼만 레이어를 켠다.
+    private void UpdateFireLayer()
+    {
+        bool autoFiring = weapon.IsAutoFiring;
+        float weight = 0f;
+
+        if (autoFiring)
+        {
+            if (!wasAutoFiring)
+            {
+                animator.Play(FireAutoStateHash, fireLayerIndex, 0f);
+            }
+
+            animator.SetFloat(FireSpeedHash, autoFireAnimSpeed);
+            weight = 1f;
+        }
+        else if (isArmed && Time.time < singleShotVisibleUntil)
+        {
+            weight = 1f;
+        }
+
+        wasAutoFiring = autoFiring;
+        animator.SetLayerWeight(fireLayerIndex, weight);
+    }
+
+    // WeaponController.ShotFired - 실제로 한 발 나갈 때마다 호출된다 (연사 무기는 UpdateFireLayer 가 따로 처리)
+    private void HandleShotFired()
+    {
+        if (animator != null && fireLayerIndex >= 0 && !weapon.IsAutomaticWeaponEquipped)
+        {
+            animator.SetFloat(FireSpeedHash, 1f);
+            animator.Play(FireSingleStateHash, fireLayerIndex, 0f);
+            singleShotVisibleUntil = Time.time + singleShotClipLength;
+        }
+    }
+
+    // 인스펙터에 클립이 연결돼 있으면 그 길이, 없으면 Animator 에 들어있는 클립을 이름으로 찾는다
+    private float FindClipLength(AnimationClip clip, string clipName)
+    {
+        float length = 0f;
+
+        if (clip != null)
+        {
+            length = clip.length;
+        }
+        else if (animator.runtimeAnimatorController != null)
+        {
+            foreach (AnimationClip candidate in animator.runtimeAnimatorController.animationClips)
+            {
+                if (candidate != null && candidate.name == clipName)
+                {
+                    length = candidate.length;
+                    break;
+                }
+            }
+        }
+
+        if (length <= 0f)
+        {
+            Debug.LogWarning("PlayerController: 발사 클립 '" + clipName + "' 을 찾지 못해 길이를 1초로 가정합니다. 인스펙터에 클립을 연결하세요.", this);
+            length = 1f;
+        }
+
+        return length;
     }
 
     private bool TryGetAimPoint(out Vector3 point)
@@ -568,9 +671,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleWeaponSelected(int slotIndex)
     {
-        if (weapon != null && !IsControlLocked && !IsUsingItem && !IsReloading)
+        if (weapon != null && CanSwapWeapon)
         {
-            weapon.EquipSlot(slotIndex); // 상자/인벤토리 UI, 아이템 사용, 재장전 중에는 무기 교체 금지
+            weapon.EquipSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
         }
     }
 

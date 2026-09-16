@@ -56,6 +56,21 @@ public class WeaponInventoryBridge : MonoBehaviour
                playerInventoryService.TryGetWeaponQuickSlot(playerData, weaponSlotIndex, out _, out weapon);
     }
 
+    // 무기가 들어있는 장비 슬롯 데이터 자체를 돌려준다 (없거나 잘못된 인덱스면 null).
+    // WeaponController 가 이 슬롯의 remainingRounds 에 무기별 잔탄을 기록한다 - 슬롯 데이터는
+    // 가방/창고/전리품으로 옮길 때 remainingRounds 까지 같이 옮겨지므로 잔탄이 무기를 따라다닌다.
+    // weaponSlotIndex 0/1 은 장비 슬롯 EquipmentSlots.PrimaryWeapon/SecondaryWeapon 과 같은 번호다.
+    public GridSlotData GetWeaponSlotData(int weaponSlotIndex)
+    {
+        GridSlotData slot = null;
+        if (playerData != null && EquipmentSlots.IsWeaponSlot(weaponSlotIndex))
+        {
+            slot = playerData.equipmentSlots.slots[weaponSlotIndex];
+        }
+
+        return slot;
+    }
+
     // 가방에 흩어진 같은 탄약 itemId 재고를 소모 없이 합산만 한다 - 재장전 게이지를 시작하기 전에
     // 실제로 탄약이 있는지 미리 확인하기 위함 (없으면 게이지를 아예 시작하지 않는다).
     public int PeekAmmoCount(int ammoItemId)

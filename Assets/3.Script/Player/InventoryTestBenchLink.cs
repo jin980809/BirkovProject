@@ -24,6 +24,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     [SerializeField] private WeaponController weaponController;
     [SerializeField] private PlayerVitals playerVitals;
     [SerializeField] private PlayerInputHandler input;
+    [SerializeField] private PlayerController player;
 
     private bool didLinkWeaponData;
 
@@ -52,6 +53,11 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         if (input == null)
         {
             input = FindAnyObjectByType<PlayerInputHandler>();
+        }
+
+        if (player == null)
+        {
+            player = FindAnyObjectByType<PlayerController>();
         }
     }
 
@@ -83,7 +89,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void HandleWeaponSelected(int slotIndex)
     {
-        if (inventoryBench != null)
+        // 실제 장착이 막히는 상황(재장전/상호작용/아이템 사용 등)에서는 UI 선택 표시도 바꾸지 않는다 -
+        // 안 그러면 손에 든 무기는 그대로인데 퀵슬롯 하이라이트만 넘어가서 교체된 것처럼 보인다.
+        if (inventoryBench != null && player != null && player.CanSwapWeapon)
         {
             inventoryBench.SelectWeapon(slotIndex); // 실제 장착은 WeaponController(PlayerController.HandleWeaponSelected)가 따로 처리, 여기선 UI 하이라이트만
         }

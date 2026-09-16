@@ -697,8 +697,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 2.2415335, z: 1}
+  m_Center: {x: 0, y: 0.620767, z: 0}
 --- !u!23 &544193657
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1629,6 +1629,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 345ca3f09741fbf4b9aecad26eaa92ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DebugDamageable
+--- !u!1 &1054583234
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1054583236}
+  - component: {fileID: 1054583235}
+  m_Layer: 0
+  m_Name: Global Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1054583235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054583234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 823f4ff78fd4d5e44a76a8bf028e0d91, type: 2}
+--- !u!4 &1054583236
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054583234}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.1862526, y: -6.699228, z: 7.259091}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1066933457
 GameObject:
   m_ObjectHideFlags: 0
@@ -1801,6 +1850,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1145437850}
   - component: {fileID: 1145437849}
+  - component: {fileID: 1145437851}
   m_Layer: 0
   m_Name: VirtualCamera
   m_TagString: Untagged
@@ -1863,6 +1913,28 @@ Transform:
   - {fileID: 1939004251}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 55, y: 0, z: 0}
+--- !u!114 &1145437851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145437848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c11265b855408d42af33d62691f5194, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Cinemachine::Cinemachine.CinemachineIndependentImpulseListener
+  m_ChannelMask: 1
+  m_Gain: 1
+  m_Use2DDistance: 0
+  m_UseLocalSpace: 1
+  m_ReactionSettings:
+    m_SecondaryNoise: {fileID: 0}
+    m_AmplitudeGain: 1
+    m_FrequencyGain: 1
+    m_Duration: 1
+    m_NoiseOffsets: {x: 0, y: 0, z: 0}
 --- !u!1 &1259624842
 GameObject:
   m_ObjectHideFlags: 0
@@ -2568,7 +2640,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -5320,6 +5392,7 @@ GameObject:
   - component: {fileID: 4842063134739801412}
   - component: {fileID: 4842063134739801413}
   - component: {fileID: 4842063134739801414}
+  - component: {fileID: 4842063134739801415}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -5840,6 +5913,8 @@ MonoBehaviour:
   aimHeightOffset: 0.5
   animator: {fileID: 0}
   animDamp: 0.12
+  singleShotClip: {fileID: 0}
+  autoFireAnimSpeed: 1
 --- !u!114 &4842063134739801406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5875,8 +5950,6 @@ MonoBehaviour:
   debugRange: 0
   debugMaxSpread: 0
   debugCurrentAmmo: 0
-  singleShotAnimDuration: 0.25
-  fireAnimSpeedMultiplier: 1
 --- !u!114 &4842063134739801407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5956,6 +6029,7 @@ MonoBehaviour:
   weaponController: {fileID: 0}
   playerVitals: {fileID: 0}
   input: {fileID: 0}
+  player: {fileID: 0}
 --- !u!114 &4842063134739801412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6002,24 +6076,27 @@ MonoBehaviour:
   models:
   - weaponItemId: 10001
     modelPrefab: {fileID: 2172628414432795203, guid: 30aa2da93c7027542b0e246d185a6470, type: 3}
-    positionOffset: {x: 0, y: 0, z: 0}
-    rotationOffsetEuler: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
   - weaponItemId: 10002
     modelPrefab: {fileID: 1105646471333690, guid: a2458a3a2318bb64ea864a87f6558170, type: 3}
-    positionOffset: {x: 0, y: 0, z: 0}
-    rotationOffsetEuler: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
   - weaponItemId: 10003
     modelPrefab: {fileID: 5713630339208828332, guid: ac49ae4cf95c1b342b75757a0698280f, type: 3}
-    positionOffset: {x: 0, y: 0, z: 0}
-    rotationOffsetEuler: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
   - weaponItemId: 10004
     modelPrefab: {fileID: 1311854592980844, guid: 339cc5e61566f63428dc7728c5c3c5a0, type: 3}
-    positionOffset: {x: 0, y: 0, z: 0}
-    rotationOffsetEuler: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
+--- !u!114 &4842063134739801415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3092850973133897278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35b841eaaa0996f46a7ea2539806380f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponCameraShake
+  shakeForce: 0.05
+  shakeDuration: 0.12
+  vcam: {fileID: 1145437849}
 --- !u!137 &5068502951382580481
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 0
@@ -7235,3 +7312,4 @@ SceneRoots:
   - {fileID: 940087820}
   - {fileID: 648438532}
   - {fileID: 256786438}
+  - {fileID: 1054583236}

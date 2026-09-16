@@ -22,6 +22,7 @@ public class WeaponController : MonoBehaviour
 
     [Header("연결")]
     [SerializeField] private WeaponInventoryBridge inventoryBridge;
+    [Tooltip("장착한 총 모델에 FirePoint 가 없을 때 대신 쓰는 발사 위치 (보통은 WeaponVisual 이 스폰한 총 프리팹의 FirePoint 를 쓴다)")]
     [SerializeField] private Transform firePoint;
     [SerializeField] private BulletPool bulletPool;
     [SerializeField] private Collider ownerCollider; // 자기 자신과의 충돌 무시용, 비우면 자동 탐색
@@ -48,10 +49,18 @@ public class WeaponController : MonoBehaviour
     private PlayerController player;
     private PlayerNoise noise;
     private PlayerInputHandler input;
+    private WeaponVisual weaponVisual; // 선택 - 있으면 장착한 총 모델의 FirePoint 에서 발사한다
 
     private ItemData equippedWeapon;
     private int equippedSlotIndex = -1;
-    private readonly int[] ammoInMagazine = new int[InventorySettings.WeaponQuickSlotCount];
+
+    // 장착 무기가 들어있는 장비 슬롯 데이터. 잔탄은 여기(remainingRounds)에 저장한다.
+    // 인스턴스별 ID 가 없어서 무기 개체를 구분할 방법이 슬롯 데이터뿐인데, 인벤토리 이동(MoveItem)이
+    // remainingRounds 를 같이 옮겨주므로 가방/창고/전리품으로 옮겼다가 다시 껴도 잔탄이 그대로 따라온다.
+    // 무기에서 remainingRounds 는 "탄창에서 비운 발 수"로 쓴다 - 0 이면 가득 찬 상태라서, 드롭/지급으로
+    // 새로 생긴 무기(기본값 0)는 자동으로 가득 찬 탄창으로 시작한다.
+    // (탄약 아이템에서의 원래 뜻 "뜯다 만 박스의 잔탄, 0 = 미개봉"과도 충돌하지 않는다 - 무기와 탄약은 슬롯을 공유하지 않는다)
+    private GridSlotData equippedWeaponSlot;
 
     // 재장전 진행 상태. ItemUseController 의 아이템 사용과 같은 방식(interaction 슬라이더 재사용,
     // 진행 중엔 걷기/시야 회전만 가능)으로 처리한다 - PlayerController.IsReloading 이 이 값을 그대로 비춘다.
@@ -78,48 +87,29 @@ public class WeaponController : MonoBehaviour
         get { return reloadDuration > 0f ? Mathf.Clamp01(reloadTimer / reloadDuration) : 0f; }
     }
 
-    // 슬롯별로 마지막에 장착됐던 무기의 itemId. 같은 무기를 다시 선택했을 뿐인데 탄창이
-    // 매번 가득 채워지는 걸(무한 재장전 악용) 막기 위해, 슬롯의 무기가 실제로 "바뀌었을 때"만
-    // 새로 채운다 (아래 EquipSlot 참고).
-    private readonly int[] lastEquippedItemId = new int[InventorySettings.WeaponQuickSlotCount];
-
-    [Header("애니메이션")]
-    [Tooltip("단발 무기가 한 발 쏜 뒤 상체 발사 포즈(Fire 레이어)를 얼마나 유지할지(초)")]
-    [SerializeField] private float singleShotAnimDuration = 0.25f;
-    [Tooltip("연사 애니메이션 재생 속도 = fireRate * 이 배율. 실제 연사 속도보다 반동 애니메이션이 느리면 이 값을 올린다")]
-    [SerializeField] private float fireAnimSpeedMultiplier = 1f;
-
     private bool fireHeld;
     private float nextFireReadyTime;
     private float currentSpreadDegrees; // 0(완전 정조준) ~ EffectiveMaxSpread
-    private float fireAnimUntilTime; // 단발 무기 전용 - 이 시각까지는 발사 포즈를 유지한다
 
-    // PlayerController.UpdateAnimator() 가 이 두 값을 읽어서 Fire 레이어(상체 전용 마스크)를 제어한다.
-    // 연사 무기는 fireHeld 인 동안 계속(루프), 단발 무기는 한 발마다 짧게 보여준다.
+    // 실제로 한 발 나갈 때마다 발생한다 (펠릿이 여러 개여도 한 번). PlayerController 가 단발 무기
+    // 발사 애니메이션을 한 발마다 처음부터 재생하는 데 쓴다.
+    public event Action ShotFired;
+
+    // PlayerController.UpdateFireLayer() 가 아래 값들로 Fire 레이어(상체 전용 마스크)를 제어한다.
     public bool IsAutomaticWeaponEquipped
     {
         get { return equippedWeapon != null && equippedWeapon.automatic; }
     }
 
-    public bool IsFiringVisual
+    // 연사 무기로 지금 계속 쏘고 있는 중인지 (쏘는 동안 반동 루프를 보여준다).
+    // 사격이 막힌 동안(달리기/인벤토리/아이템 사용 등)과 탄창이 빈 동안은 false.
+    public bool IsAutoFiring
     {
         get
         {
-            if (equippedWeapon == null)
-            {
-                return false;
-            }
-
-            return equippedWeapon.automatic
-                ? (fireHeld && !isReloading && CurrentAmmo > 0)
-                : Time.time < fireAnimUntilTime;
+            return IsAutomaticWeaponEquipped && fireHeld && !isReloading && CurrentAmmo > 0 &&
+                   player != null && player.CanFire;
         }
-    }
-
-    // Fire 레이어 애니메이션 재생 속도. 실제 연사 속도(fireRate)에 비례해서 반동 모션도 같이 빨라지게 한다.
-    public float FireAnimSpeed
-    {
-        get { return equippedWeapon != null ? Mathf.Max(0.01f, equippedWeapon.fireRate * fireAnimSpeedMultiplier) : 1f; }
     }
 
     // 줌(조준) 등에서 SetAimSpreadMultiplier 로 거는 배율. 1 = 정상, 0.5 면 최대 퍼짐이 절반으로 줄어듦
@@ -149,7 +139,27 @@ public class WeaponController : MonoBehaviour
 
     public int CurrentAmmo
     {
-        get { return equippedSlotIndex >= 0 ? ammoInMagazine[equippedSlotIndex] : 0; }
+        get
+        {
+            int ammo = 0;
+            if (equippedWeapon != null && equippedWeaponSlot != null)
+            {
+                int spentRounds = Mathf.Clamp(equippedWeaponSlot.remainingRounds, 0, equippedWeapon.magazineSize);
+                ammo = equippedWeapon.magazineSize - spentRounds;
+            }
+
+            return ammo;
+        }
+    }
+
+    // 잔탄을 장비 슬롯 데이터에 기록한다 (remainingRounds = 비운 발 수, CurrentAmmo 참고)
+    private void SetCurrentAmmo(int ammo)
+    {
+        if (equippedWeapon != null && equippedWeaponSlot != null)
+        {
+            int clampedAmmo = Mathf.Clamp(ammo, 0, equippedWeapon.magazineSize);
+            equippedWeaponSlot.remainingRounds = equippedWeapon.magazineSize - clampedAmmo;
+        }
     }
 
     // 크로스헤어 UI 가 읽는 값. 0(정조준) ~ 1(그 무기의 최대 퍼짐)
@@ -179,6 +189,7 @@ public class WeaponController : MonoBehaviour
         TryGetComponent(out player);
         TryGetComponent(out noise);
         TryGetComponent(out input);
+        TryGetComponent(out weaponVisual);
 
         if (inventoryBridge == null)
         {
@@ -194,11 +205,6 @@ public class WeaponController : MonoBehaviour
         if (ownerCollider == null)
         {
             TryGetComponent(out ownerCollider);
-        }
-
-        for (int i = 0; i < lastEquippedItemId.Length; i++)
-        {
-            lastEquippedItemId[i] = -1; // -1 = 아직 이 슬롯에 아무것도 장착된 적 없음 (실제 itemId 는 항상 양수)
         }
     }
 
@@ -225,6 +231,14 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        // 장착 중인 무기가 인벤토리 조작(드래그로 빼기/바꿔 끼우기, 사망 초기화 등)으로 슬롯에서 바뀌었으면
+        // 그 슬롯을 다시 조회한다. 그러지 않으면 이미 빠진 무기로 계속 쏘면서 잔탄을 엉뚱한 슬롯
+        // (새로 들어온 다른 무기나 빈 슬롯)에 기록하게 된다.
+        if (equippedWeapon != null && (equippedWeaponSlot == null || equippedWeaponSlot.itemId != equippedWeapon.itemId))
+        {
+            EquipSlot(equippedSlotIndex);
+        }
+
         RecoverBloom();
         UpdateReload();
 
@@ -280,9 +294,9 @@ public class WeaponController : MonoBehaviour
         }
 
         int gained = inventoryBridge.ConsumeAmmo(reloadAmmoItemId, reloadNeeded);
-        ammoInMagazine[equippedSlotIndex] += gained;
+        SetCurrentAmmo(CurrentAmmo + gained);
 
-        bool magazineFull = ammoInMagazine[equippedSlotIndex] >= equippedWeapon.magazineSize;
+        bool magazineFull = CurrentAmmo >= equippedWeapon.magazineSize;
         bool ranOutOfAmmo = gained <= 0;
 
         if (reloadOneAtATime && !magazineFull && !ranOutOfAmmo)
@@ -337,24 +351,20 @@ public class WeaponController : MonoBehaviour
     // slotIndex: 0 = 주 무기, 1 = 보조 무기
     public void EquipSlot(int slotIndex)
     {
+        // 재장전 도중 무기가 바뀌면 진행 중이던 재장전은 버린다 (다른 무기 탄창에 채워지는 것 방지)
+        HandleCancelReload();
+
         ItemData weapon = null;
-        if (inventoryBridge != null)
+        GridSlotData weaponSlot = null;
+        if (inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(slotIndex, out weapon))
         {
-            inventoryBridge.TryGetEquippedWeapon(slotIndex, out weapon);
+            weaponSlot = inventoryBridge.GetWeaponSlotData(slotIndex);
         }
 
-        // 이 슬롯에 실제로 "새 무기"가 들어왔을 때만 탄창을 채운다 - 인스턴스별 잔탄을 저장하는
-        // 시스템이 아직 없어서(내구도 미구현과 같은 이유) 처음 장착 시엔 가득 채워서 시작하지만,
-        // 같은 무기를 다시 선택했을 뿐이면 이미 쏜 만큼 줄어든 잔탄을 그대로 유지해야 한다
-        // (안 그러면 슬롯을 껐다 켰다 하는 것만으로 탄창이 무한 리필된다).
-        int newItemId = weapon != null ? weapon.itemId : -1;
-        if (weapon != null && lastEquippedItemId[slotIndex] != newItemId)
-        {
-            ammoInMagazine[slotIndex] = weapon.magazineSize;
-        }
-        lastEquippedItemId[slotIndex] = newItemId;
-
+        // 잔탄은 슬롯 데이터(remainingRounds)에 들어 있으므로 여기서 채우거나 초기화하지 않는다.
+        // 같은 무기를 다시 선택하든, 다른 무기로 바꿨다가 돌아오든 그 무기가 쏜 만큼 줄어든 채로 유지된다.
         equippedWeapon = weapon;
+        equippedWeaponSlot = weaponSlot;
         equippedSlotIndex = weapon != null ? slotIndex : -1;
         nextFireReadyTime = 0f; // 무기를 바꾸면 발사 쿨다운은 리셋
         currentSpreadDegrees = 0f; // 이전 무기의 블룸은 안 이어받는다
@@ -386,7 +396,7 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        int needed = equippedWeapon.magazineSize - ammoInMagazine[equippedSlotIndex];
+        int needed = equippedWeapon.magazineSize - CurrentAmmo;
         if (needed <= 0)
         {
             return;
@@ -430,7 +440,21 @@ public class WeaponController : MonoBehaviour
 
     private void TryFireOnce()
     {
-        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || player == null || firePoint == null)
+        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || player == null)
+        {
+            return;
+        }
+
+        Transform shotPoint = GetShotPoint();
+        if (shotPoint == null)
+        {
+            return;
+        }
+
+        // 발사 버튼을 누르고 있는 동안 Update 가 매 프레임 이 메서드를 호출하므로, 누른 순간뿐 아니라
+        // 매 발마다 사격 가능 여부를 다시 확인한다 (누른 채로 인벤토리 열기/아이템 사용/달리기에 들어가면 멈춘다).
+        // fireHeld 는 건드리지 않으므로, 막힌 상태가 풀렸을 때 계속 누르고 있었다면 다시 쏘기 시작한다.
+        if (!player.CanFire)
         {
             return;
         }
@@ -440,7 +464,7 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        if (ammoInMagazine[equippedSlotIndex] <= 0)
+        if (CurrentAmmo <= 0)
         {
             return; // TODO: 빈 탄창 소리
         }
@@ -448,13 +472,11 @@ public class WeaponController : MonoBehaviour
         float interval = equippedWeapon.fireRate > 0f ? 1f / equippedWeapon.fireRate : 0f;
         nextFireReadyTime = Time.time + interval;
 
-        ammoInMagazine[equippedSlotIndex]--;
+        SetCurrentAmmo(CurrentAmmo - 1);
 
-        // 연사 무기는 fireHeld 로 애니메이션이 계속 유지되지만, 단발 무기는 눌렀다 뗀 순간이 짧아서
-        // 한 발마다 이 시각을 갱신해서 Fire 레이어(상체 발사 포즈)를 잠깐 보여준다.
-        if (!equippedWeapon.automatic)
+        if (ShotFired != null)
         {
-            fireAnimUntilTime = Time.time + singleShotAnimDuration;
+            ShotFired();
         }
 
         // 이번 발사는 지금까지 쌓인 퍼짐(currentSpreadDegrees) 을 그대로 쓰고,
@@ -462,7 +484,7 @@ public class WeaponController : MonoBehaviour
         int pellets = Mathf.Max(1, equippedWeapon.pelletCount);
         for (int i = 0; i < pellets; i++)
         {
-            FireProjectile();
+            FireProjectile(shotPoint);
         }
 
         GrowBloom();
@@ -497,18 +519,35 @@ public class WeaponController : MonoBehaviour
         currentSpreadDegrees = Mathf.Max(0f, currentSpreadDegrees - recover);
     }
 
-    private void FireProjectile()
+    // 장착한 총 모델의 FirePoint(프리팹 루트 WeaponModel 에 연결)를 우선 쓰고, 없으면 인스펙터의 기본 firePoint 를 쓴다
+    private Transform GetShotPoint()
+    {
+        Transform point = firePoint;
+
+        if (weaponVisual != null && equippedWeapon != null)
+        {
+            Transform modelFirePoint = weaponVisual.GetFirePoint(equippedWeapon.itemId);
+            if (modelFirePoint != null)
+            {
+                point = modelFirePoint;
+            }
+        }
+
+        return point;
+    }
+
+    private void FireProjectile(Transform shotPoint)
     {
         if (bulletPool == null)
         {
             return;
         }
 
-        Vector3 baseDirection = player.AimWorldPoint - firePoint.position;
+        Vector3 baseDirection = player.AimWorldPoint - shotPoint.position;
         baseDirection.y = 0f;
         if (baseDirection.sqrMagnitude < 0.0001f)
         {
-            baseDirection = firePoint.forward;
+            baseDirection = shotPoint.forward;
         }
         baseDirection.Normalize();
 
@@ -519,7 +558,7 @@ public class WeaponController : MonoBehaviour
         float spreadDegrees = equippedWeapon.pelletCount > 1 ? EffectiveMaxSpread : currentSpreadDegrees;
         Vector3 direction = ApplySpread(baseDirection, spreadDegrees);
 
-        Projectile projectile = bulletPool.Rent(firePoint.position, Quaternion.LookRotation(direction));
+        Projectile projectile = bulletPool.Rent(shotPoint.position, Quaternion.LookRotation(direction));
 
         // 지금 플레이어가 붙어있는 엄폐물이 있으면, 이번 총알은 그것들을 무시하고 통과한다
         // (엄폐물 너머의 적을 쏠 수 있게 - CoverObject.cs 참고)
