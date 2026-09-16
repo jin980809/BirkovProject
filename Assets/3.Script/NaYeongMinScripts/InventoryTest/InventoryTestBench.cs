@@ -26,18 +26,27 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Font font;
         [Tooltip("단독 테스트에서만 사용. 팀원 입력 이벤트 연결 시 끌 것.")]
         public bool useStandaloneKeyboard = true;
+        [Tooltip("프리팹 기반 새 UI 로 전환하면 끈다. 끄면 이 벤치는 UI 를 만들지 않는다.")]
+        public bool buildLegacyUi = true;
+
+        [Header("HONETi 스킨")]
+        public Sprite honetiPanelSprite;
+        public Sprite honetiSlotSprite;
+        public Sprite honetiTitleSprite;
+        public Sprite honetiButtonSprite;
         public TestIconBinding[] icons = Array.Empty<TestIconBinding>();
 
-        private const int BagCell = 66;
-        private const int EquipCell = 74;
-        private const int QuickCell = 62;
-        private const int LootCell = 62;
-        private const int WarehouseCell = 31;
+        private const int BagCell = 76;
+        private const int EquipCell = 80;
+        private const int QuickCell = 68;
+        private const int LootCell = 80;
+        private const int WarehouseCell = 80;
 
         private ItemCatalog catalog;
         private InventoryService inventoryService;
         private PlayerInventoryService playerService;
         private WarehouseService warehouseService;
+        private CraftingService craftingService;
         private JsonSaveSystem saves;
         private List<DropTableEntry> dropEntries = new List<DropTableEntry>();
 
@@ -49,8 +58,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private readonly Dictionary<int, Sprite> spriteMap = new Dictionary<int, Sprite>();
 
         private RectTransform screen;
-        private GameObject lootPanel, warehousePanel;
-        private RectTransform lootGridRoot, warehouseGridRoot;
+        private GameObject lootPanel, warehousePanel, craftPanel, mapChestPanel;
+        private Text[] craftLabels;
+        private RectTransform lootGridRoot, warehouseGridRoot, mapChestGridRoot;
         private Text status, statsText, hint;
         private Image dragIcon;
         private TestSlotView dragSource, hovered;
@@ -61,9 +71,63 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private IRecoveryTarget recoveryTarget;
         private string externalStats;
         private LootDropObject openedDrop;
+        private InventoryWorldContainer openedContainer;
+        private bool mapChestOpen;
+        public bool IsOpen => screen != null && screen.gameObject.activeSelf;
+        // PlayerInventoryBridge 가 거리가 멀어지면 닫기 위해 쓴다.
+        public bool IsExternalOpen => IsOpen && (openedDrop != null || openedContainer != null);
+        public Transform ExternalAnchor => openedContainer != null ? openedContainer.transform :
+            openedDrop != null ? openedDrop.transform : null;
+
+        public void OpenInventory()
+        {
+            if (!IsReady || screen == null) return;
+            CloseLoot();
+            screen.gameObject.SetActive(true);
+        }
+
+        public void CloseCurrent()
+        {
+            if (screen == null) return;
+            CloseLoot();
+            screen.gameObject.SetActive(false);
+        }
+
+        public void OpenStorage(InventoryWorldContainer source)
+        {
+            if (!IsReady || source == null || !source.isActiveAndEnabled || source.kind != InventoryWorldKind.Storage) return;
+            OpenInventory();
+            openedContainer = source;
+            warehouseService.Open();
+            warehousePanel.SetActive(true);
+            Refresh();
+        }
+
+        public void OpenLoot(InventoryWorldContainer source)
+        {
+            OpenContainer(source, InventoryWorldKind.Loot);
+        }
+
+        public void OpenMapChest(InventoryWorldContainer source)
+        {
+            OpenContainer(source, InventoryWorldKind.MapChest);
+        }
+
+        private void OpenContainer(InventoryWorldContainer source, InventoryWorldKind expected)
+        {
+            if (!IsReady || source == null || !source.isActiveAndEnabled || source.kind != expected) return;
+            OpenInventory();
+            openedContainer = source;
+            loot = source.GetContents(catalog);
+            mapChestOpen = expected == InventoryWorldKind.MapChest;
+            GameObject panel = mapChestOpen ? mapChestPanel : lootPanel;
+            panel.SetActive(true);
+            panel.GetComponentInChildren<Text>().text = source.displayName;
+            BuildLootGrid();
+            Refresh();
+        }
 
         public bool IsReady => data != null && EnsureServices();
-        public PlayerInventoryData PlayerData => data?.inventoryData;
 
         public void BindRecoveryTarget(IRecoveryTarget target)
         {
@@ -87,19 +151,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public void ToggleInventory()
         {
             if (!IsReady || screen == null) return;
-            EndDrag();
-            hovered = null;
-            screen.gameObject.SetActive(!screen.gameObject.activeSelf);
-            if (!screen.gameObject.activeSelf) warehouseService.Close();
-        }
-
-        public bool InteractWithHoveredItem()
-        {
-            if (!IsReady || screen == null || !screen.gameObject.activeSelf || hovered == null ||
-                !hovered.gameObject.activeInHierarchy) return false;
-            if (hovered.container != TestContainer.Loot && hovered.container != TestContainer.Warehouse) return false;
-            Take(hovered.container, hovered.index);
-            return true;
+            if (IsOpen) CloseCurrent();
+            else OpenInventory();
         }
 
         public void OpenLoot(LootDropObject drop)
@@ -120,6 +173,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public void CloseLoot()
         {
             openedDrop = null;
+            openedContainer = null;
+            mapChestOpen = false;
+            if (warehouseService != null) warehouseService.Close();
+            if (lootPanel != null) lootPanel.SetActive(false);
+            if (mapChestPanel != null) mapChestPanel.SetActive(false);
+            if (warehousePanel != null) warehousePanel.SetActive(false);
+            if (craftPanel != null) craftPanel.SetActive(false);
             loot = new LootContainerData(lootPreset);
             EndDrag();
             hovered = null;
@@ -130,6 +190,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void Start()
         {
+            // 새 UI 가 켜져 있으면 벤치는 화면을 만들지 않는다. UI 중복 생성 방지.
+            if (!buildLegacyUi)
+            {
+                enabled = false;
+                return;
+            }
+
             if (itemCsv == null)
             {
                 Debug.LogError("ItemData.csv 를 itemCsv 에 연결해야 한다.", this);
@@ -146,6 +213,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             Initialize();
             BuildUi();
             ResetAll();
+            OpenInventory();
         }
 
         private void Initialize()
@@ -156,6 +224,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             catalog = new ItemCatalog(items);
             inventoryService = new InventoryService(catalog);
             playerService = new PlayerInventoryService(catalog);
+            craftingService = new CraftingService(catalog);
             saves = new JsonSaveSystem(SaveDirectory);
 
             if (dropCsv != null)
@@ -685,7 +754,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // 플레이 중 스크립트 재컴파일 시 직렬화되지 않는 서비스 필드가 null 로 돌아온다. 데이터는 두고 서비스만 재구성한다.
         private bool EnsureServices()
         {
-            if (playerService != null && warehouseService != null)
+            if (playerService != null && warehouseService != null && craftingService != null)
             {
                 return true;
             }
@@ -754,6 +823,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 if (externalStats != null)
                     statsText.text = externalStats + "    지푸라기 " + data.inventoryData.currency + "    선택 무기 " + (selectedWeapon + 1);
             }
+
+            RefreshCraftPanel();
         }
 
         private static string PlaceholderCaption(TestSlotView view)
@@ -809,8 +880,20 @@ namespace Birdkov.NaYeongMin.InventoryTest
         }
 
         // ---------- UI 구축 ----------
+        // 배치 기준 1600 x 900. 좌측 장비·가방 / 우측 전리품·창고·제작대 / 하단 중앙 퀵슬롯.
+        // 좌·우 두 열은 화면 양끝에 붙이고 가운데 아래에 퀵슬롯을 둔다. 패널만 HONETi 스킨을 쓴다.
+        private const int HeaderBottom = 76;
+        private const int LeftX = 24;
+        private const int ColumnWidth = 460;
+        private const int RightX = 1116;
+        private const int MiddleX = 500;
+        private const int MiddleWidth = 600;
+        private const int SidePanelHeight = 640;
+
         private void BuildUi()
         {
+            ResolveSkin();
+
             Canvas canvas = GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
@@ -832,84 +915,282 @@ namespace Birdkov.NaYeongMin.InventoryTest
             screen = MakeRect("Root", transform, 0, 0, 1600, 900);
             screen.anchorMin = screen.anchorMax = screen.pivot = new Vector2(0.5f, 0.5f);
             screen.anchoredPosition = Vector2.zero;
-            screen.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.08f, 0.09f, 1f);
 
-            MakeLabel(screen, "NaYeongMin 인벤토리 테스트 벤치", 30, 18, 700, 34, 22);
+            // 머리말. 제목 띠만 HONETi 스프라이트를 쓴다.
+            RectTransform titleBar = MakeRect("TitleBar", screen, LeftX, 16, ColumnWidth, 40);
+            Image titleImage = titleBar.gameObject.AddComponent<Image>();
+            ApplySkin(titleImage, honetiTitleSprite, new Color(0.12f, 0.19f, 0.24f, 0.86f), new Color(0.12f, 0.13f, 0.14f, 0.9f));
+            titleImage.raycastTarget = false;
+            MakeLabel(titleBar, "NaYeongMin 인벤토리 테스트 벤치", 16, 6, ColumnWidth - 32, 28, 18);
+
             hint = MakeLabel(screen, "드래그로 이동 · 클릭으로 사용/획득 · 1·2 무기 선택 · 3·4·5 아이템 퀵 사용 · E 획득",
-                30, 52, 1100, 26, 14);
-            hint.color = new Color(0.65f, 0.7f, 0.72f);
+                RightX, 16, ColumnWidth, 40, 12);
+            hint.color = new Color(0.72f, 0.78f, 0.8f);
 
-            BuildButtons();
+            // 상단 테스트 버튼은 생성하지 않는다.
 
-            // 좌측: 전리품 / 창고
-            lootPanel = MakePanel("LootPanel", 30, 150, 430, 470, "전리품 상자");
-            lootGridRoot = MakeRect("LootGrid", lootPanel.transform, 22, 96, 380, 340);
+            // 왼쪽: 장비 + 가방
+            GameObject equipmentPanel = MakePanel("EquipmentPanel", LeftX, HeaderBottom, ColumnWidth, 156,
+                "장비 슬롯  4칸  ( 무기 2 · 방어구 2 )");
+            BuildGrid(equipmentPanel.transform, TestContainer.Equipment, 4, 1, 20, 58, EquipCell);
 
-            warehousePanel = MakePanel("WarehousePanel", 30, 150, 430, 470, "허브 창고  10 x 12 = 120칸");
-            warehouseGridRoot = MakeRect("WarehouseGrid", warehousePanel.transform, 22, 60, 380, 390);
+            GameObject bagPanel = MakePanel("BagPanel", LeftX, HeaderBottom + 168, ColumnWidth, 472, "가방  5 x 5 = 25칸");
+            BuildGrid(bagPanel.transform, TestContainer.Bag, 5, 5, 20, 58, BagCell);
+
+            // 오른쪽: 전리품 / 창고 / 제작대. 같은 자리에서 서로 바꿔 띄운다.
+            lootPanel = MakePanel("LootPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "전리품 상자");
+            lootGridRoot = MakeRect("LootGrid", lootPanel.transform, 20, 58, ColumnWidth - 40, SidePanelHeight - 78);
+            mapChestPanel = MakePanel("MapChestPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "맵 상자");
+            mapChestGridRoot = MakeRect("MapChestGrid", mapChestPanel.transform, 20, 58, ColumnWidth - 40, SidePanelHeight - 78);
+            mapChestPanel.SetActive(false);
+
+            warehousePanel = MakePanel("WarehousePanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight,
+                "허브 창고  " + InventorySettings.WarehouseWidth + " x " + InventorySettings.WarehouseHeight + " = " +
+                InventorySettings.WarehouseWidth * InventorySettings.WarehouseHeight + "칸  ( 휠 스크롤 )");
+            warehouseGridRoot = BuildWarehouseScroll(warehousePanel.transform);
             warehousePanel.SetActive(false);
 
-            BuildLootSizeButtons();
+            BuildCraftPanel();
 
-            // 우측: 장비 + 가방
-            GameObject playerPanel = MakePanel("PlayerPanel", 500, 150, 620, 630, "플레이어");
-            MakeLabel(playerPanel.transform, "장비 슬롯  4칸  ( 무기 2 · 방어구 2 )", 22, 52, 420, 24, 14);
-            BuildGrid(playerPanel.transform, TestContainer.Equipment, 4, 1, 22, 82, EquipCell);
-
-            MakeLabel(playerPanel.transform, "가방  5 x 5 = 25칸", 22, 180, 420, 24, 14);
-            BuildGrid(playerPanel.transform, TestContainer.Bag, 5, 5, 22, 210, BagCell);
-
-            // 퀵슬롯
-            GameObject quickPanel = MakePanel("QuickPanel", 500, 800, 620, 82, null);
-            MakeLabel(quickPanel.transform, "무기 퀵 (링크)", 14, 6, 130, 20, 12);
-            BuildGrid(quickPanel.transform, TestContainer.WeaponQuick, 2, 1, 14, 26, QuickCell);
-            MakeLabel(quickPanel.transform, "아이템 퀵 (가방 매핑)", 190, 6, 200, 20, 12);
-            BuildGrid(quickPanel.transform, TestContainer.ItemQuick, 3, 1, 190, 26, QuickCell);
-
-            statsText = MakeLabel(screen, string.Empty, 1140, 160, 430, 30, 15);
-            status = MakeLabel(screen, string.Empty, 1140, 200, 430, 300, 14);
+            // 상태 문구는 좌·우 패널 바로 아래 줄에 붙인다. 빈 가운데 열을 두지 않는다.
+            statsText = MakeLabel(screen, string.Empty, LeftX, HeaderBottom + 648, ColumnWidth, 56, 13);
+            status = MakeLabel(screen, string.Empty, RightX, HeaderBottom + 648, ColumnWidth, 56, 13);
             status.alignment = TextAnchor.UpperLeft;
             status.color = new Color(0.95f, 0.83f, 0.45f);
 
-            RectTransform dragRect = MakeRect("DragIcon", screen, 0, 0, 54, 54);
+            // 하단 중앙: 퀵슬롯
+            GameObject quickPanel = MakePanel("QuickPanel", MiddleX, 780, MiddleWidth, 110, null);
+            MakeLabel(quickPanel.transform, "무기 퀵 (링크)", 16, 6, 150, 18, 12);
+            BuildGrid(quickPanel.transform, TestContainer.WeaponQuick, 2, 1, 16, 26, QuickCell);
+            MakeLabel(quickPanel.transform, "아이템 퀵 (가방 매핑)", 200, 6, 190, 18, 12);
+            BuildGrid(quickPanel.transform, TestContainer.ItemQuick, 3, 1, 200, 26, QuickCell);
+
+            RectTransform dragRect = MakeRect("DragIcon", screen, 0, 0, 72, 72);
             dragRect.anchorMin = dragRect.anchorMax = dragRect.pivot = new Vector2(0.5f, 0.5f);
             dragIcon = dragRect.gameObject.AddComponent<Image>();
             dragIcon.raycastTarget = false;
+            dragIcon.preserveAspect = true;
             dragRect.gameObject.SetActive(false);
 
             BuildLootGrid();
             BuildGrid(warehouseGridRoot, TestContainer.Warehouse,
                 InventorySettings.WarehouseWidth, InventorySettings.WarehouseHeight, 0, 0, WarehouseCell);
+
         }
 
+        // 창고는 칸이 많아 한 화면에 들어가지 않는다. 마우스 휠로 세로 스크롤한다.
+        private RectTransform BuildWarehouseScroll(Transform panel)
+        {
+            RectTransform viewport = MakeRect("WarehouseViewport", panel, 20, 62, ColumnWidth - 40, SidePanelHeight - 82);
+            Image viewportImage = viewport.gameObject.AddComponent<Image>();
+            viewportImage.color = new Color(0f, 0f, 0f, 0.12f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+
+            int contentHeight = InventorySettings.WarehouseHeight * (WarehouseCell + 4) - 4;
+            RectTransform content = MakeRect("WarehouseGrid", viewport, 0, 0, ColumnWidth - 40, contentHeight);
+
+            ScrollRect scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = content;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 36f;
+            return content;
+        }
+
+        // 테스트 버튼. 화면에 띄우지 않는다. 수동 테스트가 필요할 때만 BuildUi 에서 불러 쓴다.
         private void BuildButtons()
         {
-            string[] labels = { "초기화", "창고 상호작용", "가방 채우기", "사망", "저장", "불러오기", "손상 복구 검사" };
+            string[] labels = { "초기화", "창고 상호작용", "제작대", "가방 채우기", "사망", "저장", "불러오기", "손상 복구 검사" };
             Action[] actions =
             {
-                ResetAll, ToggleWarehouse, FillBag, KillPlayer, SaveGame, LoadGame, TestCorruptionRecovery
+                ResetAll, ToggleWarehouse, ToggleCraftingTable, FillBag, KillPlayer, SaveGame, LoadGame, TestCorruptionRecovery
             };
 
+            const int buttonWidth = 290;
+            const int buttonHeight = 34;
             for (int index = 0; index < labels.Length; index++)
             {
                 Action action = actions[index];
-                MakeButton(screen, labels[index], 30 + index * 152, 92, 144, 34, action);
+                MakeButton(screen, labels[index], MiddleX + index % 2 * (buttonWidth + 10),
+                    HeaderBottom + index / 2 * (buttonHeight + 6), buttonWidth, buttonHeight, action);
             }
         }
 
+        // HONETi flat_gui_elements 스킨. 인스펙터가 비어 있으면 에디터에서 경로로 채운다.
+        private void ResolveSkin()
+        {
+            honetiPanelSprite = ResolveSprite(honetiPanelSprite, "universal_panel_1");
+            honetiSlotSprite = ResolveSprite(honetiSlotSprite, "universal_panel_2");
+            honetiTitleSprite = ResolveSprite(honetiTitleSprite, "title_bg");
+            honetiButtonSprite = ResolveSprite(honetiButtonSprite, "button_outlined");
+        }
+
+        // 에디터 전용 보조. HONETi 폴더가 옮겨져도 이름으로 찾는다. 빌드에서는 인스펙터 값만 쓴다.
+        private static Sprite ResolveSprite(Sprite assigned, string assetName)
+        {
+#if UNITY_EDITOR
+            if (assigned != null)
+            {
+                return assigned;
+            }
+
+            foreach (string guid in UnityEditor.AssetDatabase.FindAssets(assetName + " t:Sprite"))
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.Contains("HONETi") || !path.EndsWith(assetName + ".png"))
+                {
+                    continue;
+                }
+
+                Sprite found = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+#endif
+            return assigned;
+        }
+
+        // 스프라이트가 있으면 9 슬라이스로, 없으면 단색으로 떨어뜨린다.
+        private static void ApplySkin(Image image, Sprite sprite, Color tint, Color fallback)
+        {
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                image.type = Image.Type.Sliced;
+                image.color = tint;
+                return;
+            }
+
+            image.color = fallback;
+        }
+
+        // 제작대 상호작용 시 전리품 자리에 제작 UI 를 띄운다. 기획서 5.3.
+        private void BuildCraftPanel()
+        {
+            craftPanel = MakePanel("CraftPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "총알 제작대");
+            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 1박스", 20, 48, ColumnWidth - 40, 26, 14);
+
+            IList<int> mushrooms = CraftingService.MushroomItemIds;
+            craftLabels = new Text[mushrooms.Count];
+            for (int index = 0; index < mushrooms.Count; index++)
+            {
+                int mushroomItemId = mushrooms[index];
+                float y = 88 + index * 84;
+                craftLabels[index] = MakeLabel(craftPanel.transform, string.Empty, 20, y, 236, 48, 13);
+                MakeButton(craftPanel.transform, "제작", 268, y + 6, 152, 36, () => CraftAmmo(mushroomItemId));
+            }
+        
+            craftPanel.SetActive(false);
+        }
+
+        public void ToggleCraftingTable()
+        {
+            if (!IsReady || craftPanel == null)
+            {
+                return;
+            }
+
+            bool opening = !craftPanel.activeSelf;
+            if (opening)
+            {
+                CloseLoot();
+                warehouseService.Close();
+                if (warehousePanel != null) warehousePanel.SetActive(false);
+                if (lootPanel != null) lootPanel.SetActive(false);
+            }
+            else if (lootPanel != null)
+            {
+                lootPanel.SetActive(true);
+            }
+
+            craftPanel.SetActive(opening);
+            SetMessage(opening ? "제작대를 열었습니다." : "제작대를 닫았습니다.");
+            Refresh();
+        }
+
+        public CraftResult CraftAmmo(int mushroomItemId)
+        {
+            if (!IsReady)
+            {
+                return CraftResult.InvalidData;
+            }
+
+            CraftResult result = craftingService.Craft(data.inventoryData, mushroomItemId);
+            SetMessage(CraftMessage(result, mushroomItemId));
+            Refresh();
+            return result;
+        }
+
+        private string CraftMessage(CraftResult result, int mushroomItemId)
+        {
+            switch (result)
+            {
+                case CraftResult.Success:
+                    int ammoItemId;
+                    CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
+                    return "제작 완료. " + DisplayName(ammoItemId) + " 1박스를 가방에 넣었습니다.";
+                case CraftResult.NotEnoughMushroom:
+                    return DisplayName(mushroomItemId) + "이(가) " + CraftingService.MushroomCost + "개 필요합니다.";
+                case CraftResult.NotEnoughGunpowder:
+                    return "화약이 " + CraftingService.GunpowderCost + "개 필요합니다.";
+                case CraftResult.NoSpace:
+                    return "가방이 꽉 찼습니다. 재료는 그대로 유지됩니다.";
+                case CraftResult.UnknownRecipe:
+                    return "제작법이 없는 재료입니다.";
+                default:
+                    return "제작할 수 없습니다.";
+            }
+        }
+
+        private string DisplayName(int itemId)
+        {
+            ItemData item;
+            return catalog != null && catalog.TryGetItem(itemId, out item) ? item.displayName : itemId.ToString();
+        }
+
+        private void RefreshCraftPanel()
+        {
+            if (craftPanel == null || !craftPanel.activeSelf || craftLabels == null)
+            {
+                return;
+            }
+
+            IList<int> mushrooms = CraftingService.MushroomItemIds;
+            int gunpowder = craftingService.Count(data.inventoryData.inventory, CraftingService.GunpowderItemId);
+            for (int index = 0; index < craftLabels.Length && index < mushrooms.Count; index++)
+            {
+                int mushroomItemId = mushrooms[index];
+                int ammoItemId;
+                CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
+                int owned = craftingService.Count(data.inventoryData.inventory, mushroomItemId);
+                bool ready = craftingService.CanCraft(data.inventoryData, mushroomItemId) == CraftResult.Success;
+        
+                craftLabels[index].text = DisplayName(mushroomItemId) + " " + owned + " / " + CraftingService.MushroomCost +
+                    "   화약 " + gunpowder + " / " + CraftingService.GunpowderCost + "\n-> " + DisplayName(ammoItemId);
+                craftLabels[index].color = ready
+                    ? new Color(0.65f, 0.92f, 0.7f)
+                    : new Color(0.62f, 0.64f, 0.66f);
+            }
+        }
+
+        // 전리품 상자 규격 프리셋 버튼. 화면에 띄우지 않는다. 수동 테스트가 필요할 때만 BuildUi 에서 불러 쓴다.
         private void BuildLootSizeButtons()
         {
             LootContainerSize[] presets =
             {
                 LootContainerSize.Box2x4, LootContainerSize.Box3x3,
-                LootContainerSize.Box3x5, LootContainerSize.Box4x2
+                LootContainerSize.Box3x5, LootContainerSize.Box4x1
             };
             string[] names = { "2 x 4", "3 x 3", "3 x 5", "4 x 1" };
 
+            MakeLabel(screen, "전리품 상자 규격", MiddleX, 256, MiddleWidth, 20, 12);
             for (int index = 0; index < presets.Length; index++)
             {
                 LootContainerSize preset = presets[index];
-                MakeButton(lootPanel.transform, names[index], 22 + index * 96, 52, 88, 30, () => RollLoot(preset));
+                MakeButton(screen, names[index], MiddleX + index * 148, 278, 142, 32, () => RollLoot(preset));
             }
         }
 
@@ -922,15 +1203,29 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     continue;
                 }
 
+                views[index].gameObject.SetActive(false);
                 Destroy(views[index].gameObject);
                 views.RemoveAt(index);
             }
 
             LootContainerSizes.GetSize(loot.sizePreset, out int width, out int height);
-            BuildGrid(lootGridRoot, TestContainer.Loot, width, height, 0, 0, LootCell);
+            RectTransform gridRoot = mapChestOpen ? mapChestGridRoot : lootGridRoot;
+            RectTransform panel = (RectTransform)gridRoot.parent;
+
+            // 상자 규격 그대로 그리되 가로를 긴 쪽으로 둔다. 2x4 -> 4x2, 3x3 -> 3x3, 3x5 -> 5x3, 4x1 -> 4x1.
+            // 패널도 그리드에 맞춰 줄이고 오른쪽 모서리에 맞춴 둔다.
+            int columns = Mathf.Max(width, height);
+            int rows = Mathf.Min(width, height);
+            int gridWidth = columns * (LootCell + 4) - 4;
+            int panelWidth = gridWidth + 40;
+            panel.sizeDelta = new Vector2(panelWidth, 78 + rows * (LootCell + 4));
+            panel.anchoredPosition = new Vector2(RightX + ColumnWidth - panelWidth, -HeaderBottom);
+            gridRoot.sizeDelta = new Vector2(gridWidth, rows * (LootCell + 4) - 4);
+            BuildGrid(gridRoot, TestContainer.Loot, columns, rows, 0, 0, LootCell, width * height);
         }
 
-        private void BuildGrid(Transform parent, TestContainer container, int width, int height, int x, int y, int cell)
+        private void BuildGrid(Transform parent, TestContainer container, int width, int height, int x, int y, int cell,
+            int slotCount = -1)
         {
             const int gap = 4;
             for (int row = 0; row < height; row++)
@@ -938,12 +1233,19 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 for (int column = 0; column < width; column++)
                 {
                     int index = row * width + column;
+
+                    // 접어서 그릴 때 마지막 줄에 남는 자리는 만들지 않는다.
+                    if (slotCount >= 0 && index >= slotCount)
+                    {
+                        return;
+                    }
+
                     RectTransform rect = MakeRect(
                         container + "_" + index, parent,
                         x + column * (cell + gap), y + row * (cell + gap), cell, cell);
 
                     Image background = rect.gameObject.AddComponent<Image>();
-                    background.color = new Color(0.17f, 0.18f, 0.19f, 0.9f);
+                    ApplySkin(background, honetiSlotSprite, Color.white, new Color(0.17f, 0.18f, 0.19f, 0.9f));
 
                     RectTransform iconRect = MakeRect("Icon", rect, 5, 5, cell - 10, cell - 10);
                     Image icon = iconRect.gameObject.AddComponent<Image>();
@@ -976,11 +1278,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private GameObject MakePanel(string name, int x, int y, int width, int height, string title)
         {
             RectTransform rect = MakeRect(name, screen, x, y, width, height);
-            rect.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.14f, 0.95f);
+            Image background = rect.gameObject.AddComponent<Image>();
+            ApplySkin(background, honetiPanelSprite, new Color(0.13f, 0.19f, 0.24f, 0.84f), new Color(0.12f, 0.13f, 0.14f, 0.84f));
 
             if (!string.IsNullOrEmpty(title))
             {
-                MakeLabel(rect, title, 20, 16, width - 40, 28, 17);
+                MakeLabel(rect, title, 20, 14, width - 40, 28, 16);
             }
 
             return rect.gameObject;
@@ -1015,7 +1318,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             RectTransform rect = MakeRect("Button_" + text, parent, x, y, width, height);
             Image background = rect.gameObject.AddComponent<Image>();
-            background.color = new Color(0.21f, 0.29f, 0.31f, 1f);
+            ApplySkin(background, honetiButtonSprite, Color.white, new Color(0.21f, 0.29f, 0.31f, 1f));
 
             Button button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = background;

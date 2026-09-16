@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 순수 투사체(Rigidbody)로 날아가는 총알. BulletPool 로 재사용된다.
@@ -16,6 +17,10 @@ public class Projectile : MonoBehaviour
     private float damage;
     private float maxDistance;
     private Vector3 startPosition;
+
+    // Launch 때 무시 설정한 엄폐물 콜라이더들 - ReturnToPool 에서 다시 충돌하도록 되돌린다
+    // (이번 한 발 동안만 무시해야 한다 - 계속 무시하면 나중에 그 엄폐물을 진짜로 쏴도 안 맞는다)
+    private readonly List<Collider> ignoredCovers = new List<Collider>();
 
     private void Awake()
     {
@@ -44,8 +49,10 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    // direction 은 정규화된 방향, range 는 이 거리를 넘어가면 자동으로 풀에 반환한다 (0 이하면 무제한)
-    public void Launch(Vector3 direction, float speed, float damageAmount, float range, Collider ownerCollider)
+    // direction 은 정규화된 방향, range 는 이 거리를 넘어가면 자동으로 풀에 반환한다 (0 이하면 무제한).
+    // coversToIgnore 는 발사 시점에 플레이어가 붙어있던 엄폐물들 - 이번 발사체만 그 엄폐물들을
+    // 무시하고 통과한다 (CoverObject.AttachedCoverColliders 를 WeaponController 가 넘겨준다).
+    public void Launch(Vector3 direction, float speed, float damageAmount, float range, Collider ownerCollider, IEnumerable<Collider> coversToIgnore = null)
     {
         startPosition = transform.position;
         damage = damageAmount;
@@ -57,6 +64,21 @@ public class Projectile : MonoBehaviour
         if (ownCollider != null && ownerCollider != null)
         {
             Physics.IgnoreCollision(ownCollider, ownerCollider, true);
+        }
+
+        ignoredCovers.Clear();
+        if (ownCollider != null && coversToIgnore != null)
+        {
+            foreach (Collider cover in coversToIgnore)
+            {
+                if (cover == null)
+                {
+                    continue;
+                }
+
+                Physics.IgnoreCollision(ownCollider, cover, true);
+                ignoredCovers.Add(cover);
+            }
         }
     }
 
@@ -83,6 +105,19 @@ public class Projectile : MonoBehaviour
     private void ReturnToPool()
     {
         rb.linearVelocity = Vector3.zero;
+
+        if (ownCollider != null)
+        {
+            for (int i = 0; i < ignoredCovers.Count; i++)
+            {
+                if (ignoredCovers[i] != null)
+                {
+                    Physics.IgnoreCollision(ownCollider, ignoredCovers[i], false);
+                }
+            }
+        }
+
+        ignoredCovers.Clear();
 
         if (pool != null)
         {

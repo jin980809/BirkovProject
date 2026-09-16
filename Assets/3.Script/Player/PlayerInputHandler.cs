@@ -14,6 +14,7 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 LookScreenPosition { get; private set; }
     public bool SprintHeld { get; private set; }
     public bool FireHeld { get; private set; }
+    public bool ZoomHeld { get; private set; }
 
     // ---------- 단발 입력 이벤트 ----------
 
@@ -68,6 +69,18 @@ public class PlayerInputHandler : MonoBehaviour
         else if (context.canceled)
         {
             SprintHeld = false;
+        }
+    }
+
+    public void OnZoom(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            ZoomHeld = true;
+        }
+        else if (context.canceled)
+        {
+            ZoomHeld = false;
         }
     }
 

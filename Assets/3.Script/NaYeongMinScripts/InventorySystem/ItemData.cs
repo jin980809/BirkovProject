@@ -66,7 +66,9 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public int durabilityCostPerHit;
         public int repairAmountPerCurrency;
 
-        // 피격 데미지 감소 비율(%). 머리+몸통 합산, 둘 다 최고급이면 60%. 기획서 6.7.
+        // 방어력. 정수 차감식. 최종 피격 데미지 = MAX(1, 공격의 고정 공격력 - 총 방어력).
+        // 총 방어력 = 장착 중인 머리 + 몸통 합산. 피격 위치와 무관하다. 기획서 6.7.
+        // 내구도는 피격 1회당 장착 중인 모든 부위가 동시에 -1 된다.
         public float defense;
         public float healthRecovery;
         public float hungerRecovery;
