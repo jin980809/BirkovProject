@@ -35,15 +35,16 @@ public class EnemyDetect : MonoBehaviour, IHearing
     [SerializeField] private Vector3 visibleTargetsV3;
     
     private Vector3 dirToTarget;
-   
+    
+
     [Header("감지도")]
     [SerializeField] private float currentDetection;
     [SerializeField] private bool searchCheck = true;
+    [SerializeField] private bool firstCheck = false;
     [SerializeField] private float decrease;
     [SerializeField] private float walkPoints;
     [SerializeField] private float runPoints;
     [SerializeField] private float shotPoints;
-
 
     //시야용 변수들
     int count;              //Ray 개수
@@ -79,17 +80,19 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
     private void Update()
     {
+        //게이지 감소
         if ((currentDetection > 0f && searchCheck) || currentDetection > 60f)
         {
             currentDetection -= decrease * Time.deltaTime;
         }
-
+        //적 상태 변환
         if (currentDetection > 60f && !(visibleTargets == null))
         {
             enemyState = EnemyState.Battle;
         }
         else if (currentDetection > 30f)
         {
+            PositionReset();
             enemyState = EnemyState.Search;
         }
         else if (currentDetection > 0f)
@@ -114,7 +117,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
                 currentDetection += shotPoints;
                 break;
         }
-
+        //100을 넘지 않게
         if (currentDetection > 100f)
         {
             currentDetection = 100f;
@@ -124,6 +127,9 @@ public class EnemyDetect : MonoBehaviour, IHearing
     }
 
     //-------------------------적 시야 메서드 -----------------------------
+
+    //죽었을때 조건 초가해야함---------------------------------------------<-----------------------------------------
+    //실행문
     private IEnumerator FindTargetsWithDelay(float delay)
     {
         while (true)
@@ -132,12 +138,9 @@ public class EnemyDetect : MonoBehaviour, IHearing
             FindVisibleTargets();
         }
     }
-
+    //레이 탐지
     private void FindVisibleTargets()
     {
-        //visibleTargets = null;
-        //visibleTargetsV3 = Vector3.zero;
-
         count = Mathf.Max(1, rayCount); //ray 개수 최소 1개
 
         startAngle = -viewAngle / 2f; //첫번째 각도
@@ -174,7 +177,11 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
                 dirToTarget = (target.position - transform.position).normalized; //실제로 플레이어가 있는 방향 저장
 
-                visibleTargets = target; //현재 발견한 플레이어를 저장
+                if (visibleTargets == null)
+                {
+                    firstCheck = true;
+                    visibleTargets = target; //현재 발견한 플레이어를 저장
+                }
                 visibleTargetsV3 = target.position; //마지막으로 본 플레이어 위치
 
                currentDetection = 100f; //감지도 변경
@@ -189,15 +196,14 @@ public class EnemyDetect : MonoBehaviour, IHearing
             }
         }
     }
-
     //Layer판단
     private bool IsInLayerMask(GameObject obj)
     {
         return LayerMask.LayerToName(obj.layer) == "Player";
     }
 
-
     //---------------------------참조용 메서드 -----------------------------
+
     public float ViewRadius()
     {
         return rayDistance;
@@ -210,13 +216,32 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
     public Transform VisibleTargets()
     {
-        return visibleTargets;
+        if (visibleTargets != null)
+        {
+            return visibleTargets;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public float CurrentDetection()
     {
         return currentDetection;
     }
+
+    public bool SearchCheck()
+    {
+        return searchCheck;
+
+    }
+
+    public bool FirstCheck()
+    {
+        return firstCheck;
+    }
+
     public Vector3 VisibleTargetsV3()
     {
         return visibleTargetsV3;
@@ -228,21 +253,31 @@ public class EnemyDetect : MonoBehaviour, IHearing
     }
 
     //--------------------------- 기타 메서드 -----------------------------
+
+    //플레이어 트렌스폼 값 초기화
     public void PositionReset()
     {
         visibleTargets = null;
     }
-
+    //수색끝
     public void SearchCheckOn()
     {
         searchCheck = true;
     }
-
+    //수색시작
     public void SearchCheckOff()
     {
         searchCheck = false;
     }
-
+    //첫 발견인지
+    public void FirstCheckOn()
+    {
+        firstCheck = true;
+    }
+    public void FirstCheckOff()
+    {
+        firstCheck = false;
+    }
     //각도 변환
     public Vector3 DirFromAngle(float angleDegrees, bool angleIsGlobal)
     {
@@ -258,7 +293,6 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
         return new Vector3(Mathf.Cos((-angleDegrees + 90f) * Mathf.Deg2Rad), 0f, Mathf.Sin((-angleDegrees + 90f) * Mathf.Deg2Rad));
     }
-
     //디버기용
     private void OnDrawGizmosSelected()
     {
