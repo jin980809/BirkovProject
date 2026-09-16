@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.Rng;
-using Birdkov.NaYeongMin.Ui;
+using Birdkov.NaYeongMin.InventoryTest;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -159,11 +159,12 @@ namespace Birdkov.NaYeongMin.Tests
         }
     }
 
-    public class MapChestContainerTests
+    // 상자는 최초 한 번만 추첨하고 재개방으로 획득분이 복구되지 않는다. 기획서 8.1.1.
+    public class InventoryWorldContainerTests
     {
         private ItemCatalog catalog;
         private GameObject host;
-        private MapChestContainer chest;
+        private InventoryWorldContainer chest;
 
         [SetUp]
         public void SetUp()
@@ -173,24 +174,27 @@ namespace Birdkov.NaYeongMin.Tests
                 new ItemData { itemId = 21001, itemType = ItemType.Consumable, displayName = "회복약", stackable = true, maxStack = 5 }
             });
 
-            ContainerDropSettings settings = ScriptableObject.CreateInstance<ContainerDropSettings>();
-            SetPrivate(settings, "containerSize", LootContainerSize.Box2x4);
-            SetPrivate(settings, "entries", new[]
-            {
-                new ContainerDropSettings.DropEntry { itemId = 21001, chancePercent = 100f, minAmount = 2, maxAmount = 2 }
-            });
-
             host = new GameObject("MapChestTest");
-            chest = host.AddComponent<MapChestContainer>();
-            SetPrivate(chest, "dropSettings", settings);
-            SetPrivate(chest, "useFixedSeed", true);
-            SetPrivate(chest, "seed", 1234);
+            chest = host.AddComponent<InventoryWorldContainer>();
+            chest.kind = InventoryWorldKind.MapChest;
+            chest.dropSettings = CreateSettings();
         }
 
         [TearDown]
         public void TearDown()
         {
             Object.DestroyImmediate(host);
+        }
+
+        private static ContainerDropSettings CreateSettings()
+        {
+            ContainerDropSettings settings = ScriptableObject.CreateInstance<ContainerDropSettings>();
+            SetPrivate(settings, "containerSize", LootContainerSize.Box2x4);
+            SetPrivate(settings, "entries", new[]
+            {
+                new ContainerDropSettings.DropEntry { itemId = 21001, chancePercent = 100f, minAmount = 2, maxAmount = 2 }
+            });
+            return settings;
         }
 
         private static void SetPrivate(object target, string field, object value)
@@ -201,34 +205,29 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void EnsureContents_RollsOnceOnly()
+        public void GetContents_RollsOnceOnly()
         {
-            chest.EnsureContents(catalog);
-            Assert.IsTrue(chest.Rolled);
-            Assert.AreEqual(2, chest.Container.slots[0].amount);
+            LootContainerData contents = chest.GetContents(catalog);
+            Assert.AreEqual(2, contents.loot.slots[0].amount);
 
             // 획득 후 재개방해도 다시 굴리지 않고 복구하지 않는다.
-            chest.Container.slots[0].Clear();
-            chest.EnsureContents(catalog);
+            contents.loot.slots[0].Clear();
 
-            Assert.IsTrue(chest.Container.slots[0].IsEmpty());
+            Assert.IsTrue(chest.GetContents(catalog).loot.slots[0].IsEmpty());
         }
 
         [Test]
         public void Contents_AreIndependentPerObject()
         {
             GameObject other = new GameObject("MapChestTest2");
-            MapChestContainer second = other.AddComponent<MapChestContainer>();
-            SetPrivate(second, "dropSettings", chest.DropSettings);
-            SetPrivate(second, "useFixedSeed", true);
-            SetPrivate(second, "seed", 1234);
+            InventoryWorldContainer second = other.AddComponent<InventoryWorldContainer>();
+            second.kind = InventoryWorldKind.MapChest;
+            second.dropSettings = CreateSettings();
 
-            chest.EnsureContents(catalog);
-            second.EnsureContents(catalog);
-            chest.Container.slots[0].Clear();
+            chest.GetContents(catalog).loot.slots[0].Clear();
 
-            Assert.IsTrue(chest.Container.slots[0].IsEmpty());
-            Assert.AreEqual(2, second.Container.slots[0].amount);
+            Assert.IsTrue(chest.GetContents(catalog).loot.slots[0].IsEmpty());
+            Assert.AreEqual(2, second.GetContents(catalog).loot.slots[0].amount);
 
             Object.DestroyImmediate(other);
         }

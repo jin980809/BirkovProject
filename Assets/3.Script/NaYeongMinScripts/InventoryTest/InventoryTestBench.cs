@@ -17,6 +17,28 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Sprite sprite;
     }
 
+    // 하이어라키에 미리 만든 UI 를 벤치에 연결하는 참조 묶음. 모두 인스펙터에서 갈아끼운다.
+    [Serializable]
+    public class InventoryUiReferences
+    {
+        public RectTransform screen;
+        public GameObject lootPanel;
+        public GameObject mapChestPanel;
+        public GameObject warehousePanel;
+        public GameObject craftPanel;
+        public RectTransform lootGridRoot;
+        public RectTransform mapChestGridRoot;
+        public RectTransform warehouseGridRoot;
+        public Text status;
+        public Text statsText;
+        public Text hint;
+        public Image dragIcon;
+        public RectTransform itemPopup;
+        public Text itemPopupText;
+        public Text[] craftLabels;
+        public Button[] craftButtons;
+    }
+
     // 인벤토리 계열 기능을 육안으로 확인하는 테스트 벤치.
     [RequireComponent(typeof(Canvas))]
     public sealed class InventoryTestBench : MonoBehaviour, IRecoveryTarget
@@ -28,6 +50,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public bool useStandaloneKeyboard = true;
         [Tooltip("프리팹 기반 새 UI 로 전환하면 끈다. 끄면 이 벤치는 UI 를 만들지 않는다.")]
         public bool buildLegacyUi = true;
+
+        [Header("하이어라키 UI")]
+        [Tooltip("비워 두면 예전처럼 코드로 UI 를 만든다. 채우면 그 오브젝트를 그대로 쓴다.")]
+        public InventoryUiReferences ui = new InventoryUiReferences();
 
         [Header("HONETi 스킨")]
         public Sprite honetiPanelSprite;
@@ -58,6 +84,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private readonly Dictionary<int, Sprite> spriteMap = new Dictionary<int, Sprite>();
 
         private RectTransform screen;
+        private RectTransform itemPopup;
+        private Text itemPopupText;
         private GameObject lootPanel, warehousePanel, craftPanel, mapChestPanel;
         private Text[] craftLabels;
         private RectTransform lootGridRoot, warehouseGridRoot, mapChestGridRoot;
@@ -166,6 +194,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             warehousePanel.SetActive(false);
             lootPanel.SetActive(true);
             screen.gameObject.SetActive(true);
+            lootPanel.GetComponentInChildren<Text>().text = "전리품";
             BuildLootGrid();
             Refresh();
         }
@@ -211,7 +240,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             Initialize();
-            BuildUi();
+            if (!BindUi())
+            {
+                BuildUi();
+            }
+
             ResetAll();
             OpenInventory();
         }
@@ -320,6 +353,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             dragSource = slot;
+            if (itemPopup != null) itemPopup.gameObject.SetActive(false);
             if (dragIcon != null)
             {
                 dragIcon.sprite = slot.icon.sprite;
@@ -417,7 +451,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             if (from == TestContainer.Warehouse && to == TestContainer.Bag)
             {
-                return warehouseService.Withdraw(data.inventoryData, toIndex, fromIndex, all);
+                return warehouseService.Withdraw(data.inventoryData, fromIndex, toIndex, all);
             }
 
             if (from == TestContainer.Warehouse && to == TestContainer.Warehouse)
@@ -578,6 +612,55 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public void HoverSlot(TestSlotView slot)
         {
             hovered = slot;
+            if (itemPopup == null) return;
+            itemPopup.gameObject.SetActive(false);
+            if (slot == null || !IsOpen || !IsReady || dragSource != null || !slot.gameObject.activeInHierarchy) return;
+            int itemId, amount;
+            if (slot.container == TestContainer.WeaponQuick || slot.container == TestContainer.ItemQuick)
+                ResolveQuick(slot.container, slot.index, out itemId, out amount);
+            else
+            {
+                GridContainerData container = GetContainer(slot.container);
+                if (slot.index < 0 || slot.index >= container.slots.Count) return;
+                itemId = container.slots[slot.index].itemId;
+                amount = container.slots[slot.index].amount;
+            }
+            if (amount <= 0 || !catalog.TryGetItem(itemId, out ItemData item)) return;
+            itemPopupText.text = item.displayName + "\n종류: " + ItemTypeLabel(item.itemType) +
+                "\n무게: " + item.weight.ToString("0.##") + "\n가격: " + item.price +
+                "\n\n" + item.description;
+            float height = Mathf.Clamp(itemPopupText.preferredHeight + 28, 170, screen.rect.height - 24);
+            itemPopup.sizeDelta = new Vector2(300, height);
+            itemPopupText.rectTransform.sizeDelta = new Vector2(272, height - 28);
+            itemPopup.SetAsLastSibling();
+            itemPopup.gameObject.SetActive(true);
+            PositionItemPopup();
+        }
+
+        private static string ItemTypeLabel(ItemType itemType)
+        {
+            switch (itemType)
+            {
+                case ItemType.Equipment: return "장비";
+                case ItemType.Weapon: return "무기";
+                case ItemType.Consumable: return "소모품";
+                case ItemType.Material: return "재료";
+                case ItemType.Ammo: return "탄약";
+                case ItemType.Currency: return "재화";
+                case ItemType.Sale: return "판매용";
+                case ItemType.Special: return "특수 소모품";
+                default: return itemType.ToString();
+            }
+        }
+
+        private void PositionItemPopup()
+        {
+            if (itemPopup == null || !itemPopup.gameObject.activeSelf) return;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(screen, Input.mousePosition, null, out Vector2 point);
+            Rect bounds = screen.rect;
+            itemPopup.anchoredPosition = new Vector2(
+                Mathf.Clamp(point.x + 18, bounds.xMin + 8, bounds.xMax - itemPopup.rect.width - 8),
+                Mathf.Clamp(point.y - 18, bounds.yMin + itemPopup.rect.height + 8, bounds.yMax - 8));
         }
 
         private void NotifyLootChanged()
@@ -740,6 +823,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             {
                 status.text = string.Empty;
             }
+            PositionItemPopup();
         }
 
         private void SetMessage(string text)
@@ -825,6 +909,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             RefreshCraftPanel();
+            HoverSlot(hovered);
         }
 
         private static string PlaceholderCaption(TestSlotView view)
@@ -890,10 +975,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private const int MiddleWidth = 600;
         private const int SidePanelHeight = 640;
 
-        private void BuildUi()
+        // 하이어라키에 미리 놓인 UI 를 그대로 쓴다. 기획팀은 인스펙터에서 배치만 고치면 된다.
+        // ui.screen 이 비어 있으면 false 를 돌려 기존 BuildUi() 로 넘어간다.
+        // 캔버스는 어느 경로로 UI 를 얻든 같은 설정이어야 한다.
+        // 씬 값이 WorldSpace 나 ConstantPixelSize 로 남아 있으면 화면에 아무것도 안 보인다.
+        private void ConfigureCanvas()
         {
-            ResolveSkin();
-
             Canvas canvas = GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
@@ -911,6 +998,74 @@ namespace Birdkov.NaYeongMin.InventoryTest
             {
                 gameObject.AddComponent<GraphicRaycaster>();
             }
+        }
+
+        private bool BindUi()
+        {
+            if (ui == null || ui.screen == null)
+            {
+                return false;
+            }
+
+            ResolveSkin();
+            ConfigureCanvas();
+
+            screen = ui.screen;
+            lootPanel = ui.lootPanel;
+            mapChestPanel = ui.mapChestPanel;
+            warehousePanel = ui.warehousePanel;
+            craftPanel = ui.craftPanel;
+            lootGridRoot = ui.lootGridRoot;
+            mapChestGridRoot = ui.mapChestGridRoot;
+            warehouseGridRoot = ui.warehouseGridRoot;
+            status = ui.status;
+            statsText = ui.statsText;
+            hint = ui.hint;
+            dragIcon = ui.dragIcon;
+            itemPopup = ui.itemPopup;
+            itemPopupText = ui.itemPopupText;
+            craftLabels = ui.craftLabels;
+
+            // 칸을 옮기거나 지워도 따라가도록 매번 다시 모으고 벤치를 다시 꾼다.
+            views.Clear();
+            foreach (TestSlotView view in screen.GetComponentsInChildren<TestSlotView>(true))
+            {
+                view.bench = this;
+                views.Add(view);
+            }
+
+            IList<int> mushrooms = CraftingService.MushroomItemIds;
+            for (int index = 0; ui.craftButtons != null && index < ui.craftButtons.Length && index < mushrooms.Count; index++)
+            {
+                if (ui.craftButtons[index] == null)
+                {
+                    continue;
+                }
+
+                int mushroomItemId = mushrooms[index];
+                ui.craftButtons[index].onClick.RemoveAllListeners();
+                ui.craftButtons[index].onClick.AddListener(() => CraftAmmo(mushroomItemId));
+            }
+
+            if (dragIcon != null)
+            {
+                dragIcon.gameObject.SetActive(false);
+            }
+
+            if (itemPopup != null)
+            {
+                itemPopup.gameObject.SetActive(false);
+            }
+
+            CloseLoot();
+            BuildLootGrid();
+            return true;
+        }
+
+        private void BuildUi()
+        {
+            ResolveSkin();
+            ConfigureCanvas();
 
             screen = MakeRect("Root", transform, 0, 0, 1600, 900);
             screen.anchorMin = screen.anchorMax = screen.pivot = new Vector2(0.5f, 0.5f);
@@ -921,9 +1076,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
             Image titleImage = titleBar.gameObject.AddComponent<Image>();
             ApplySkin(titleImage, honetiTitleSprite, new Color(0.12f, 0.19f, 0.24f, 0.86f), new Color(0.12f, 0.13f, 0.14f, 0.9f));
             titleImage.raycastTarget = false;
-            MakeLabel(titleBar, "NaYeongMin 인벤토리 테스트 벤치", 16, 6, ColumnWidth - 32, 28, 18);
+            MakeLabel(titleBar, "인벤토리", 16, 6, ColumnWidth - 32, 28, 18);
 
-            hint = MakeLabel(screen, "드래그로 이동 · 클릭으로 사용/획득 · 1·2 무기 선택 · 3·4·5 아이템 퀵 사용 · E 획득",
+            hint = MakeLabel(screen, "클릭: 사용/획득 · 드래그: 이동\nF: 상자 열기/닫기 · E: 인벤토리",
                 RightX, 16, ColumnWidth, 40, 12);
             hint.color = new Color(0.72f, 0.78f, 0.8f);
 
@@ -931,10 +1086,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             // 왼쪽: 장비 + 가방
             GameObject equipmentPanel = MakePanel("EquipmentPanel", LeftX, HeaderBottom, ColumnWidth, 156,
-                "장비 슬롯  4칸  ( 무기 2 · 방어구 2 )");
+                "장비");
             BuildGrid(equipmentPanel.transform, TestContainer.Equipment, 4, 1, 20, 58, EquipCell);
 
-            GameObject bagPanel = MakePanel("BagPanel", LeftX, HeaderBottom + 168, ColumnWidth, 472, "가방  5 x 5 = 25칸");
+            GameObject bagPanel = MakePanel("BagPanel", LeftX, HeaderBottom + 168, ColumnWidth, 472, "가방 / 25칸");
             BuildGrid(bagPanel.transform, TestContainer.Bag, 5, 5, 20, 58, BagCell);
 
             // 오른쪽: 전리품 / 창고 / 제작대. 같은 자리에서 서로 바꿔 띄운다.
@@ -945,8 +1100,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             mapChestPanel.SetActive(false);
 
             warehousePanel = MakePanel("WarehousePanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight,
-                "허브 창고  " + InventorySettings.WarehouseWidth + " x " + InventorySettings.WarehouseHeight + " = " +
-                InventorySettings.WarehouseWidth * InventorySettings.WarehouseHeight + "칸  ( 휠 스크롤 )");
+                "보관상자 / " + InventorySettings.WarehouseWidth * InventorySettings.WarehouseHeight + "칸  (휠 스크롤)");
             warehouseGridRoot = BuildWarehouseScroll(warehousePanel.transform);
             warehousePanel.SetActive(false);
 
@@ -960,9 +1114,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             // 하단 중앙: 퀵슬롯
             GameObject quickPanel = MakePanel("QuickPanel", MiddleX, 780, MiddleWidth, 110, null);
-            MakeLabel(quickPanel.transform, "무기 퀵 (링크)", 16, 6, 150, 18, 12);
+            MakeLabel(quickPanel.transform, "무기 1 / 2", 16, 6, 150, 18, 12);
             BuildGrid(quickPanel.transform, TestContainer.WeaponQuick, 2, 1, 16, 26, QuickCell);
-            MakeLabel(quickPanel.transform, "아이템 퀵 (가방 매핑)", 200, 6, 190, 18, 12);
+            MakeLabel(quickPanel.transform, "퀵슬롯 3 / 4 / 5", 200, 6, 190, 18, 12);
             BuildGrid(quickPanel.transform, TestContainer.ItemQuick, 3, 1, 200, 26, QuickCell);
 
             RectTransform dragRect = MakeRect("DragIcon", screen, 0, 0, 72, 72);
@@ -975,6 +1129,17 @@ namespace Birdkov.NaYeongMin.InventoryTest
             BuildLootGrid();
             BuildGrid(warehouseGridRoot, TestContainer.Warehouse,
                 InventorySettings.WarehouseWidth, InventorySettings.WarehouseHeight, 0, 0, WarehouseCell);
+
+            itemPopup = MakeRect("ItemPopup", screen, 0, 0, 300, 190);
+            itemPopup.anchorMin = itemPopup.anchorMax = new Vector2(0.5f, 0.5f);
+            Image popupBackground = itemPopup.gameObject.AddComponent<Image>();
+            ApplySkin(popupBackground, honetiPanelSprite, new Color(0.08f, 0.12f, 0.16f, 0.96f), Color.black);
+            popupBackground.raycastTarget = false;
+            itemPopupText = MakeLabel(itemPopup, string.Empty, 14, 14, 272, 162, 16);
+            itemPopupText.supportRichText = false;
+            itemPopupText.raycastTarget = false;
+            itemPopupText.verticalOverflow = VerticalWrapMode.Truncate;
+            itemPopup.gameObject.SetActive(false);
 
         }
 
@@ -1210,18 +1375,14 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             LootContainerSizes.GetSize(loot.sizePreset, out int width, out int height);
             RectTransform gridRoot = mapChestOpen ? mapChestGridRoot : lootGridRoot;
-            RectTransform panel = (RectTransform)gridRoot.parent;
 
             // 상자 규격 그대로 그리되 가로를 긴 쪽으로 둔다. 2x4 -> 4x2, 3x3 -> 3x3, 3x5 -> 5x3, 4x1 -> 4x1.
-            // 패널도 그리드에 맞춰 줄이고 오른쪽 모서리에 맞춴 둔다.
+            // 패널과 그리드의 위치·크기는 건드리지 않는다. 기획팀이 인스펙터에서 잡은 그대로 둔다.
+            // 칸 크기만 그리드 폭에 맞춰 줄인다. 폭을 넓히면 칸도 커지고 LootCell 이 상한이다.
             int columns = Mathf.Max(width, height);
             int rows = Mathf.Min(width, height);
-            int gridWidth = columns * (LootCell + 4) - 4;
-            int panelWidth = gridWidth + 40;
-            panel.sizeDelta = new Vector2(panelWidth, 78 + rows * (LootCell + 4));
-            panel.anchoredPosition = new Vector2(RightX + ColumnWidth - panelWidth, -HeaderBottom);
-            gridRoot.sizeDelta = new Vector2(gridWidth, rows * (LootCell + 4) - 4);
-            BuildGrid(gridRoot, TestContainer.Loot, columns, rows, 0, 0, LootCell, width * height);
+            int cell = Mathf.Clamp(Mathf.FloorToInt((gridRoot.rect.width + 4) / columns) - 4, 16, LootCell);
+            BuildGrid(gridRoot, TestContainer.Loot, columns, rows, 0, 0, cell, width * height);
         }
 
         private void BuildGrid(Transform parent, TestContainer container, int width, int height, int x, int y, int cell,
