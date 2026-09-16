@@ -56,6 +56,29 @@ public class WeaponInventoryBridge : MonoBehaviour
                playerInventoryService.TryGetWeaponQuickSlot(playerData, weaponSlotIndex, out _, out weapon);
     }
 
+    // 가방에 흩어진 같은 탄약 itemId 재고를 소모 없이 합산만 한다 - 재장전 게이지를 시작하기 전에
+    // 실제로 탄약이 있는지 미리 확인하기 위함 (없으면 게이지를 아예 시작하지 않는다).
+    public int PeekAmmoCount(int ammoItemId)
+    {
+        if (playerData == null)
+        {
+            return 0;
+        }
+
+        int total = 0;
+        List<GridSlotData> slots = playerData.inventory.slots;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            GridSlotData slot = slots[i];
+            if (slot.itemId == ammoItemId && !slot.IsEmpty())
+            {
+                total += slot.amount;
+            }
+        }
+
+        return total;
+    }
+
     // 가방에 흩어진 같은 탄약 itemId 재고를 합산해서 최대 amount 만큼 소모한다.
     // 반환값: 실제로 소모(확보)한 수량 (재고가 모자라면 그만큼만).
     public int ConsumeAmmo(int ammoItemId, int amount)
