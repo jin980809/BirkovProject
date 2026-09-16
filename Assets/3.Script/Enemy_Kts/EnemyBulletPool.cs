@@ -8,6 +8,7 @@ public class EnemyBulletPool : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private int poolSize = 30;
 
+    private GameObject bullet;
     private Queue<GameObject> bulletPool = new Queue<GameObject>();
 
     private void Awake()
@@ -20,7 +21,7 @@ public class EnemyBulletPool : MonoBehaviour
 
     private GameObject CreateBullet()
     {
-        GameObject bullet = Instantiate(bulletPrefab, transform);
+        bullet = Instantiate(bulletPrefab, transform);
 
         bullet.SetActive(false);
 
@@ -37,7 +38,7 @@ public class EnemyBulletPool : MonoBehaviour
             CreateBullet();
         }
 
-        GameObject bullet = bulletPool.Dequeue();
+        bullet = bulletPool.Dequeue();
 
         bullet.SetActive(true);
 

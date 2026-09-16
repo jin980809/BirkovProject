@@ -47,9 +47,9 @@ public class EnemyBullet : MonoBehaviour
         {
             target.TakeDamage(damage);
         }
-
         ReturnToPool();
-    }
+
+    }   
 
     private void ReturnToPool()
     {
