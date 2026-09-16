@@ -234,7 +234,6 @@ public class EnemyDetect : MonoBehaviour, IHearing
     public bool SearchCheck()
     {
         return searchCheck;
-
     }
 
     public bool FirstCheck()
