@@ -92,6 +92,15 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // 펠릿이 여러 개인 무기(샷건 등)는 같은 지점에서 총알 여러 개가 동시에 스폰되는데,
+        // 서로의 트리거 콜라이더가 겹쳐서 "부딪힌 대상"으로 잡히면 스폰되자마자 전부 풀로
+        // 반환돼버린다 (pelletCount=1인 무기는 총알이 하나뿐이라 이 문제가 없었다).
+        // 총알끼리는 서로 무시한다.
+        if (other.GetComponentInParent<Projectile>() != null)
+        {
+            return;
+        }
+
         IDamageable target = other.GetComponentInParent<IDamageable>();
         if (target != null)
         {

@@ -232,7 +232,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return InventorySettings.SingleItemStackLimit;
             }
 
-            return Math.Clamp(item.maxStack, 1, InventorySettings.DefaultStackLimit);
+            return Math.Max(1, item.maxStack);
         }
     }
 }

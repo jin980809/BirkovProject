@@ -18,15 +18,26 @@ public class WeaponInventoryBridge : MonoBehaviour
         if (itemDatabase == null)
         {
             Debug.LogError("WeaponInventoryBridge: ItemDatabase 가 필요합니다.", this);
+        }
+
+        // InventoryTestBenchLink.cs 가 준비되는 대로 SetPlayerInventoryData 로 진짜 데이터를 주입한다.
+        // 그 전까지(또는 벤치가 아예 없을 때) 쓰는 임시 빈 데이터.
+        playerData = new PlayerInventoryData();
+    }
+
+    // ItemDatabase 는 자기 Awake() 에서 CSV 를 읽어 Catalog 를 채우는데, 이 컴포넌트의 Awake() 가
+    // 그보다 먼저 실행되면 Catalog 가 아직 null 이라 PlayerInventoryService 생성자가 예외를 던진다.
+    // 그래서 여기서 즉시 만들지 않고, 실제로 필요할 때(아래 두 공개 메서드) 딱 한 번만 만든다.
+    private void EnsureServices()
+    {
+        if (playerInventoryService != null || itemDatabase == null || itemDatabase.Catalog == null)
+        {
             return;
         }
 
         IItemCatalog catalog = itemDatabase.Catalog;
         playerInventoryService = new PlayerInventoryService(catalog);
         gridService = new InventoryService(catalog);
-
-        // TODO: 세이브/로드 시스템이 실제 PlayerInventoryData 를 넘겨주면 SetPlayerInventoryData 로 교체한다
-        playerData = new PlayerInventoryData();
     }
 
     // 세이브에서 불러온 실제 데이터로 교체할 때 호출
@@ -38,6 +49,8 @@ public class WeaponInventoryBridge : MonoBehaviour
     // weaponSlotIndex: 0 = 주 무기, 1 = 보조 무기 (무기 퀵슬롯과 동일)
     public bool TryGetEquippedWeapon(int weaponSlotIndex, out ItemData weapon)
     {
+        EnsureServices();
+
         weapon = null;
         return playerInventoryService != null &&
                playerInventoryService.TryGetWeaponQuickSlot(playerData, weaponSlotIndex, out _, out weapon);
@@ -47,6 +60,8 @@ public class WeaponInventoryBridge : MonoBehaviour
     // 반환값: 실제로 소모(확보)한 수량 (재고가 모자라면 그만큼만).
     public int ConsumeAmmo(int ammoItemId, int amount)
     {
+        EnsureServices();
+
         if (gridService == null || playerData == null || amount <= 0)
         {
             return 0;

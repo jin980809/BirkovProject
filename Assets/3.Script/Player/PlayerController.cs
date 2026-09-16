@@ -57,6 +57,7 @@ public class PlayerController : MonoBehaviour
     private PlayerVitals vitals; // 선택 - 있으면 스테미나로 달리기/구르기 게이트
     private WeaponController weapon; // 선택 - 있으면 발사/재장전/무기교체를 위임
     private PlayerInteraction interaction; // 선택 - 있으면 상호작용 중 이동/회전/사격을 막음
+    private ItemUseController itemUse; // 선택 - 있으면 아이템 사용 중 달리기/구르기/사격/상호작용만 막음 (이동/회전/시야는 그대로)
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -81,13 +82,14 @@ public class PlayerController : MonoBehaviour
         get { return isDodging; }
     }
 
-    // Shift 를 누른 채로 실제 이동 중 + 스테미나 여유가 있을 때만 달리기로 친다
+    // Shift 를 누른 채로 실제 이동 중 + 스테미나 여유가 있을 때만 달리기로 친다.
+    // 아이템 사용/재장전 중에는 달리기 자체가 금지된다 (걷기는 가능).
     public bool IsSprinting
     {
         get
         {
             bool wantSprint = input.SprintHeld && input.MoveInput.sqrMagnitude > 0.01f;
-            return wantSprint && (vitals == null || vitals.CanSprint);
+            return wantSprint && !IsUsingItem && !IsReloading && (vitals == null || vitals.CanSprint);
         }
     }
 
@@ -95,6 +97,22 @@ public class PlayerController : MonoBehaviour
     public bool IsInteracting
     {
         get { return interaction != null && interaction.IsInteracting; }
+    }
+
+    // 아이템 사용(게이지) 중인지 (그 시스템이 없으면 항상 false).
+    // 상자 등의 IsControlLocked 와 달리 이동/회전/시야는 막지 않는다 - 달리기/구르기/사격/상호작용/
+    // 인벤토리 열기만 개별적으로 막는다 (CanFire, HandleDodge, HandleInteract, PlayerInventoryToggle 참고).
+    public bool IsUsingItem
+    {
+        get { return itemUse != null && itemUse.IsUsing; }
+    }
+
+    // 재장전 중인지 (그 시스템이 없으면 항상 false). IsUsingItem 과 완전히 동일한 규칙 -
+    // 이동/회전/시야는 그대로 두고, 달리기/구르기/사격/상호작용/무기교체/인벤토리 열기/다른
+    // 퀵슬롯 사용만 개별적으로 막는다.
+    public bool IsReloading
+    {
+        get { return weapon != null && weapon.IsReloading; }
     }
 
     // 상자 UI 등 외부 UI 가 SetMovementLocked 로 잠근 상태
@@ -137,7 +155,7 @@ public class PlayerController : MonoBehaviour
     // 달리는 중 / 구르는 중 / 상호작용 중 / 외부 UI 로 잠긴 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
     public bool CanFire
     {
-        get { return !IsSprinting && !isDodging && !IsControlLocked; }
+        get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading; }
     }
 
     // 마우스 커서가 가리키는 월드 좌표
@@ -178,6 +196,7 @@ public class PlayerController : MonoBehaviour
         TryGetComponent(out vitals);
         TryGetComponent(out weapon);
         TryGetComponent(out interaction);
+        TryGetComponent(out itemUse);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
@@ -303,9 +322,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleDodge()
     {
-        if (isDodging || Time.time < dodgeReadyTime)
+        if (isDodging || Time.time < dodgeReadyTime || IsControlLocked || IsUsingItem || IsReloading)
         {
-            return;
+            return; // 상자/인벤토리 UI, 상호작용, 아이템 사용, 재장전 중에는 구르기로 스테미나만 낭비되는 것 방지
         }
 
         if (vitals != null && !vitals.TryConsumeDodgeStamina())
@@ -498,17 +517,17 @@ public class PlayerController : MonoBehaviour
 
     private void HandleReload()
     {
-        if (weapon != null)
+        if (weapon != null && !IsControlLocked && !IsUsingItem)
         {
-            weapon.TryReload();
+            weapon.TryReload(); // 이미 재장전 중이면 WeaponController.TryReload() 가 알아서 무시한다
         }
     }
 
     private void HandleInteract()
     {
-        if (isDodging || interaction == null)
+        if (isDodging || interaction == null || IsControlLocked || IsUsingItem || IsReloading)
         {
-            return; // 구르는 중에는 상호작용 시작 불가
+            return; // 구르는 중/이미 잠긴 중(상자 등)/아이템 사용/재장전 중에는 상호작용 시작 불가
         }
 
         interaction.TryStartInteract();
@@ -529,14 +548,15 @@ public class PlayerController : MonoBehaviour
 
     private void HandleWeaponSelected(int slotIndex)
     {
-        if (weapon != null)
+        if (weapon != null && !IsControlLocked && !IsUsingItem && !IsReloading)
         {
-            weapon.EquipSlot(slotIndex);
+            weapon.EquipSlot(slotIndex); // 상자/인벤토리 UI, 아이템 사용, 재장전 중에는 무기 교체 금지
         }
     }
 
     private void HandleQuickSlot(int slotIndex)
     {
-        // TODO: 소모성 아이템 사용 (0~2 = 3, 4, 5번 키)
+        // 실제 처리는 ItemUseController.cs 가 이 이벤트를 직접 구독해서 담당한다 (PlayerController 는
+        // NaYeongMin 인벤토리 타입을 몰라도 되게 하려고 여기서는 아무것도 안 한다).
     }
 }

@@ -29,30 +29,53 @@ public class WeaponController : MonoBehaviour
     [Header("탄약 매핑 (나중에 여기서 자유롭게 추가/수정)")]
     [SerializeField] private WeaponAmmoMapping[] ammoMappings = Array.Empty<WeaponAmmoMapping>();
 
-    [Header("테스트용 무기 (실제 CSV 총기 데이터 나오기 전 임시)")]
-    [Tooltip("가방에 장착된 무기가 없을 때 이 임시 스펙으로 대신 장착한다")]
-    [SerializeField] private bool useDebugWeapon;
-    [SerializeField] private float debugFireRate = 5f;
-    [SerializeField] private int debugMagazineSize = 12;
-    [SerializeField] private float debugDamage = 10f;
-    [SerializeField] private float debugProjectileSpeed = 40f;
-    [SerializeField] private float debugRange = 30f;
-    [SerializeField] private float debugMaxSpread = 3f;
-    [SerializeField] private int debugPelletCount = 1;
-    [SerializeField] private bool debugAutomatic = true;
-
     [Header("블룸 (연사할수록 퍼지고, 안 쏘면 다시 좁혀짐)")]
     [Tooltip("한 발 쏠 때마다 maxSpread 의 이 비율만큼 현재 퍼짐이 늘어난다")]
     [SerializeField] private float bloomGrowthFraction = 0.25f;
     [Tooltip("초당 maxSpread 의 이 비율만큼 현재 퍼짐이 줄어든다")]
     [SerializeField] private float bloomRecoverFraction = 1.5f;
 
+    [Header("디버그 - 현재 장착 무기 (읽기 전용, Play 중에만 갱신됨)")]
+    [SerializeField] private string debugWeaponName;
+    [SerializeField] private float debugAttackDamage;
+    [SerializeField] private float debugFireRate;
+    [SerializeField] private int debugMagazineSize;
+    [SerializeField] private float debugProjectileSpeed;
+    [SerializeField] private float debugRange;
+    [SerializeField] private float debugMaxSpread;
+    [SerializeField] private int debugCurrentAmmo;
+
     private PlayerController player;
     private PlayerNoise noise;
+    private PlayerInputHandler input;
 
     private ItemData equippedWeapon;
     private int equippedSlotIndex = -1;
     private readonly int[] ammoInMagazine = new int[InventorySettings.WeaponQuickSlotCount];
+
+    // 재장전 진행 상태. ItemUseController 의 아이템 사용과 같은 방식(interaction 슬라이더 재사용,
+    // 진행 중엔 걷기/시야 회전만 가능)으로 처리한다 - PlayerController.IsReloading 이 이 값을 그대로 비춘다.
+    private bool isReloading;
+    private float reloadTimer;
+    private float reloadDuration;
+    private int reloadAmmoItemId;
+    private int reloadNeeded;
+
+    public bool IsReloading
+    {
+        get { return isReloading; }
+    }
+
+    // UI 가 읽는 0~1 진행률 (InteractionPromptUI 가 상호작용/아이템 사용과 같은 슬라이더로 보여준다)
+    public float ReloadProgress01
+    {
+        get { return reloadDuration > 0f ? Mathf.Clamp01(reloadTimer / reloadDuration) : 0f; }
+    }
+
+    // 슬롯별로 마지막에 장착됐던 무기의 itemId. 같은 무기를 다시 선택했을 뿐인데 탄창이
+    // 매번 가득 채워지는 걸(무한 재장전 악용) 막기 위해, 슬롯의 무기가 실제로 "바뀌었을 때"만
+    // 새로 채운다 (아래 EquipSlot 참고).
+    private readonly int[] lastEquippedItemId = new int[InventorySettings.WeaponQuickSlotCount];
 
     private bool fireHeld;
     private float nextFireReadyTime;
@@ -108,6 +131,7 @@ public class WeaponController : MonoBehaviour
     {
         TryGetComponent(out player);
         TryGetComponent(out noise);
+        TryGetComponent(out input);
 
         if (inventoryBridge == null)
         {
@@ -124,6 +148,11 @@ public class WeaponController : MonoBehaviour
         {
             TryGetComponent(out ownerCollider);
         }
+
+        for (int i = 0; i < lastEquippedItemId.Length; i++)
+        {
+            lastEquippedItemId[i] = -1; // -1 = 아직 이 슬롯에 아무것도 장착된 적 없음 (실제 itemId 는 항상 양수)
+        }
     }
 
     private void Start()
@@ -131,18 +160,113 @@ public class WeaponController : MonoBehaviour
         EquipSlot(0); // 시작 시 주 무기 슬롯을 기본으로 시도
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        RecoverBloom();
-
-        // 자동 사격 무기는 발사 버튼을 누르고 있는 동안 쿨다운마다 계속 나간다
-        if (fireHeld && equippedWeapon != null && equippedWeapon.automatic)
+        if (input != null)
         {
-            TryFireOnce();
+            input.CancelPressed += HandleCancelReload;
         }
     }
 
+    private void OnDisable()
+    {
+        if (input != null)
+        {
+            input.CancelPressed -= HandleCancelReload;
+        }
+    }
+
+    private void Update()
+    {
+        RecoverBloom();
+        UpdateReload();
+
+        // 자동 사격 무기는 발사 버튼을 누르고 있는 동안 쿨다운마다 계속 나간다
+        if (fireHeld && !isReloading && equippedWeapon != null && equippedWeapon.automatic)
+        {
+            TryFireOnce();
+        }
+
+        RefreshDebugDisplay();
+    }
+
+    private void UpdateReload()
+    {
+        if (!isReloading)
+        {
+            return;
+        }
+
+        reloadTimer += Time.deltaTime;
+        if (reloadTimer >= reloadDuration)
+        {
+            CompleteReload();
+        }
+    }
+
+    private void HandleCancelReload()
+    {
+        if (!isReloading)
+        {
+            return;
+        }
+
+        isReloading = false;
+        reloadTimer = 0f;
+        reloadDuration = 0f;
+        // 취소하면 지금까지 모은 진행도는 버리고, 탄약은 소모/획득 없이 원래 상태 그대로 둔다
+    }
+
+    private void CompleteReload()
+    {
+        isReloading = false;
+        reloadTimer = 0f;
+        reloadDuration = 0f;
+
+        if (equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
+        {
+            return;
+        }
+
+        int gained = inventoryBridge.ConsumeAmmo(reloadAmmoItemId, reloadNeeded);
+        ammoInMagazine[equippedSlotIndex] += gained;
+    }
+
+    // 인스펙터에서 현재 장착 무기 스펙 + 잔탄을 바로 확인할 수 있게 한다 (읽기 전용 디버그용)
+    private void RefreshDebugDisplay()
+    {
+        if (equippedWeapon == null)
+        {
+            debugWeaponName = "(없음)";
+            debugAttackDamage = 0f;
+            debugFireRate = 0f;
+            debugMagazineSize = 0;
+            debugProjectileSpeed = 0f;
+            debugRange = 0f;
+            debugMaxSpread = 0f;
+            debugCurrentAmmo = 0;
+            return;
+        }
+
+        debugWeaponName = equippedWeapon.displayName;
+        debugAttackDamage = equippedWeapon.attackDamage;
+        debugFireRate = equippedWeapon.fireRate;
+        debugMagazineSize = equippedWeapon.magazineSize;
+        debugProjectileSpeed = equippedWeapon.projectileSpeed;
+        debugRange = equippedWeapon.range;
+        debugMaxSpread = equippedWeapon.maxSpread;
+        debugCurrentAmmo = CurrentAmmo;
+    }
+
     // ---------- PlayerController 가 호출하는 진입점 ----------
+
+    // InventoryTestBenchLink 가 진짜 인벤토리 데이터를 나중에 주입한 뒤 호출한다.
+    // Start() 의 EquipSlot(0) 은 그 데이터가 도착하기 전에 실행돼서 빈 데이터로 실패하므로,
+    // 데이터가 준비된 뒤 지금 장착 중이던(또는 기본 0번) 슬롯을 다시 조회해서 갱신한다.
+    public void RefreshEquippedWeapon()
+    {
+        EquipSlot(equippedSlotIndex >= 0 ? equippedSlotIndex : 0);
+    }
 
     // slotIndex: 0 = 주 무기, 1 = 보조 무기
     public void EquipSlot(int slotIndex)
@@ -153,11 +277,16 @@ public class WeaponController : MonoBehaviour
             inventoryBridge.TryGetEquippedWeapon(slotIndex, out weapon);
         }
 
-        if (weapon == null && useDebugWeapon)
+        // 이 슬롯에 실제로 "새 무기"가 들어왔을 때만 탄창을 채운다 - 인스턴스별 잔탄을 저장하는
+        // 시스템이 아직 없어서(내구도 미구현과 같은 이유) 처음 장착 시엔 가득 채워서 시작하지만,
+        // 같은 무기를 다시 선택했을 뿐이면 이미 쏜 만큼 줄어든 잔탄을 그대로 유지해야 한다
+        // (안 그러면 슬롯을 껐다 켰다 하는 것만으로 탄창이 무한 리필된다).
+        int newItemId = weapon != null ? weapon.itemId : -1;
+        if (weapon != null && lastEquippedItemId[slotIndex] != newItemId)
         {
-            weapon = BuildDebugWeapon();
-            ammoInMagazine[slotIndex] = weapon.magazineSize; // 테스트 편의상 가득 채워서 시작
+            ammoInMagazine[slotIndex] = weapon.magazineSize;
         }
+        lastEquippedItemId[slotIndex] = newItemId;
 
         equippedWeapon = weapon;
         equippedSlotIndex = weapon != null ? slotIndex : -1;
@@ -168,25 +297,6 @@ public class WeaponController : MonoBehaviour
         {
             player.SetArmed(equippedWeapon != null);
         }
-    }
-
-    // 실제 CSV에 총기 데이터가 없을 때 발사 로직만 검증하기 위한 임시 무기
-    private ItemData BuildDebugWeapon()
-    {
-        return new ItemData
-        {
-            itemId = -1,
-            displayName = "디버그 테스트 무기",
-            itemType = ItemType.Weapon,
-            fireRate = debugFireRate,
-            magazineSize = debugMagazineSize,
-            attackDamage = debugDamage,
-            projectileSpeed = debugProjectileSpeed,
-            range = debugRange,
-            maxSpread = debugMaxSpread,
-            pelletCount = Mathf.Max(1, debugPelletCount),
-            automatic = debugAutomatic,
-        };
     }
 
     public void TryFire()
@@ -200,9 +310,12 @@ public class WeaponController : MonoBehaviour
         fireHeld = false;
     }
 
+    // 실제 탄약 소모/충전은 게이지가 다 찬 뒤 CompleteReload() 에서 처리한다.
+    // (ItemUseController 의 아이템 사용과 동일한 패턴 - PlayerController.IsReloading 이 이 상태를
+    // 비추고, 진행 중엔 걷기/시야 회전만 가능하도록 CanFire/HandleDodge/HandleInteract 등이 확인한다)
     public void TryReload()
     {
-        if (equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
+        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
         {
             return;
         }
@@ -218,15 +331,25 @@ public class WeaponController : MonoBehaviour
             return; // 이 무기의 탄약 매핑이 아직 설정되지 않음
         }
 
-        int gained = inventoryBridge.ConsumeAmmo(ammoItemId, needed);
-        ammoInMagazine[equippedSlotIndex] += gained;
+        reloadAmmoItemId = ammoItemId;
+        reloadNeeded = needed;
+        reloadDuration = equippedWeapon.reloadSpeed;
+        reloadTimer = 0f;
+
+        if (reloadDuration <= 0f)
+        {
+            CompleteReload(); // reloadSpeed 가 0 이하면 즉시 완료 (기존과 동일한 동작)
+            return;
+        }
+
+        isReloading = true;
     }
 
     // ---------- 내부 ----------
 
     private void TryFireOnce()
     {
-        if (equippedWeapon == null || equippedSlotIndex < 0 || player == null || firePoint == null)
+        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || player == null || firePoint == null)
         {
             return;
         }
@@ -301,7 +424,12 @@ public class WeaponController : MonoBehaviour
         }
         baseDirection.Normalize();
 
-        Vector3 direction = ApplySpread(baseDirection, currentSpreadDegrees);
+        // 펠릿이 여러 개인 무기(샷건 등)는 한 발에 여러 알이 원래 부채꼴로 퍼져 나가야 하므로,
+        // 연사 블룸 누적치(currentSpreadDegrees)와 상관없이 매번 무기 자체의 최대 퍼짐(maxSpread)
+        // 범위에서 각자 독립적으로 흩어지게 한다. 첫 발엔 블룸이 0이라 이걸 안 하면 펠릿들이
+        // 전부 완전히 같은 방향으로 나가 서로 겹쳐 보인다. 펠릿이 1개인 무기는 기존처럼 블룸을 쓴다.
+        float spreadDegrees = equippedWeapon.pelletCount > 1 ? EffectiveMaxSpread : currentSpreadDegrees;
+        Vector3 direction = ApplySpread(baseDirection, spreadDegrees);
 
         Projectile projectile = bulletPool.Rent(firePoint.position, Quaternion.LookRotation(direction));
 

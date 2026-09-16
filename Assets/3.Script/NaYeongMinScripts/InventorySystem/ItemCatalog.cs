@@ -100,7 +100,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                     defense = ParseFloat(GetAny(row, headers, "defense", "defensePower")),
                     healthRecovery = ParseFloat(Get(row, headers, "healthRecovery")),
                     hungerRecovery = ParseFloat(Get(row, headers, "hungerRecovery")),
-                    waterRecovery = ParseFloat(Get(row, headers, "waterRecovery"))
+                    waterRecovery = ParseFloat(Get(row, headers, "waterRecovery")),
+                    usageTime = ParseFloat(Get(row, headers, "usageTime"))
                 });
             }
 

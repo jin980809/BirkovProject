@@ -59,7 +59,7 @@ public class PlayerZoom : MonoBehaviour
         }
 
         bool wantsZoom = input.ZoomHeld;
-        bool canZoom = wantsZoom && !player.IsSprinting && !player.IsDodging && !player.IsControlLocked;
+        bool canZoom = wantsZoom && !player.IsSprinting && !player.IsDodging && !player.IsControlLocked && !player.IsUsingItem && !player.IsReloading;
 
         if (canZoom == IsZoomed)
         {

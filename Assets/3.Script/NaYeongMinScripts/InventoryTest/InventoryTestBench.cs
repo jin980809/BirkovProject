@@ -51,6 +51,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private List<DropTableEntry> dropEntries = new List<DropTableEntry>();
 
         private PlayerSaveData data;
+        public PlayerInventoryData PlayerData => data?.inventoryData;
         private LootContainerData loot = new LootContainerData();
         private LootContainerSize lootPreset = LootContainerSize.Box2x4;
 

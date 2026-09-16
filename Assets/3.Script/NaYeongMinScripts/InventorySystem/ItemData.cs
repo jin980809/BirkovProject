@@ -73,5 +73,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public float healthRecovery;
         public float hungerRecovery;
         public float waterRecovery;
+
+        // 사용(소모)에 걸리는 시간(초). 0 이하면 즉시 사용.
+        public float usageTime;
     }
 }

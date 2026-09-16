@@ -14,7 +14,11 @@ public class InteractionPromptUI : MonoBehaviour
 {
     [Header("연결")]
     [SerializeField] private PlayerInteraction interaction;
-    [Tooltip("상호작용 진행 중 진행률을 보여주는 Slider (0~1, Interactable 체크 해제). 위치는 화면 하단 고정 - 스크립트가 움직이지 않는다")]
+    [Tooltip("아이템 사용(usageTime) 게이지도 이 슬라이더를 같이 쓴다")]
+    [SerializeField] private ItemUseController itemUse;
+    [Tooltip("재장전 게이지도 이 슬라이더를 같이 쓴다")]
+    [SerializeField] private WeaponController weapon;
+    [Tooltip("상호작용/아이템 사용/재장전 진행 중 진행률을 보여주는 Slider (0~1, Interactable 체크 해제). 위치는 화면 하단 고정 - 스크립트가 움직이지 않는다")]
     [SerializeField] private Slider progressSlider;
 
     // 각 상호작용 오브젝트가 자기 프롬프트 아이콘 프리팹을 Instantiate 할 때 부모로 쓰는 자리
@@ -28,6 +32,16 @@ public class InteractionPromptUI : MonoBehaviour
         if (interaction == null)
         {
             interaction = FindAnyObjectByType<PlayerInteraction>();
+        }
+
+        if (itemUse == null)
+        {
+            itemUse = FindAnyObjectByType<ItemUseController>();
+        }
+
+        if (weapon == null)
+        {
+            weapon = FindAnyObjectByType<WeaponController>();
         }
     }
 
@@ -43,14 +57,25 @@ public class InteractionPromptUI : MonoBehaviour
             return;
         }
 
-        bool showProgress = interaction != null && interaction.IsInteracting;
+        bool interactionActive = interaction != null && interaction.IsInteracting;
+        bool itemUseActive = itemUse != null && itemUse.IsUsing;
+        bool reloadActive = weapon != null && weapon.IsReloading;
+        bool showProgress = interactionActive || itemUseActive || reloadActive;
 
         // 위치는 건드리지 않는다 - 하단 고정, 에디터에서 잡아둔 자리 그대로
         progressSlider.gameObject.SetActive(showProgress);
 
-        if (showProgress)
+        if (interactionActive)
         {
             progressSlider.value = interaction.InteractProgress01;
+        }
+        else if (itemUseActive)
+        {
+            progressSlider.value = itemUse.UseProgress01;
+        }
+        else if (reloadActive)
+        {
+            progressSlider.value = weapon.ReloadProgress01;
         }
     }
 }
