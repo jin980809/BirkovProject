@@ -2,7 +2,8 @@
   "name": "Birdkov.NaYeongMin.Tests",
   "rootNamespace": "Birdkov.NaYeongMin.Tests",
   "references": [
-    "Birdkov.NaYeongMin"
+    "Birdkov.NaYeongMin",
+    "Birdkov.NaYeongMin.Test"
   ],
   "includePlatforms": [
     "Editor"

@@ -117,6 +117,12 @@ MonoBehaviour:
   itemCsv: {fileID: 4900000, guid: 239ed652d67d3e34aae0b8b2924578c0, type: 3}
   dropCsv: {fileID: 4900000, guid: 53c410832e487ed4f98f1bd8815e0e3b, type: 3}
   font: {fileID: 0}
+  useStandaloneKeyboard: 1
+  buildLegacyUi: 1
+  honetiPanelSprite: {fileID: 21300000, guid: 06e38d939e8c7cc4fa3b3d531f29156f, type: 3}
+  honetiSlotSprite: {fileID: 21300000, guid: 0bbded730842b5246afdc4e0b070d0fe, type: 3}
+  honetiTitleSprite: {fileID: 21300000, guid: 8239e7b0d9807454bbc2f81bac5fc60c, type: 3}
+  honetiButtonSprite: {fileID: 21300000, guid: 6a76082a9f108f64684af2571a00b2fd, type: 3}
   icons:
   - itemId: 20001
     sprite: {fileID: 21300000, guid: 89318b081ecf2874083296ed93b1fc66, type: 3}

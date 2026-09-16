@@ -50,17 +50,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
-            // 현재 원본 드롭 프리팹은 빈 오브젝트이므로 테스트 인스턴스에만 표시와 충돌체를 붙인다.
-            if (activeDrop.transform.Find("PickupTestMarker") == null)
-            {
-                GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                marker.name = "PickupTestMarker";
-                marker.transform.SetParent(activeDrop.transform, false);
-                marker.transform.localPosition = Vector3.up * 0.2f;
-                marker.transform.localScale = Vector3.one * 0.4f;
-                marker.GetComponent<BoxCollider>().isTrigger = true;
-            }
-            Debug.Log("획득 테스트 준비: 큐브 2m 이내에서 F로 열기/닫기 → 전리품 클릭 또는 드래그로 획득. E는 UI 열기/닫기. 전량 획득 시 큐브 회수.", this);
+            // 표시와 트리거 콜라이더는 LootDropObject.prefab 에 들어 있다. 여기서 더 붙이지 않는다.
+            Debug.Log("획득 테스트 준비: 노란 오브제 2m 이내에서 F로 열기/닫기 → 전리품 클릭 또는 드래그로 획득. E는 UI 열기/닫기. 전량 획득 시 오브제 회수.", this);
         }
     }
 }
