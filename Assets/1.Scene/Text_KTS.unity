@@ -9134,6 +9134,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShot
   enemyShotData: {fileID: 11400000, guid: b4e9b2e77a492c74aa869fb006b7df48, type: 2}
+  Effect: {fileID: 0}
   damage: 10
   bulletsPerShot: 5
   bulletsPerBurst: 1

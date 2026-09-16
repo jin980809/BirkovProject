@@ -7,6 +7,7 @@ public class EnemyShot : MonoBehaviour
     private Animator ani;
 
     [SerializeField] private EnemyShotData enemyShotData;
+    [SerializeField] private ParticleSystem Effect;
 
     [Header("ÃÑ¾Ë ¼³Á¤")]
     [SerializeField] private int damage = 10;
@@ -50,7 +51,7 @@ public class EnemyShot : MonoBehaviour
     WaitForSeconds fireIntervalWfs;
     WaitForSeconds reloadTimeWfs;
 
-
+    
 
 
     private void Awake()
@@ -103,7 +104,6 @@ public class EnemyShot : MonoBehaviour
 
             for (int j = 0; j < bulletCount; j++)
             {
-                
                 Fire();
                 currentMagazine--;
             }
