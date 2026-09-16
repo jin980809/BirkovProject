@@ -61,6 +61,12 @@ public class WeaponController : MonoBehaviour
     private int reloadAmmoItemId;
     private int reloadNeeded;
 
+    // 펠릿이 여러 개인 무기(샷건 등)는 한 사이클(게이지 1회)에 총알 1개씩만 장전하고, 탄창이 꽉 차거나
+    // 탄약이 떨어질 때까지 사이클을 자동으로 이어간다. 매 사이클이 끝날 때마다 그 결과를 바로
+    // 탄창에 반영하기 때문에, ESC 로 취소해도 이미 끝난 사이클만큼은 그대로 남고 진행 중이던
+    // 사이클만 버려진다 (완전히 새로 시작하는 다른 무기들과 다른 점).
+    private bool reloadOneAtATime;
+
     public bool IsReloading
     {
         get { return isReloading; }
@@ -77,9 +83,44 @@ public class WeaponController : MonoBehaviour
     // 새로 채운다 (아래 EquipSlot 참고).
     private readonly int[] lastEquippedItemId = new int[InventorySettings.WeaponQuickSlotCount];
 
+    [Header("애니메이션")]
+    [Tooltip("단발 무기가 한 발 쏜 뒤 상체 발사 포즈(Fire 레이어)를 얼마나 유지할지(초)")]
+    [SerializeField] private float singleShotAnimDuration = 0.25f;
+    [Tooltip("연사 애니메이션 재생 속도 = fireRate * 이 배율. 실제 연사 속도보다 반동 애니메이션이 느리면 이 값을 올린다")]
+    [SerializeField] private float fireAnimSpeedMultiplier = 1f;
+
     private bool fireHeld;
     private float nextFireReadyTime;
     private float currentSpreadDegrees; // 0(완전 정조준) ~ EffectiveMaxSpread
+    private float fireAnimUntilTime; // 단발 무기 전용 - 이 시각까지는 발사 포즈를 유지한다
+
+    // PlayerController.UpdateAnimator() 가 이 두 값을 읽어서 Fire 레이어(상체 전용 마스크)를 제어한다.
+    // 연사 무기는 fireHeld 인 동안 계속(루프), 단발 무기는 한 발마다 짧게 보여준다.
+    public bool IsAutomaticWeaponEquipped
+    {
+        get { return equippedWeapon != null && equippedWeapon.automatic; }
+    }
+
+    public bool IsFiringVisual
+    {
+        get
+        {
+            if (equippedWeapon == null)
+            {
+                return false;
+            }
+
+            return equippedWeapon.automatic
+                ? (fireHeld && !isReloading && CurrentAmmo > 0)
+                : Time.time < fireAnimUntilTime;
+        }
+    }
+
+    // Fire 레이어 애니메이션 재생 속도. 실제 연사 속도(fireRate)에 비례해서 반동 모션도 같이 빨라지게 한다.
+    public float FireAnimSpeed
+    {
+        get { return equippedWeapon != null ? Mathf.Max(0.01f, equippedWeapon.fireRate * fireAnimSpeedMultiplier) : 1f; }
+    }
 
     // 줌(조준) 등에서 SetAimSpreadMultiplier 로 거는 배율. 1 = 정상, 0.5 면 최대 퍼짐이 절반으로 줄어듦
     private float aimSpreadMultiplier = 1f;
@@ -98,6 +139,12 @@ public class WeaponController : MonoBehaviour
     public bool HasWeaponEquipped
     {
         get { return equippedWeapon != null; }
+    }
+
+    // 지금 장착 중인 무기의 itemId (없으면 -1). WeaponVisual 이 어떤 모델을 보여줄지 결정할 때 쓴다.
+    public int EquippedWeaponItemId
+    {
+        get { return equippedWeapon != null ? equippedWeapon.itemId : -1; }
     }
 
     public int CurrentAmmo
@@ -212,24 +259,43 @@ public class WeaponController : MonoBehaviour
         }
 
         isReloading = false;
+        reloadOneAtATime = false;
         reloadTimer = 0f;
         reloadDuration = 0f;
-        // 취소하면 지금까지 모은 진행도는 버리고, 탄약은 소모/획득 없이 원래 상태 그대로 둔다
+        // 취소해도 이미 끝난 사이클(한 발씩 장전 방식이면 이미 채워진 발들)은 그대로 두고,
+        // 지금 진행 중이던 사이클의 진행도만 버린다 - CompleteReload() 가 사이클이 끝날 때마다
+        // 바로바로 탄창에 반영하기 때문에 여기서 되돌릴 게 없다.
     }
 
     private void CompleteReload()
     {
-        isReloading = false;
         reloadTimer = 0f;
-        reloadDuration = 0f;
 
         if (equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
         {
+            isReloading = false;
+            reloadOneAtATime = false;
+            reloadDuration = 0f;
             return;
         }
 
         int gained = inventoryBridge.ConsumeAmmo(reloadAmmoItemId, reloadNeeded);
         ammoInMagazine[equippedSlotIndex] += gained;
+
+        bool magazineFull = ammoInMagazine[equippedSlotIndex] >= equippedWeapon.magazineSize;
+        bool ranOutOfAmmo = gained <= 0;
+
+        if (reloadOneAtATime && !magazineFull && !ranOutOfAmmo)
+        {
+            // 아직 덜 찼고 탄약도 남아있으면 다음 한 발 장전 사이클을 바로 이어간다 (게이지가
+            // 끊기지 않고 계속 돈다) - reloadDuration 은 그대로, 타이머만 리셋한다.
+            reloadNeeded = 1;
+            return;
+        }
+
+        isReloading = false;
+        reloadOneAtATime = false;
+        reloadDuration = 0f;
     }
 
     // 인스펙터에서 현재 장착 무기 스펙 + 잔탄을 바로 확인할 수 있게 한다 (읽기 전용 디버그용)
@@ -331,14 +397,29 @@ public class WeaponController : MonoBehaviour
             return; // 이 무기의 탄약 매핑이 아직 설정되지 않음
         }
 
+        if (inventoryBridge.PeekAmmoCount(ammoItemId) <= 0)
+        {
+            return; // 인벤토리에 해당 탄약이 하나도 없으면 게이지를 아예 시작하지 않는다
+        }
+
+        // 펠릿이 여러 개인 무기(샷건 등)는 한 사이클에 총알 1개씩만 장전하고, CompleteReload() 가
+        // 매번 그 결과를 바로 반영하며 자동으로 다음 발을 이어간다 (게이지 회전당 한 발).
+        reloadOneAtATime = equippedWeapon.pelletCount > 1;
         reloadAmmoItemId = ammoItemId;
-        reloadNeeded = needed;
+        reloadNeeded = reloadOneAtATime ? 1 : needed;
         reloadDuration = equippedWeapon.reloadSpeed;
         reloadTimer = 0f;
 
         if (reloadDuration <= 0f)
         {
-            CompleteReload(); // reloadSpeed 가 0 이하면 즉시 완료 (기존과 동일한 동작)
+            // reloadSpeed 가 0 이하면 즉시 완료 (기존과 동일한 동작). 한 발씩 장전 방식이면
+            // CompleteReload() 가 다음 사이클로 이어가라고 reloadOneAtATime 을 계속 true 로 남겨두므로,
+            // 게이지를 기다릴 필요 없이 여기서 바로 다 채워질 때까지 반복한다.
+            do
+            {
+                CompleteReload();
+            } while (reloadOneAtATime);
+
             return;
         }
 
@@ -368,6 +449,13 @@ public class WeaponController : MonoBehaviour
         nextFireReadyTime = Time.time + interval;
 
         ammoInMagazine[equippedSlotIndex]--;
+
+        // 연사 무기는 fireHeld 로 애니메이션이 계속 유지되지만, 단발 무기는 눌렀다 뗀 순간이 짧아서
+        // 한 발마다 이 시각을 갱신해서 Fire 레이어(상체 발사 포즈)를 잠깐 보여준다.
+        if (!equippedWeapon.automatic)
+        {
+            fireAnimUntilTime = Time.time + singleShotAnimDuration;
+        }
 
         // 이번 발사는 지금까지 쌓인 퍼짐(currentSpreadDegrees) 을 그대로 쓰고,
         // 다음 발사를 위한 증가는 쏜 뒤에 적용한다

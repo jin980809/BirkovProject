@@ -52,6 +52,8 @@ public class PlayerController : MonoBehaviour
     [Tooltip("블렌드 파라미터 감쇠 시간 (클수록 부드럽고 반응 느림)")]
     [SerializeField] private float animDamp = 0.12f;
 
+    private int fireLayerIndex = -1; // 상체 전용 발사 포즈 레이어 인덱스 (Awake 에서 이름으로 찾음, 없으면 -1)
+
     private Rigidbody rb;
     private PlayerInputHandler input;
     private PlayerVitals vitals; // 선택 - 있으면 스테미나로 달리기/구르기 게이트
@@ -172,6 +174,11 @@ public class PlayerController : MonoBehaviour
     // 무기 장착 여부 (무기 시스템에서 SetArmed 로 설정)
     private bool isArmed;
 
+    public bool IsArmed
+    {
+        get { return isArmed; }
+    }
+
     public void SetArmed(bool value)
     {
         isArmed = value;
@@ -191,6 +198,11 @@ public class PlayerController : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator != null)
+        {
+            fireLayerIndex = animator.GetLayerIndex("Fire"); // 상체 전용 발사 포즈 레이어 (없으면 -1)
         }
 
         TryGetComponent(out vitals);
@@ -454,6 +466,14 @@ public class PlayerController : MonoBehaviour
         animator.SetFloat("MoveY", localMove.z, damp, Time.deltaTime);
         animator.SetFloat("Speed", targetSpeed, damp, Time.deltaTime);
         animator.SetBool("IsArmed", isArmed);
+
+        // Fire 레이어(상체 전용 마스크)로 발사 포즈를 덮어씌운다 - 하체(걷기/달리기)는 그대로 유지된다.
+        if (fireLayerIndex >= 0 && weapon != null)
+        {
+            animator.SetBool("IsAutomaticWeapon", weapon.IsAutomaticWeaponEquipped);
+            animator.SetFloat("FireSpeed", weapon.FireAnimSpeed);
+            animator.SetLayerWeight(fireLayerIndex, weapon.IsFiringVisual ? 1f : 0f);
+        }
     }
 
     private bool TryGetAimPoint(out Vector3 point)
