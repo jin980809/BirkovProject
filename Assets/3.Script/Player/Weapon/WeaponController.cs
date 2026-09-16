@@ -56,7 +56,21 @@ public class WeaponController : MonoBehaviour
 
     private bool fireHeld;
     private float nextFireReadyTime;
-    private float currentSpreadDegrees; // 0(완전 정조준) ~ equippedWeapon.maxSpread
+    private float currentSpreadDegrees; // 0(완전 정조준) ~ EffectiveMaxSpread
+
+    // 줌(조준) 등에서 SetAimSpreadMultiplier 로 거는 배율. 1 = 정상, 0.5 면 최대 퍼짐이 절반으로 줄어듦
+    private float aimSpreadMultiplier = 1f;
+
+    // 실제 블룸 계산/크로스헤어가 쓰는 "유효" 최대 퍼짐 (무기 원본 maxSpread * 조준 배율)
+    private float EffectiveMaxSpread
+    {
+        get { return equippedWeapon != null ? equippedWeapon.maxSpread * aimSpreadMultiplier : 0f; }
+    }
+
+    public void SetAimSpreadMultiplier(float multiplier)
+    {
+        aimSpreadMultiplier = multiplier;
+    }
 
     public bool HasWeaponEquipped
     {
@@ -73,13 +87,21 @@ public class WeaponController : MonoBehaviour
     {
         get
         {
-            if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f)
+            float effectiveMax = EffectiveMaxSpread;
+            if (effectiveMax <= 0f)
             {
                 return 0f;
             }
 
-            return Mathf.Clamp01(currentSpreadDegrees / equippedWeapon.maxSpread);
+            return Mathf.Clamp01(currentSpreadDegrees / effectiveMax);
         }
+    }
+
+    // 크로스헤어 UI 가 무기별로 최대 반경을 다르게 잡기 위해 참조하는 값 (도 단위). 무기가 없으면 0.
+    // 줌(조준) 배율이 걸려 있으면 그만큼 줄어든 값이 나온다 - 크로스헤어도 같이 좁아지게 하기 위해서다.
+    public float EquippedMaxSpreadDegrees
+    {
+        get { return EffectiveMaxSpread; }
     }
 
     private void Awake()
@@ -242,23 +264,25 @@ public class WeaponController : MonoBehaviour
 
     private void GrowBloom()
     {
-        if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f)
+        float effectiveMax = EffectiveMaxSpread;
+        if (effectiveMax <= 0f)
         {
             return;
         }
 
-        float growth = equippedWeapon.maxSpread * bloomGrowthFraction;
-        currentSpreadDegrees = Mathf.Min(equippedWeapon.maxSpread, currentSpreadDegrees + growth);
+        float growth = effectiveMax * bloomGrowthFraction;
+        currentSpreadDegrees = Mathf.Min(effectiveMax, currentSpreadDegrees + growth);
     }
 
     private void RecoverBloom()
     {
-        if (equippedWeapon == null || equippedWeapon.maxSpread <= 0f || currentSpreadDegrees <= 0f)
+        float effectiveMax = EffectiveMaxSpread;
+        if (effectiveMax <= 0f || currentSpreadDegrees <= 0f)
         {
             return;
         }
 
-        float recover = equippedWeapon.maxSpread * bloomRecoverFraction * Time.deltaTime;
+        float recover = effectiveMax * bloomRecoverFraction * Time.deltaTime;
         currentSpreadDegrees = Mathf.Max(0f, currentSpreadDegrees - recover);
     }
 
@@ -280,7 +304,10 @@ public class WeaponController : MonoBehaviour
         Vector3 direction = ApplySpread(baseDirection, currentSpreadDegrees);
 
         Projectile projectile = bulletPool.Rent(firePoint.position, Quaternion.LookRotation(direction));
-        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider);
+
+        // 지금 플레이어가 붙어있는 엄폐물이 있으면, 이번 총알은 그것들을 무시하고 통과한다
+        // (엄폐물 너머의 적을 쏠 수 있게 - CoverObject.cs 참고)
+        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider, CoverObject.AttachedCoverColliders);
     }
 
     private Vector3 ApplySpread(Vector3 direction, float maxSpreadDegrees)

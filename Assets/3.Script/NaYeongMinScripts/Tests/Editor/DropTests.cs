@@ -77,7 +77,7 @@ namespace Birdkov.NaYeongMin.Tests
         [TestCase(LootContainerSize.Box2x4, 8)]
         [TestCase(LootContainerSize.Box3x3, 9)]
         [TestCase(LootContainerSize.Box3x5, 15)]
-        [TestCase(LootContainerSize.Box4x2, 8)]
+        [TestCase(LootContainerSize.Box4x1, 4)]
         public void SizePreset_CreatesExpectedSlotCount(LootContainerSize sizePreset, int expectedSlotCount)
         {
             LootContainerData container = new LootContainerData(sizePreset);
@@ -109,9 +109,9 @@ namespace Birdkov.NaYeongMin.Tests
             }
 
             LootContainerData loot = new DropRoller(new AlwaysHitRandomSource())
-                .Roll(entries, DropSourceType.Box, LootContainerSize.Box4x2);
+                .Roll(entries, DropSourceType.Box, LootContainerSize.Box4x1);
 
-            Assert.AreEqual(8, loot.SlotCount);
+            Assert.AreEqual(4, loot.SlotCount);
             Assert.IsTrue(loot.loot.slots.TrueForAll(slot => !slot.IsEmpty()));
         }
 
