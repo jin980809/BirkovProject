@@ -10,6 +10,7 @@ public class EnemyBasicPatten : MonoBehaviour
     private Animator ani;
     private NavMeshAgent agent;
     private EnemyDetect enemyDetect;
+    private EnemyShot enemyShot;
 
     private Vector3 respawnPoint;
     private int rnd;
@@ -17,7 +18,10 @@ public class EnemyBasicPatten : MonoBehaviour
     private bool canRevert = true;
     private bool canPatrol = true;
     private bool canBattle = true;
-    private WaitForSeconds wfs;
+
+    private WaitForSeconds patrolWaitingTimeWfs;
+    private WaitForSeconds exclamationTimeWfs;
+    private WaitForSeconds delayTimeWfs;
 
     [Header("순찰 정보")]
     [SerializeField] private Transform[] wayPoints;
@@ -43,6 +47,7 @@ public class EnemyBasicPatten : MonoBehaviour
         TryGetComponent(out agent);
         TryGetComponent(out ani);
         TryGetComponent(out enemyDetect);
+        TryGetComponent(out enemyShot);
 
     }   
 
@@ -51,7 +56,10 @@ public class EnemyBasicPatten : MonoBehaviour
         agent.speed = moveSpeed;
         agent.angularSpeed = angleSpeed;
         patrolWaitingTime = enemyData.patrolWaitingTime;
-        wfs = new WaitForSeconds(patrolWaitingTime);
+
+        patrolWaitingTimeWfs = new WaitForSeconds(patrolWaitingTime);
+        exclamationTimeWfs = new WaitForSeconds(0.7f);
+        delayTimeWfs = new WaitForSeconds(1.5f);
 
         respawnPoint = transform.position;
     }
@@ -115,7 +123,7 @@ public class EnemyBasicPatten : MonoBehaviour
         rnd = Random.Range(0, wayPoints.Length);
         agent.destination = wayPoints[rnd].position;
 
-        yield return wfs;
+        yield return patrolWaitingTimeWfs;
 
         canPatrol = true;
     }
@@ -126,6 +134,7 @@ public class EnemyBasicPatten : MonoBehaviour
     public void SearchMove()
     {
         agent.isStopped = false;
+        agent.updateRotation = true;
         ani.SetBool("Walk", true);
 
         enemyDetect.SearchCheckOff();
@@ -173,9 +182,11 @@ public class EnemyBasicPatten : MonoBehaviour
             {
                 questionMark.SetActive(false);
             }
+            agent.updateRotation = false;
             exclamationMark.SetActive(true);
 
-            yield return new WaitForSeconds(0.7f);
+
+            yield return exclamationTimeWfs;
 
             exclamationMark.SetActive(false);
 
@@ -218,53 +229,39 @@ public class EnemyBasicPatten : MonoBehaviour
     //전진 공격 패턴
     private IEnumerator Patten1_co()
     {
-        ani.SetBool("Walk", true);
+        ani.SetBool("Run", true);
         agent.isStopped = false;
 
         agent.destination = enemyDetect.VisibleTargets().position;
-        
-        yield return new WaitForSeconds(1.5f);
+
+        yield return delayTimeWfs;
 
         agent.isStopped = true;
+        ani.SetBool("Run", false);
 
-        ani.SetBool("Walk", false);
-
-        ani.SetBool("Shot", true);
-        //총알 발사
-        yield return new WaitForSeconds(1.0f);
-        ani.SetBool("Shot", false);
+        yield return StartCoroutine(enemyShot.Fire_co());
     }
     //정지 공격 패턴
     private IEnumerator Patten2_co()
     {
+        yield return delayTimeWfs;
 
-        yield return new WaitForSeconds(1.5f);
-
-        ani.SetBool("Shot", true);
-        yield return new WaitForSeconds(1.0f);
-        ani.SetBool("Shot", false);
-
-
+        yield return StartCoroutine(enemyShot.Fire_co());
     }
     //랜덤 위치 이동 패턴
     private IEnumerator Patten3_co()
     {
-
-        ani.SetBool("Walk", true);
+        ani.SetBool("Run", true);
         agent.isStopped = false;
-
 
         agent.destination = GetRandomPositionOnNavMesh();
 
-        yield return new WaitForSeconds(1.5f);
+        yield return delayTimeWfs;
 
         agent.isStopped = true;
+        ani.SetBool("Run", false);
 
-        ani.SetBool("Walk", false);
-
-        ani.SetBool("Shot", true);
-        yield return new WaitForSeconds(1.0f);
-        ani.SetBool("Shot", false);
+        yield return StartCoroutine(enemyShot.Fire_co());
     }
 
     //----------------------------------플레이어를 발견해 전투 상태--------------------------------------

@@ -4,9 +4,21 @@ using UnityEngine;
 
 public class EnemyShot : MonoBehaviour
 {
+    private Animator ani;
+
+    [SerializeField] private EnemyShotData enemyShotData;
+
     [Header("총알 설정")]
     [SerializeField] private int damage = 10;
+
+    [Header("연발")]
     [SerializeField] private int bulletsPerShot = 1;
+
+    [Header("동시 발사")]
+    [SerializeField] private int bulletsPerBurst = 1;
+
+    [Header("탄퍼짐 설정")]
+    [SerializeField] private float spreadAngle = 5.0f;
 
     [Header("발사 설정")]
     [SerializeField] private float fireInterval = 0.1f;
@@ -17,6 +29,7 @@ public class EnemyShot : MonoBehaviour
 
     [Header("재장전")]
     [SerializeField] private float reloadTime = 2.0f;
+    [SerializeField]private GameObject reloadImage;
 
     [Header("총구")]
     [SerializeField] private Transform firePoint;
@@ -24,13 +37,46 @@ public class EnemyShot : MonoBehaviour
     [Header("총알 풀")]
     [SerializeField] private EnemyBulletPool enemyBulletPool;
 
+    private int fireCount;
+    private int bulletCount;
+    float randomY;
     private bool isReloading;
+    Vector3 direction;
+    Vector3 spreadDirection;
+    Quaternion spreadRotation;
+    private GameObject bullet;
+    private EnemyBullet enemyBullet;
+
+    WaitForSeconds fireIntervalWfs;
+    WaitForSeconds reloadTimeWfs;
+
+
+
 
     private void Awake()
     {
+        TryGetComponent(out ani);
         //초기 탄알
         currentMagazine = magazineSize;
     }
+    private void Start()
+    {
+        if (enemyShotData != null)
+        {
+            damage = enemyShotData.damage;
+            bulletsPerShot = enemyShotData.bulletsPerShot;
+            bulletsPerBurst = enemyShotData.bulletsPerBurst;
+            spreadAngle = enemyShotData.spreadAngle;
+            fireInterval = enemyShotData.fireInterval;
+            magazineSize = enemyShotData.magazineSize;
+            reloadTime = enemyShotData.reloadTime;
+        }
+
+        fireIntervalWfs = new WaitForSeconds(fireInterval);
+        reloadTimeWfs = new WaitForSeconds(reloadTime);
+
+    }
+
 
     public IEnumerator Fire_co()
     {
@@ -46,25 +92,33 @@ public class EnemyShot : MonoBehaviour
         }
 
         // 이번 발사에서 쏠 총알 수
-        int fireCount = Mathf.Min(bulletsPerShot, currentMagazine);
+        fireCount = Mathf.Min(bulletsPerShot, currentMagazine);
 
+
+        ani.SetBool("Shot", true);
+        
         for (int i = 0; i < fireCount; i++)
         {
-            Fire();
+            bulletCount = Mathf.Min(bulletsPerBurst, currentMagazine);
 
-            currentMagazine--;
+            for (int j = 0; j < bulletCount; j++)
+            {
+                
+                Fire();
+                currentMagazine--;
+            }
 
-            // 연사 간격
             if (i < fireCount - 1)
             {
                 yield return new WaitForSeconds(fireInterval);
             }
         }
+        ani.SetBool("Shot", false);
     }
 
     private void Fire()
     {
-        GameObject bullet = enemyBulletPool.GetBullet();
+        bullet = enemyBulletPool.GetBullet();
 
         if (bullet == null)
         {
@@ -74,14 +128,24 @@ public class EnemyShot : MonoBehaviour
         bullet.transform.position = firePoint.position;
         bullet.transform.rotation = firePoint.rotation;
 
-        EnemyBullet enemyBullet = bullet.GetComponent<EnemyBullet>();
+        bullet.TryGetComponent(out enemyBullet);
 
         if (enemyBullet != null)
         {
-            enemyBullet.Fire(firePoint.forward, damage);
+            spreadDirection = GetSpreadDirection();
+            enemyBullet.Fire(spreadDirection, damage);
+            enemyBullet.Initialize(enemyBulletPool);
         }
     }
+    private Vector3 GetSpreadDirection()
+    {
+        randomY = Random.Range(-spreadAngle, spreadAngle);
+        spreadRotation = Quaternion.Euler(0f, randomY, 0f);
 
+        direction = firePoint.rotation * spreadRotation * Vector3.forward;
+
+        return direction.normalized;
+    }
     private IEnumerator Reload_co()
     {
         if (isReloading)
@@ -91,7 +155,8 @@ public class EnemyShot : MonoBehaviour
 
         isReloading = true;
 
-        Debug.Log("재장전 시작");
+        reloadImage.SetActive(true);
+
 
         yield return new WaitForSeconds(reloadTime);
 
@@ -99,6 +164,6 @@ public class EnemyShot : MonoBehaviour
 
         isReloading = false;
 
-        Debug.Log("재장전 완료");
+        reloadImage.SetActive(false);
     }
 }
