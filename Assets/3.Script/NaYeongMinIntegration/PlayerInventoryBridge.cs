@@ -12,6 +12,8 @@ namespace Birdkov.NaYeongMin.Integration
         [SerializeField] private PlayerInputHandler playerInput;
         [SerializeField] private InventoryTestBench inventoryBench;
         [SerializeField, Min(0.1f)] private float interactionDistance = 2f;
+        [Tooltip("팀원 Player의 입력/회복/상자 연결 사용. 이 브리지는 풀 전리품과 사망/거리 처리를 담당합니다.")]
+        [SerializeField] private bool useTeamPlayerConnections;
         private LootDropObject openedDrop;
         private bool subscribed;
         private bool previousStandaloneKeyboard;
@@ -24,10 +26,13 @@ namespace Birdkov.NaYeongMin.Integration
             if (playerVitals == null || playerInput == null || inventoryBench == null) return;
             previousStandaloneKeyboard = inventoryBench.useStandaloneKeyboard;
             inventoryBench.useStandaloneKeyboard = false;
-            inventoryBench.BindRecoveryTarget(this);
-            playerInput.WeaponSelected += SelectWeapon;
-            playerInput.QuickSlotUsed += UseQuickSlot;
-            playerInput.InventoryToggled += ToggleInventory;
+            if (!useTeamPlayerConnections)
+            {
+                inventoryBench.BindRecoveryTarget(this);
+                playerInput.WeaponSelected += SelectWeapon;
+                playerInput.QuickSlotUsed += UseQuickSlot;
+                playerInput.InventoryToggled += ToggleInventory;
+            }
             playerInput.InteractPressed += Interact;
             playerVitals.Died += HandleDeath;
             subscribed = true;
@@ -47,7 +52,7 @@ namespace Birdkov.NaYeongMin.Integration
             if (inventoryBench != null)
             {
                 inventoryBench.CloseLoot();
-                inventoryBench.BindRecoveryTarget(null);
+                if (!useTeamPlayerConnections) inventoryBench.BindRecoveryTarget(null);
                 inventoryBench.useStandaloneKeyboard = previousStandaloneKeyboard;
             }
             openedDrop = null;
@@ -115,6 +120,13 @@ namespace Birdkov.NaYeongMin.Integration
                 openedDrop = null;
                 return;
             }
+            if (useTeamPlayerConnections)
+            {
+                PlayerController player = playerVitals.GetComponent<PlayerController>();
+                if (player != null && (player.IsControlLocked || player.IsUsingItem || player.IsReloading)) return;
+                PlayerInteraction interaction = playerVitals.GetComponent<PlayerInteraction>();
+                if (interaction != null && interaction.HasTarget) return;
+            }
             LootDropObject nearest = null;
             InventoryWorldContainer nearestContainer = null;
             float nearestDistance = interactionDistance;
@@ -123,6 +135,7 @@ namespace Birdkov.NaYeongMin.Integration
                 InventoryWorldContainer container = hit.GetComponentInParent<InventoryWorldContainer>();
                 if (container != null && container.isActiveAndEnabled)
                 {
+                    if (useTeamPlayerConnections) continue;
                     float containerDistance = Vector3.Distance(playerVitals.transform.position, container.transform.position);
                     if (containerDistance <= nearestDistance)
                     {
