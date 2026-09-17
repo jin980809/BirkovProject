@@ -79,11 +79,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 1);
             }
 
-            if (!playerData.equipmentSlots.slots[targetIndex].IsEmpty())
-            {
-                return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 1);
-            }
-
             InventoryMoveResult result = inventoryService.MoveItem(
                 playerData.inventory, inventoryIndex, playerData.equipmentSlots, targetIndex, 1);
             SanitizeItemQuickSlots(playerData);
