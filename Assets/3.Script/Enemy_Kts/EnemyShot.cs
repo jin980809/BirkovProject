@@ -7,16 +7,20 @@ public class EnemyShot : MonoBehaviour
     private Animator ani;
 
     [SerializeField] private EnemyShotData enemyShotData;
-    [SerializeField] private ParticleSystem Effect;
+    [SerializeField] private ParticleSystem shotEffect;
 
     [Header("총알 설정")]
     [SerializeField] private int damage = 10;
 
     [Header("연발")]
-    [SerializeField] private int bulletsPerShot = 1;
+    [SerializeField] private int minBulletsPerShot = 1;
+    [SerializeField] private int maxBulletsPerShot = 1;
+    private int rndBulletsPerShot;
 
     [Header("동시 발사")]
-    [SerializeField] private int bulletsPerBurst = 1;
+    [SerializeField] private int minBulletsPerBurst = 1;
+    [SerializeField] private int maxBulletsPerBurst = 1;
+    private int rndBulletsPerBurst;
 
     [Header("탄퍼짐 설정")]
     [SerializeField] private float spreadAngle = 5.0f;
@@ -38,8 +42,8 @@ public class EnemyShot : MonoBehaviour
     [Header("총알 풀")]
     [SerializeField] private EnemyBulletPool enemyBulletPool;
 
-    private int fireCount;
-    private int bulletCount;
+    //private int fireCount;
+    //private int bulletCount;
     float randomY;
     private bool isReloading;
     Vector3 direction;
@@ -65,8 +69,10 @@ public class EnemyShot : MonoBehaviour
         if (enemyShotData != null)
         {
             damage = enemyShotData.damage;
-            bulletsPerShot = enemyShotData.bulletsPerShot;
-            bulletsPerBurst = enemyShotData.bulletsPerBurst;
+            minBulletsPerShot = enemyShotData.minBulletsPerShot;
+            maxBulletsPerShot = enemyShotData.maxBulletsPerShot + 1;
+            minBulletsPerBurst = enemyShotData.minBulletsPerBurst;
+            maxBulletsPerBurst = enemyShotData.maxBulletsPerBurst + 1;
             spreadAngle = enemyShotData.spreadAngle;
             fireInterval = enemyShotData.fireInterval;
             magazineSize = enemyShotData.magazineSize;
@@ -75,7 +81,7 @@ public class EnemyShot : MonoBehaviour
 
         fireIntervalWfs = new WaitForSeconds(fireInterval);
         reloadTimeWfs = new WaitForSeconds(reloadTime);
-
+        shotEffect.Stop();
     }
 
 
@@ -86,35 +92,47 @@ public class EnemyShot : MonoBehaviour
             yield break;
         }
 
+        // 이번 발사에서 쏠 총알 수
+        rndBulletsPerShot = Random.Range(minBulletsPerShot, maxBulletsPerShot);
+
+        //한번에 몇발 쏠 것인지
+        rndBulletsPerBurst = Random.Range(minBulletsPerBurst, maxBulletsPerBurst);
+
         // 탄창이 비어있으면 먼저 재장전
         if (currentMagazine <= 0)
         {
             yield return StartCoroutine(Reload_co());
         }
 
-        // 이번 발사에서 쏠 총알 수
-        fireCount = Mathf.Min(bulletsPerShot, currentMagazine);
-
+        
 
         ani.SetBool("Shot", true);
         
-        for (int i = 0; i < fireCount; i++)
+        for (int i = 0; i < rndBulletsPerShot; i++)
         {
-            bulletCount = Mathf.Min(bulletsPerBurst, currentMagazine);
+            
 
-            for (int j = 0; j < bulletCount; j++)
+            
+            for (int j = 0; j < rndBulletsPerBurst; j++)
             {
+                
                 Fire();
+                
                 currentMagazine--;
             }
+            
 
-            if (i < fireCount - 1)
+            if (i < rndBulletsPerShot - 1)
             {
-                yield return new WaitForSeconds(fireInterval);
+                
+                yield return fireIntervalWfs;
+                
             }
         }
+        //shotEffect.Stop();
         ani.SetBool("Shot", false);
     }
+    
 
     private void Fire()
     {
@@ -134,6 +152,7 @@ public class EnemyShot : MonoBehaviour
         {
             spreadDirection = GetSpreadDirection();
             enemyBullet.Fire(spreadDirection, damage);
+            shotEffect.Play();
             enemyBullet.Initialize(enemyBulletPool);
         }
     }
@@ -158,7 +177,7 @@ public class EnemyShot : MonoBehaviour
         reloadImage.SetActive(true);
 
 
-        yield return new WaitForSeconds(reloadTime);
+        yield return reloadTimeWfs;
 
         currentMagazine = magazineSize;
 

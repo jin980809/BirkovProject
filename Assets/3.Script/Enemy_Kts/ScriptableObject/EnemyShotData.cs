@@ -9,10 +9,12 @@ public class EnemyShotData : ScriptableObject
     [SerializeField] public int damage = 10;
 
     [Header("연발")]
-    [SerializeField] public int bulletsPerShot = 1;
+    [SerializeField] public int minBulletsPerShot = 1;
+    [SerializeField] public int maxBulletsPerShot = 1;
 
     [Header("동시 발사")]
-    [SerializeField] public int bulletsPerBurst = 1;
+    [SerializeField] public int minBulletsPerBurst = 1;
+    [SerializeField] public int maxBulletsPerBurst = 1;
 
     [Header("탄퍼짐 설정")]
     [SerializeField] public float spreadAngle = 5.0f;

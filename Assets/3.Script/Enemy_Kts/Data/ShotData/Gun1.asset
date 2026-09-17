@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Gun1
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
   damage: 10
-  bulletsPerShot: 5
-  bulletsPerBurst: 1
+  minBulletsPerShot: 5
+  maxBulletsPerShot: 8
+  minBulletsPerBurst: 1
+  maxBulletsPerBurst: 1
   spreadAngle: 5
   fireInterval: 0.1
   magazineSize: 30

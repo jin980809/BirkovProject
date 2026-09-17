@@ -9,7 +9,7 @@ public class EnemyBullet : MonoBehaviour
 
     private EnemyBulletPool enemyBulletPool;
 
-    private Vector3 direction;
+    public Vector3 direction { get; private set; }
     private int damage;
 
     private float lifeTimer;
@@ -47,6 +47,7 @@ public class EnemyBullet : MonoBehaviour
         {
             target.TakeDamage(damage);
         }
+
         ReturnToPool();
 
     }   

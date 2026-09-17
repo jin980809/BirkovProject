@@ -9,7 +9,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     [Header("정보")]
     [SerializeField] private float maxHealth;
     [SerializeField] private float currentHealth;
-    [SerializeField] private GameObject drop;
 
     private void Start()
     {
@@ -23,7 +22,6 @@ public class EnemyController : MonoBehaviour, IDamageable
         Debug.Log(gameObject.name + " 이(가) " + amount + " 대미지를 입었습니다.", this);
         if (currentHealth < 0)
         {
-            Instantiate(drop, transform.position, transform.rotation);
             Destroy(gameObject);
         }
     }
