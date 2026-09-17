@@ -1,4 +1,4 @@
-﻿using Birdkov.NaYeongMin.InventorySystem;
+using Birdkov.NaYeongMin.InventorySystem;
 using NUnit.Framework;
 using System.Collections.Generic;
 
@@ -16,15 +16,30 @@ namespace Birdkov.NaYeongMin.Tests
             {
                 new ItemData { itemId = 1, itemType = ItemType.Material, maxStack = 99, stackable = true },
                 new ItemData { itemId = 2, itemType = ItemType.Weapon, maxStack = 99, stackable = true },
-                new ItemData { itemId = 3, itemType = ItemType.Special, maxStack = 1 }
+                new ItemData { itemId = 3, itemType = ItemType.Special, maxStack = 1 },
+                new ItemData { itemId = 4, itemType = ItemType.Consumable, maxStack = 5, stackable = true }
             });
         }
 
+        // 슬롯당 상한은 CSV 의 maxStack 을 따른다. 예전의 5개 고정 상한은 폐기됐다.
+        // 탄약처럼 5를 넘기는 항목이 생겨서 아이템별로 다르게 가져간다.
         [Test]
-        public void AddItem_UsesFiveItemStackLimit()
+        public void AddItem_UsesItemMaxStack()
         {
             GridContainerData container = new GridContainerData(2, 1);
             InventoryMoveResult result = new InventoryService(itemCatalog).AddItem(container, 1, 7);
+
+            Assert.AreEqual(InventoryResult.Success, result.Result);
+            Assert.AreEqual(7, container.slots[0].amount);
+            Assert.IsTrue(container.slots[1].IsEmpty());
+        }
+
+        // 기획서 6.3 일반 아이템 5개 규칙은 CSV 값으로 지킨다. maxStack 5 면 여전히 나뉘어 담긴다.
+        [Test]
+        public void AddItem_SplitsWhenMaxStackIsFive()
+        {
+            GridContainerData container = new GridContainerData(2, 1);
+            InventoryMoveResult result = new InventoryService(itemCatalog).AddItem(container, 4, 7);
 
             Assert.AreEqual(InventoryResult.Success, result.Result);
             Assert.AreEqual(5, container.slots[0].amount);
@@ -97,6 +112,7 @@ namespace Birdkov.NaYeongMin.Tests
         private const int PistolId = 30001;
         private const int ShotgunId = 30002;
         private const int HelmetId = 31001;
+        private const int SturdyHelmetId = 31003;
         private const int ArmorId = 31002;
         private const int PotionId = 21001;
 
@@ -111,6 +127,7 @@ namespace Birdkov.NaYeongMin.Tests
                 new ItemData { itemId = PistolId, itemType = ItemType.Weapon, displayName = "기관권총", maxStack = 1 },
                 new ItemData { itemId = ShotgunId, itemType = ItemType.Weapon, displayName = "샷건", maxStack = 1 },
                 new ItemData { itemId = HelmetId, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Helmet, maxStack = 1 },
+                new ItemData { itemId = SturdyHelmetId, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Helmet, maxStack = 1 },
                 new ItemData { itemId = ArmorId, itemType = ItemType.Equipment, equipmentSlotType = EquipmentSlotType.Armor, maxStack = 1 },
                 new ItemData { itemId = PotionId, itemType = ItemType.Consumable, maxStack = 5, stackable = true }
             });
@@ -161,30 +178,31 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void Equip_RejectsOccupiedSlot()
+        public void Equip_SwapsOccupiedWeaponSlot()
         {
-            // 기획 확정: 장비 슬롯이 비어 있다는 전제에서만 안착한다. 교환하지 않는다.
+            // 기획 변경: 빈 칸일 때만 착용하던 안은 폐기. 차 있으면 맞바꿼 끼운다.
             PutInBag(0, PistolId);
             service.EquipFromInventory(playerData, 0, EquipmentSlots.PrimaryWeapon);
             PutInBag(0, ShotgunId);
 
             InventoryMoveResult result = service.EquipFromInventory(playerData, 0, EquipmentSlots.PrimaryWeapon);
 
-            Assert.AreEqual(InventoryResult.DestinationRejected, result.Result);
-            Assert.AreEqual(PistolId, playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].itemId);
-            Assert.AreEqual(ShotgunId, playerData.inventory.slots[0].itemId);
+            Assert.AreEqual(InventoryResult.Success, result.Result);
+            Assert.AreEqual(ShotgunId, playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].itemId);
+            Assert.AreEqual(PistolId, playerData.inventory.slots[0].itemId);
         }
 
         [Test]
-        public void Equip_RejectsOccupiedArmorSlot()
+        public void Equip_SwapsOccupiedArmorSlot()
         {
             PutInBag(0, HelmetId);
             service.EquipFromInventory(playerData, 0, EquipmentSlots.Helmet);
-            PutInBag(3, HelmetId);
+            PutInBag(3, SturdyHelmetId);
 
             InventoryMoveResult result = service.EquipFromInventory(playerData, 3, EquipmentSlots.Helmet);
 
-            Assert.AreEqual(InventoryResult.DestinationRejected, result.Result);
+            Assert.AreEqual(InventoryResult.Success, result.Result);
+            Assert.AreEqual(SturdyHelmetId, playerData.equipmentSlots.slots[EquipmentSlots.Helmet].itemId);
             Assert.AreEqual(HelmetId, playerData.inventory.slots[3].itemId);
         }
 

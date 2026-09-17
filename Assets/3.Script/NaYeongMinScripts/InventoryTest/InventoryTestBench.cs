@@ -482,7 +482,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             if (to == TestContainer.Equipment)
             {
-                SetMessage("장비 슬롯은 비어 있을 때만 착용됩니다. 종류가 맞는지, 이미 차 있지 않은지 확인하세요.");
+                SetMessage("이 칸에는 들어가지 않는 종류입니다. 무기 칸에는 무기, 방어구 칸에는 해당 부위 장비만 가능합니다.");
                 return;
             }
 
@@ -976,8 +976,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private const int MiddleWidth = 600;
         private const int SidePanelHeight = 640;
 
-        // 하이어라키에 미리 놓인 UI 를 그대로 쓴다. 기획팀은 인스펙터에서 배치만 고치면 된다.
-        // ui.screen 이 비어 있으면 false 를 돌려 기존 BuildUi() 로 넘어간다.
+        // 하이어라키에 미리 놓인 UI 를 그대로 쓴다. 기획팀은 인스펙터에서 배치만 고치면 됨.
+        // ui.screen 이 비어 있으면 false 를 돌려 기존 BuildUi() 로 넘어감
         // 캔버스는 어느 경로로 UI 를 얻든 같은 설정이어야 한다.
         // 씬 값이 WorldSpace 나 ConstantPixelSize 로 남아 있으면 화면에 아무것도 안 보인다.
         private void ConfigureCanvas()
@@ -1072,7 +1072,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
             screen.anchorMin = screen.anchorMax = screen.pivot = new Vector2(0.5f, 0.5f);
             screen.anchoredPosition = Vector2.zero;
 
-            // 머리말. 제목 띠만 HONETi 스프라이트를 쓴다.
             RectTransform titleBar = MakeRect("TitleBar", screen, LeftX, 16, ColumnWidth, 40);
             Image titleImage = titleBar.gameObject.AddComponent<Image>();
             ApplySkin(titleImage, honetiTitleSprite, new Color(0.12f, 0.19f, 0.24f, 0.86f), new Color(0.12f, 0.13f, 0.14f, 0.9f));
