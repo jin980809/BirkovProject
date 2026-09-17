@@ -36,6 +36,21 @@ public class WeaponController : MonoBehaviour
     [Tooltip("초당 maxSpread 의 이 비율만큼 현재 퍼짐이 줄어든다")]
     [SerializeField] private float bloomRecoverFraction = 1.5f;
 
+    [Header("반동 킥 (크로스헤어 + 실제 조준점을 같이 흔든다)")]
+    [Tooltip("무기의 maxSpread(도) 1당 한 발에 튀는 화면 픽셀 거리 - 무기마다 maxSpread 가 다르므로 반동 세기가 자동으로 무기에 비례한다")]
+    [SerializeField] private float recoilKickPixelsPerSpreadDegree = 2f;
+    [Tooltip("튄 뒤 원래 자리로 돌아오는 빠르기 (클수록 빠르게 진정됨)")]
+    [SerializeField] private float recoilRecoverySharpness = 10f;
+
+    private Vector2 recoilKickOffset;
+
+    // 크로스헤어(시각)와 PlayerController 의 조준 계산(실제 탄착)이 똑같은 값을 봐야 서로 어긋나지
+    // 않는다 - 그래서 이 오프셋을 여기 한 곳에서만 계산하고 양쪽이 그대로 읽어간다.
+    public Vector2 RecoilKickOffset
+    {
+        get { return recoilKickOffset; }
+    }
+
     [Header("디버그 - 현재 장착 무기 (읽기 전용, Play 중에만 갱신됨)")]
     [SerializeField] private string debugWeaponName;
     [SerializeField] private float debugAttackDamage;
@@ -241,6 +256,7 @@ public class WeaponController : MonoBehaviour
 
         RecoverBloom();
         UpdateReload();
+        UpdateRecoilKick();
 
         // 자동 사격 무기는 발사 버튼을 누르고 있는 동안 쿨다운마다 계속 나간다
         if (fireHeld && !isReloading && equippedWeapon != null && equippedWeapon.automatic)
@@ -249,6 +265,11 @@ public class WeaponController : MonoBehaviour
         }
 
         RefreshDebugDisplay();
+    }
+
+    private void UpdateRecoilKick()
+    {
+        recoilKickOffset = Vector2.Lerp(recoilKickOffset, Vector2.zero, 1f - Mathf.Exp(-recoilRecoverySharpness * Time.deltaTime));
     }
 
     private void UpdateReload()
@@ -473,6 +494,10 @@ public class WeaponController : MonoBehaviour
         nextFireReadyTime = Time.time + interval;
 
         SetCurrentAmmo(CurrentAmmo - 1);
+
+        // 크로스헤어와 실제 조준점(PlayerController)이 같은 방향으로 같이 튄다 - 무기의
+        // maxSpread 가 클수록(퍼짐이 큰 무기일수록) 반동도 세진다.
+        recoilKickOffset += UnityEngine.Random.insideUnitCircle.normalized * (equippedWeapon.maxSpread * recoilKickPixelsPerSpreadDegree);
 
         if (ShotFired != null)
         {

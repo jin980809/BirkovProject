@@ -21,6 +21,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 {
     [SerializeField] private InventoryTestBench inventoryBench;
     [SerializeField] private WeaponInventoryBridge weaponInventoryBridge;
+    [SerializeField] private PlayerArmorBridge armorBridge;
     [SerializeField] private WeaponController weaponController;
     [SerializeField] private PlayerVitals playerVitals;
     [SerializeField] private PlayerInputHandler input;
@@ -38,6 +39,11 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         if (weaponInventoryBridge == null)
         {
             weaponInventoryBridge = FindAnyObjectByType<WeaponInventoryBridge>();
+        }
+
+        if (armorBridge == null)
+        {
+            armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
         }
 
         if (weaponController == null)
@@ -110,6 +116,11 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         {
             didLinkWeaponData = true;
             weaponInventoryBridge.SetPlayerInventoryData(inventoryBench.PlayerData);
+
+            if (armorBridge != null)
+            {
+                armorBridge.SetPlayerInventoryData(inventoryBench.PlayerData);
+            }
 
             // WeaponController.Start() 는 이 데이터가 도착하기 전에 이미 EquipSlot(0) 을 시도해서
             // 실패했을 수 있으니, 진짜 데이터가 연결된 지금 다시 장착을 시도한다.

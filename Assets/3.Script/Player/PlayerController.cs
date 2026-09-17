@@ -497,7 +497,11 @@ public class PlayerController : MonoBehaviour
         animator.SetFloat("MoveX", localMove.x, damp, Time.deltaTime);
         animator.SetFloat("MoveY", localMove.z, damp, Time.deltaTime);
         animator.SetFloat("Speed", targetSpeed, damp, Time.deltaTime);
-        animator.SetBool("IsArmed", isArmed);
+
+        // Idle/Walk/Run 은 이제 상태를 따로 두지 않고, 각 상태 자체가 UnArmed/Armed 클립을
+        // IsArmedBlend(0~1)로 블렌드하는 블렌드 트리다 - 별도 레이어나 조건부 전이 없이
+        // 이 값 하나로 무기 든 포즈/안 든 포즈가 갈린다.
+        animator.SetFloat("IsArmedBlend", isArmed ? 1f : 0f);
 
         // Fire 레이어(상체 전용 마스크)로 발사 포즈를 덮어씌운다 - 하체(걷기/달리기)는 그대로 유지된다.
         if (fireLayerIndex >= 0 && weapon != null)
@@ -588,7 +592,10 @@ public class PlayerController : MonoBehaviour
             return false;
         }
 
-        Ray ray = aimCamera.ScreenPointToRay(input.LookScreenPosition);
+        // CrosshairUI 가 보여주는 반동 킥과 같은 값을 여기도 더한다 - 그래야 크로스헤어가 튄
+        // 자리와 실제로 총알이 맞는 자리가 항상 일치한다 (WeaponController.RecoilKickOffset).
+        Vector2 recoilKick = weapon != null ? weapon.RecoilKickOffset : Vector2.zero;
+        Ray ray = aimCamera.ScreenPointToRay(input.LookScreenPosition + recoilKick);
 
         // 조준점은 "실제 바닥 높이"가 아니라 "총구 높이"의 수평면에서 계산한다.
         // 총알은 총구 높이의 수평면으로만 날아가므로(baseDirection.y = 0), 조준점도 같은 높이여야

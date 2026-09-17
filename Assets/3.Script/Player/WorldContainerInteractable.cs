@@ -104,6 +104,7 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
         if (promptAnchoredUI != null)
         {
             promptAnchoredUI.SetAnchor(transform);
+            promptAnchoredUI.SetText(container.displayName);
         }
 
         promptInstance.SetActive(false);

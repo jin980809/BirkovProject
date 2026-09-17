@@ -42,6 +42,10 @@ public class PlayerVitals : MonoBehaviour, IDamageable
     [SerializeField] private float hunger;
     [SerializeField] private float water;
 
+    [Header("연결")]
+    [Tooltip("장착된 헬멧/조끼로 피해를 감쇄한다. 비우면 씬에서 찾고, 그래도 없으면 감쇄 없이 원래 피해 그대로 적용한다")]
+    [SerializeField] private PlayerArmorBridge armorBridge;
+
     private bool exhausted;
     private float staminaRegenTimer;
     private bool sprinting;
@@ -87,6 +91,11 @@ public class PlayerVitals : MonoBehaviour, IDamageable
         stamina = maxStamina;
         hunger = maxHunger;
         water = maxWater;
+
+        if (armorBridge == null)
+        {
+            armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
+        }
     }
 
     private void Update()
@@ -107,8 +116,10 @@ public class PlayerVitals : MonoBehaviour, IDamageable
     // 적 총알 등에서 호출
     public void TakeDamage(float amount)
     {
-        // TODO: 방어구(defensePower) 데미지 경감 적용
-        ReduceHealth(amount);
+        // 장착된 헬멧/조끼(defense)로 감쇄한다 (허기 0 일 때의 자연 피해(TickStarvation)는
+        // 여기를 거치지 않고 ReduceHealth 를 직접 부르므로 방어구 영향을 안 받는다).
+        float multiplier = armorBridge != null ? armorBridge.GetDamageMultiplier() : 1f;
+        ReduceHealth(amount * multiplier);
     }
 
     // 회복 아이템에서 호출

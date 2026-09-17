@@ -92,7 +92,10 @@ public class CrosshairUI : MonoBehaviour
             ? Mouse.current.position.ReadValue()
             : new Vector2(Screen.width, Screen.height) * 0.5f;
 
-        root.position = new Vector3(mouse.x, mouse.y, 0f);
+        // WeaponController 가 관리하는 반동 킥 오프셋을 그대로 더한다 - PlayerController 의
+        // 조준 계산도 같은 값을 보므로, 크로스헤어가 튄 방향과 실제 탄착 방향이 항상 일치한다.
+        Vector2 recoilKick = weapon != null ? weapon.RecoilKickOffset : Vector2.zero;
+        root.position = new Vector3(mouse.x + recoilKick.x, mouse.y + recoilKick.y, 0f);
     }
 
     private void UpdateSpreadVisual()

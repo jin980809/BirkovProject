@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 // 이 UI(RectTransform)를 지정된 월드 좌표(anchor.position + worldOffset)의 화면 투영 위치로
 // 매 프레임 옮긴다. 카메라 각도/거리와 무관하게 항상 납작한 2D 이미지로 보인다
@@ -12,6 +13,8 @@ public class ScreenAnchoredUI : MonoBehaviour
     [SerializeField] private Transform anchor;
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, -0.5f, 0f);
     [SerializeField] private Camera worldCamera;
+    [Tooltip("표시할 문구가 있을 때 쓰는 텍스트 (없어도 됨 - 순수 아이콘 프롬프트는 비워둔다)")]
+    [SerializeField] private Text label;
 
     private RectTransform rect;
 
@@ -28,6 +31,15 @@ public class ScreenAnchoredUI : MonoBehaviour
     public void SetAnchor(Transform target)
     {
         anchor = target;
+    }
+
+    // label 이 연결돼 있을 때만 문구를 바꾼다 (없으면 조용히 무시 - 아이콘만 있는 프롬프트도 그대로 쓸 수 있게)
+    public void SetText(string text)
+    {
+        if (label != null)
+        {
+            label.text = text;
+        }
     }
 
     // 켜기 직전에 호출한다 - 비활성 상태에서는 Update() 가 안 돌아서 프리팹의 기본 위치(예: 화면 중앙)에

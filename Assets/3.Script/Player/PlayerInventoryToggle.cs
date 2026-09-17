@@ -99,6 +99,12 @@ public class PlayerInventoryToggle : MonoBehaviour
         if (quickPanel != null)
         {
             quickPanel.SetParent(inventoryBench.transform, false);
+
+            // 형제 순서상 맨 앞(0번)으로 보내야 나중에 오는 다른 UI(드래그 아이콘 등)보다 먼저
+            // 그려져서 뒤에 깔린다 - 안 그러면(맨 뒤로 가면) 인벤토리에서 아이템을 퀵슬롯으로
+            // 드래그할 때 드래그 아이콘이 퀵슬롯 패널에 가려져 안 보인다.
+            quickPanel.SetAsFirstSibling();
+
             quickPanel.gameObject.SetActive(true);
         }
 
