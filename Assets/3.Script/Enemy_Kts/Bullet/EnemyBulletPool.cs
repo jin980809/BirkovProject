@@ -4,14 +4,13 @@ using UnityEngine;
 
 public class EnemyBulletPool : MonoBehaviour
 {
-    [Header("총알 풀링")]
+    [Header("풀링")]
     [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private GameObject particlePrefab;
     [SerializeField] private int poolSize = 30;
 
-    [Header("파티클 풀링")]
-    [SerializeField] private GameObject particlePrefab;
-    [SerializeField] private int particlePoolSize = 30;
-    [SerializeField] ParticleSystem partcleSystem;
+
+    //[SerializeField] ParticleSystem partcleSystem;
     private GameObject bullet;
     private GameObject particle;
     private Queue<GameObject> bulletPool = new Queue<GameObject>();
@@ -25,7 +24,7 @@ public class EnemyBulletPool : MonoBehaviour
             CreateParticle();
         }
     }
-
+    //총알 풀링 1개 생성
     private GameObject CreateBullet()
     {
         bullet = Instantiate(bulletPrefab, transform);
@@ -36,7 +35,7 @@ public class EnemyBulletPool : MonoBehaviour
 
         return bullet;
     }
-
+    //파티클 풀링 1개 생성
     private GameObject CreateParticle()
     {
         particle = Instantiate(particlePrefab, transform);
@@ -47,7 +46,7 @@ public class EnemyBulletPool : MonoBehaviour
 
         return particle;
     }
-
+    //총알 정보 가져가기
     public GameObject GetBullet()
     {
         // 사용 가능한 총알이 없으면 하나 추가 생성
@@ -62,8 +61,10 @@ public class EnemyBulletPool : MonoBehaviour
 
         return bullet;
     }
+    //파티클 정보 가져가기
     public GameObject GetParticle()
     {
+        // 사용 가능한 파티클이 없으면 하나 추가 생성
         if (particlePool.Count == 0)
         {
             CreateParticle();
@@ -75,7 +76,7 @@ public class EnemyBulletPool : MonoBehaviour
 
         return particle;
     }
-
+    //총알 돌려받기 및 파티클 생성
     public void ReturnBullet(GameObject bullet)
     {
         bullet.SetActive(false);
@@ -93,8 +94,14 @@ public class EnemyBulletPool : MonoBehaviour
 
         bulletPool.Enqueue(bullet);
     }
+    public void SpawnParticle()
+    {
 
-    public void ParticleReturn(GameObject particle)
+    }
+
+
+    //파티클 돌려받기
+    public void ReturnParticle(GameObject particle)
     {
         particle.SetActive(false);
 

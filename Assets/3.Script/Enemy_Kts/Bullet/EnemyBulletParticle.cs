@@ -6,7 +6,7 @@ public class EnemyBulletParticle : MonoBehaviour
 {
     [SerializeField] private EnemyBulletPool enemyBulletPool;
     [SerializeField] private ParticleSystem particleSystem;
-    private void OnEnable()
+    private void Start()
     {
         enemyBulletPool = FindAnyObjectByType<EnemyBulletPool>();
         particleSystem = GetComponentInChildren<ParticleSystem>();
@@ -14,17 +14,20 @@ public class EnemyBulletParticle : MonoBehaviour
 
     private void Update()
     {
-        //if (enemyBulletPool != null)
-        //{
-        //    if (!particleSystem.isPlaying)
-        //    {
-        //        enemyBulletPool.ParticleReturn(gameObject);
-        //    }
-        //}
-        //else
-        //{
-        //    gameObject.SetActive(false);
-        //}
+        if (enemyBulletPool != null)
+        {
+            if (gameObject.activeSelf)
+            {
+                if (!particleSystem.isPlaying)
+                {
+                    enemyBulletPool.ReturnParticle(gameObject);
+                }
+            }
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
         
     }
 
