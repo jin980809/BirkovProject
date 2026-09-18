@@ -544,6 +544,21 @@ public class WeaponController : MonoBehaviour
         currentSpreadDegrees = Mathf.Max(0f, currentSpreadDegrees - recover);
     }
 
+    // 지금 장착 무기의 발사 위치 (무기가 없으면 null). PlayerController 가 총구 옆 거리만큼 몸 회전을 보정할 때 쓴다.
+    public Transform CurrentShotPoint
+    {
+        get
+        {
+            Transform point = null;
+            if (equippedWeapon != null)
+            {
+                point = GetShotPoint();
+            }
+
+            return point;
+        }
+    }
+
     // 장착한 총 모델의 FirePoint(프리팹 루트 WeaponModel 에 연결)를 우선 쓰고, 없으면 인스펙터의 기본 firePoint 를 쓴다
     private Transform GetShotPoint()
     {
@@ -568,7 +583,16 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        Vector3 baseDirection = player.AimWorldPoint - shotPoint.position;
+        // 커서가 가리키는 조준점을 "지금 총구 높이"의 수평면에서 다시 구한다 - 총구가 총 모델에 붙어 있어
+        // 무기/애니메이션마다 높이가 달라지므로, 고정 높이 조준점(AimWorldPoint)을 그대로 쓰면 카메라가
+        // 비스듬한 만큼 커서와 탄착 방향이 어긋난다 (PlayerController.TryGetAimPointAtHeight 참고).
+        Vector3 aimPoint = player.AimWorldPoint;
+        if (player.TryGetAimPointAtHeight(shotPoint.position.y, out Vector3 muzzleHeightAimPoint))
+        {
+            aimPoint = muzzleHeightAimPoint;
+        }
+
+        Vector3 baseDirection = aimPoint - shotPoint.position;
         baseDirection.y = 0f;
         if (baseDirection.sqrMagnitude < 0.0001f)
         {

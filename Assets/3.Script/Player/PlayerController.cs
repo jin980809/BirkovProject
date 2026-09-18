@@ -35,6 +35,11 @@ public class PlayerController : MonoBehaviour
 
     [Header("회전")]
     [SerializeField] private float rotationSpeed = 720f; // 초당 회전 각도(deg)
+    [Tooltip("총구가 몸 옆에 있어서 생기는 총열-총알 방향 어긋남을 몸 회전으로 보정한다 (GetMuzzleAlignedFacing 참고)")]
+    [SerializeField] private bool compensateMuzzleOffset = true;
+
+    // 커서가 (총구 옆 거리 + 이 값) 보다 가까우면 보정하지 않는다 - asin 이 발산해 몸이 크게 튀는 것 방지
+    private const float MinAimDistanceForMuzzleAlign = 0.3f;
 
     [Header("구르기")]
     [SerializeField] private float dodgeSpeed = 10f;
@@ -44,7 +49,7 @@ public class PlayerController : MonoBehaviour
     [Header("조준")]
     [SerializeField] private Camera aimCamera;
     [SerializeField] private LayerMask groundMask = ~0;
-    [Tooltip("총구 높이(WeaponController의 firePoint 로컬 Y와 맞춰야 함). 조준점을 이 높이의 수평면에서 계산한다.")]
+    [Tooltip("캐릭터 회전/시야/카메라용 조준점을 계산하는 수평면 높이(바닥 기준). 총알 방향은 발사 순간의 실제 총구(FirePoint) 높이로 따로 계산하므로 여기와 맞출 필요 없다.")]
     [SerializeField] private float aimHeightOffset = 0.5f;
 
     [Header("애니메이션")]
@@ -86,6 +91,10 @@ public class PlayerController : MonoBehaviour
     // 플레이어 피벗(transform.position.y)은 콜라이더 중심이라 실제 바닥보다 위에 있으므로
     // 그대로 쓰면 안 되고, 시작 시 실제 바닥을 한 번 레이캐스트해서 구한 값을 쓴다.
     private float groundPlaneY;
+
+    // 마지막 LateUpdate 에서 쓴 조준 레이 (TryGetAimPointAtHeight 가 총구 높이로 다시 교차시킬 때 쓴다)
+    private Ray aimRay;
+    private bool hasAimRay;
 
     // 구르기 상태
     private bool isDodging;
@@ -433,7 +442,7 @@ public class PlayerController : MonoBehaviour
                 toAim.y = 0f;
                 if (toAim.sqrMagnitude > 0.01f)
                 {
-                    facingDirection = toAim.normalized;
+                    facingDirection = GetMuzzleAlignedFacing(toAim.normalized);
                 }
             }
         }
@@ -445,6 +454,51 @@ public class PlayerController : MonoBehaviour
                 facingDirection = move.normalized;
             }
         }
+    }
+
+    // 총구가 몸 중심선에서 옆으로 떨어져 있어서(오른손), 몸 중심을 커서로 돌리면 총열 연장선이 커서 옆을
+    // 지나간다. 그런데 총알은 총구에서 커서로 나가므로 총열과 총알 궤적이 비스듬하게 어긋나 보인다
+    // (커서가 가까울수록, 화면 좌우로 쏠 때 특히 잘 보인다).
+    // 그래서 몸을 총구의 옆 거리만큼 더 틀어서 "총구에서 몸 정면 방향으로 뻗은 선"이 정확히 커서를 지나게 한다:
+    //   몸 방향 yaw = (몸 중심 -> 커서 yaw) - asin(총구 옆 거리 / 몸 중심~커서 거리)
+    // 총구 옆 거리는 매 프레임 실제 FirePoint 위치로 잰다 - 무기/애니메이션이 달라도 자동으로 맞는다.
+    // 커서가 총구 옆 거리보다 가까우면 수학적으로 맞출 수 없으므로 기존처럼 몸 중심 기준으로 돌린다.
+    private Vector3 GetMuzzleAlignedFacing(Vector3 defaultDirection)
+    {
+        Vector3 result = defaultDirection;
+
+        Transform muzzle = null;
+        if (compensateMuzzleOffset && isArmed && weapon != null)
+        {
+            muzzle = weapon.CurrentShotPoint;
+        }
+
+        if (muzzle != null)
+        {
+            // 총알이 쓰는 것과 같은 조준점(총구 높이 평면)을 기준으로 맞춘다 (WeaponController.FireProjectile)
+            Vector3 aimPoint = aimWorldPoint;
+            if (TryGetAimPointAtHeight(muzzle.position.y, out Vector3 muzzleHeightAimPoint))
+            {
+                aimPoint = muzzleHeightAimPoint;
+            }
+
+            Vector3 toAim = aimPoint - transform.position;
+            toAim.y = 0f;
+            float distance = toAim.magnitude;
+
+            // 몸 기준 로컬 좌표에서 총구의 x = 몸 정면 축에서 오른쪽(+)/왼쪽(-)으로 떨어진 거리
+            Vector3 localMuzzle = Quaternion.Inverse(transform.rotation) * (muzzle.position - transform.position);
+            float lateralOffset = localMuzzle.x;
+
+            if (distance > Mathf.Abs(lateralOffset) + MinAimDistanceForMuzzleAlign)
+            {
+                float yawToAim = Mathf.Atan2(toAim.x, toAim.z) * Mathf.Rad2Deg;
+                float correction = Mathf.Asin(lateralOffset / distance) * Mathf.Rad2Deg;
+                result = Quaternion.Euler(0f, yawToAim - correction, 0f) * Vector3.forward;
+            }
+        }
+
+        return result;
     }
 
     // 달리는 중이면 이동 방향, 아니면 마우스 방향
@@ -597,19 +651,47 @@ public class PlayerController : MonoBehaviour
         Vector2 recoilKick = weapon != null ? weapon.RecoilKickOffset : Vector2.zero;
         Ray ray = aimCamera.ScreenPointToRay(input.LookScreenPosition + recoilKick);
 
-        // 조준점은 "실제 바닥 높이"가 아니라 "총구 높이"의 수평면에서 계산한다.
-        // 총알은 총구 높이의 수평면으로만 날아가므로(baseDirection.y = 0), 조준점도 같은 높이여야
-        // 화면상 커서 위치와 실제 탄착 방향이 일치한다. 두 높이가 다르면 카메라가 비스듬할수록
-        // (수직 90도가 아닐수록) 원근 때문에 화면에서 어긋나 보인다.
-        Plane aimPlane = new Plane(Vector3.up, new Vector3(0f, groundPlaneY + aimHeightOffset, 0f));
-        float enter;
-        if (aimPlane.Raycast(ray, out enter))
+        // 발사 시 실제 총구 높이로 다시 교차시킬 수 있게 이번 프레임 조준 레이를 저장해 둔다 (TryGetAimPointAtHeight).
+        aimRay = ray;
+        hasAimRay = true;
+
+        // 이 조준점은 캐릭터 회전 / 시야 방향 / 카메라용이다. 실제 총알 방향은 WeaponController 가
+        // 발사 순간의 총구(FirePoint) 높이로 TryGetAimPointAtHeight 를 다시 불러서 정한다.
+        return RaycastHorizontalPlane(ray, groundPlaneY + aimHeightOffset, out point);
+    }
+
+    // 마지막으로 계산한 조준 레이(LateUpdate - 카메라가 다 움직이고 반동 킥까지 반영된 레이)를
+    // 월드 높이 worldY 의 수평면과 교차시킨 점을 돌려준다.
+    // 총알은 총구 높이의 수평면으로만 날아가므로(발사 방향 y = 0), 조준점도 "실제 총구 높이"에서 구해야
+    // 화면의 커서 위치와 탄착 방향이 일치한다. 높이가 다르면 카메라가 비스듬할수록 원근 때문에 어긋난다.
+    // 총구가 총 모델(FirePoint)에 붙어 있어 무기/애니메이션마다 높이가 달라지므로, 고정 오프셋 대신
+    // WeaponController 가 발사할 때마다 그 순간의 총구 높이로 이 메서드를 부른다.
+    public bool TryGetAimPointAtHeight(float worldY, out Vector3 point)
+    {
+        point = Vector3.zero;
+        bool found = false;
+
+        if (hasAimRay)
         {
-            point = ray.GetPoint(enter);
-            return true;
+            found = RaycastHorizontalPlane(aimRay, worldY, out point);
         }
 
-        return false;
+        return found;
+    }
+
+    private static bool RaycastHorizontalPlane(Ray ray, float worldY, out Vector3 point)
+    {
+        point = Vector3.zero;
+        bool found = false;
+
+        Plane plane = new Plane(Vector3.up, new Vector3(0f, worldY, 0f));
+        if (plane.Raycast(ray, out float enter))
+        {
+            point = ray.GetPoint(enter);
+            found = true;
+        }
+
+        return found;
     }
 
     // 실제 바닥 콜라이더의 Y 값을 한 번 구해서 캐싱한다.
