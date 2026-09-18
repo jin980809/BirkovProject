@@ -86,6 +86,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 int moved = Math.Min(stackLimit, remaining);
                 slot.itemId = itemId;
                 slot.amount = moved;
+                slot.remainingRounds = 0;
+                slot.durabilityDamage = 0;
                 remaining -= moved;
 
                 if (remaining == 0)
@@ -137,6 +139,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 destinationSlot.amount = moved;
                 // 뜯다 만 박스는 슬롯을 통째로 옮길 때만 따라간다.
                 destinationSlot.remainingRounds = moved == sourceSlot.amount ? sourceSlot.remainingRounds : 0;
+                destinationSlot.durabilityDamage = sourceSlot.durabilityDamage;
                 RemoveFromSlot(sourceSlot, moved);
                 return CreateResult(requested, moved);
             }
@@ -170,12 +173,15 @@ namespace Birdkov.NaYeongMin.InventorySystem
             int destinationItemId = destinationSlot.itemId;
             int destinationAmount = destinationSlot.amount;
             int destinationRounds = destinationSlot.remainingRounds;
+            int destinationDamage = destinationSlot.durabilityDamage;
             destinationSlot.itemId = sourceSlot.itemId;
             destinationSlot.amount = sourceSlot.amount;
             destinationSlot.remainingRounds = sourceSlot.remainingRounds;
+            destinationSlot.durabilityDamage = sourceSlot.durabilityDamage;
             sourceSlot.itemId = destinationItemId;
             sourceSlot.amount = destinationAmount;
             sourceSlot.remainingRounds = destinationRounds;
+            sourceSlot.durabilityDamage = destinationDamage;
 
             return new InventoryMoveResult(InventoryResult.Success, requested, 0);
         }
