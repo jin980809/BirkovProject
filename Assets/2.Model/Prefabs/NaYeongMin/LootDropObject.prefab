@@ -100,7 +100,8 @@ GameObject:
   - component: {fileID: 7238266288508434144}
   - component: {fileID: 1667985188534017072}
   - component: {fileID: 2931108121482873829}
-  m_Layer: 0
+  - component: {fileID: 2177172150370908886}
+  m_Layer: 10
   m_Name: LootDropObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -156,3 +157,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 0.5, z: 0.5}
   m_Center: {x: 0, y: 0.2, z: 0}
+--- !u!114 &2177172150370908886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8241624216954644709}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b74632c8bf816fc4fa44328f7b1c4a92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LootDropInteractable
+  interactDuration: 1.5
+  inventoryBench: {fileID: 0}
+  promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
