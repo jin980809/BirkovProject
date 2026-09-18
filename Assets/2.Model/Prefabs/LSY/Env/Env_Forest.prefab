@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 1969364082438385066}
   - component: {fileID: 1368474857468711181}
   - component: {fileID: 6675230019632431637}
-  - component: {fileID: 9102722861416515912}
+  - component: {fileID: 7286792161307506585}
+  - component: {fileID: 2366035522090200289}
   m_Layer: 0
   m_Name: Env_Tree_07 (3)
   m_TagString: Untagged
@@ -90,8 +91,23 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &9102722861416515912
-MeshCollider:
+--- !u!114 &7286792161307506585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359789058137891481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
+--- !u!65 &2366035522090200289
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -108,10 +124,9 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 2.082346, y: 4.8927593, z: 2.0936139}
+  m_Center: {x: -0.0062047243, y: 2.4067707, z: 0.014641643}
 --- !u!1 &681979974284882854
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +138,7 @@ GameObject:
   - component: {fileID: 6491425404912776185}
   - component: {fileID: 9188545471262095929}
   - component: {fileID: 4182923953019985391}
-  - component: {fileID: 848960834718590483}
+  - component: {fileID: 6380561800415065697}
   m_Layer: 0
   m_Name: Env_Tree_07 (6)
   m_TagString: Untagged
@@ -202,28 +217,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &848960834718590483
-MeshCollider:
+--- !u!114 &6380561800415065697
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 681979974284882854}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &1628997883267568541
 GameObject:
   m_ObjectHideFlags: 0
@@ -235,7 +243,7 @@ GameObject:
   - component: {fileID: 5242342546644803548}
   - component: {fileID: 3395357379944910793}
   - component: {fileID: 8738176306975837446}
-  - component: {fileID: 3503669743191767180}
+  - component: {fileID: 3283637107879049495}
   m_Layer: 0
   m_Name: Env_Tree_07 (4)
   m_TagString: Untagged
@@ -314,28 +322,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3503669743191767180
-MeshCollider:
+--- !u!114 &3283637107879049495
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1628997883267568541}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &2235782721217085022
 GameObject:
   m_ObjectHideFlags: 0
@@ -347,7 +348,7 @@ GameObject:
   - component: {fileID: 5277548505791944060}
   - component: {fileID: 2592892706972790594}
   - component: {fileID: 5096698160516010727}
-  - component: {fileID: 5009895537546917119}
+  - component: {fileID: 7007492760126740487}
   m_Layer: 0
   m_Name: Env_Tree_07 (1)
   m_TagString: Untagged
@@ -426,28 +427,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5009895537546917119
-MeshCollider:
+--- !u!114 &7007492760126740487
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2235782721217085022}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &3264634137309841505
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,7 +453,7 @@ GameObject:
   - component: {fileID: 3993656096973812150}
   - component: {fileID: 5249088253082713102}
   - component: {fileID: 6492608318847124969}
-  - component: {fileID: 5979347540571809141}
+  - component: {fileID: 4681757402610728820}
   m_Layer: 0
   m_Name: Env_Tree_07 (5)
   m_TagString: Untagged
@@ -538,28 +532,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5979347540571809141
-MeshCollider:
+--- !u!114 &4681757402610728820
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3264634137309841505}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &4302863423980706887
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,7 +558,7 @@ GameObject:
   - component: {fileID: 9212510995395903864}
   - component: {fileID: 3779694424223484128}
   - component: {fileID: 3422705558457278404}
-  - component: {fileID: 2528922231152906069}
+  - component: {fileID: 8519025811390593931}
   m_Layer: 0
   m_Name: Env_Tree_07 (2)
   m_TagString: Untagged
@@ -650,28 +637,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2528922231152906069
-MeshCollider:
+--- !u!114 &8519025811390593931
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4302863423980706887}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &5338166711122383647
 GameObject:
   m_ObjectHideFlags: 0
@@ -683,7 +663,7 @@ GameObject:
   - component: {fileID: 228536117700803691}
   - component: {fileID: 886281423768602111}
   - component: {fileID: 492566023825363685}
-  - component: {fileID: 3967341222396200561}
+  - component: {fileID: 6510306002576135600}
   m_Layer: 0
   m_Name: Env_Tree_07 (7)
   m_TagString: Untagged
@@ -762,28 +742,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3967341222396200561
-MeshCollider:
+--- !u!114 &6510306002576135600
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5338166711122383647}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &5512481075901801491
 GameObject:
   m_ObjectHideFlags: 0
@@ -795,7 +768,7 @@ GameObject:
   - component: {fileID: 146801838596274343}
   - component: {fileID: 6848818494412608492}
   - component: {fileID: 2056720868750676237}
-  - component: {fileID: 3507910329206252945}
+  - component: {fileID: 1507575658073269169}
   m_Layer: 0
   m_Name: Env_Tree_07
   m_TagString: Untagged
@@ -874,28 +847,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3507910329206252945
-MeshCollider:
+--- !u!114 &1507575658073269169
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5512481075901801491}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -4653808380906073056, guid: 4d296abdb7b6ebf459734287a6e46da4, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e25c98bed7eaeec4cb32c57a5280f85e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.UI.DebugUIHandlerMessageBox
+  colorDefault: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  colorSelected: {r: 0.25, g: 0.65, b: 0.8, a: 1}
+  nameLabel: {fileID: 0}
 --- !u!1 &6290112760098997707
 GameObject:
   m_ObjectHideFlags: 0
