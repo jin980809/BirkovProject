@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4683068916055158}
   - component: {fileID: 33743590850342916}
   - component: {fileID: 23435983667435114}
-  - component: {fileID: 64250608004807922}
   m_Layer: 0
   m_Name: SM_Prop_CardboardBox_Wall_01
   m_TagString: Untagged
@@ -90,25 +89,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &64250608004807922
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1882058776763666}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 43629567122717796, guid: ecded985c1254bc479f863426f24220a, type: 2}
