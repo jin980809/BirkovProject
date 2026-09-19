@@ -146,10 +146,55 @@ public class WeaponController : MonoBehaviour
         get { return equippedWeapon != null; }
     }
 
+    // 지금 손에 든 무기 슬롯 (0 = 1번, 1 = 2번, 무기가 없으면 -1). HUD 가 선택된 슬롯의 장탄수만 보여줄 때 쓴다.
+    public int EquippedSlotIndex
+    {
+        get { return equippedSlotIndex; }
+    }
+
     // 지금 장착 중인 무기의 itemId (없으면 -1). WeaponVisual 이 어떤 모델을 보여줄지 결정할 때 쓴다.
     public int EquippedWeaponItemId
     {
         get { return equippedWeapon != null ? equippedWeapon.itemId : -1; }
+    }
+
+    // 무기 슬롯(0 = 1번, 1 = 2번)에 들어 있는 무기의 잔탄/탄창 용량. 지금 손에 든 무기가 아니어도 된다.
+    // 잔탄은 장비 슬롯 데이터(remainingRounds = 비운 발 수)에 있으므로 슬롯 데이터에서 바로 읽는다 (CurrentAmmo 와 같은 규칙).
+    // 슬롯이 비어 있으면 false. HUD 의 슬롯별 장탄수 표시에 쓴다.
+    public bool TryGetSlotAmmo(int slotIndex, out int currentAmmo, out int magazineSize)
+    {
+        currentAmmo = 0;
+        magazineSize = 0;
+        bool found = false;
+
+        if (inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(slotIndex, out ItemData slotWeapon))
+        {
+            GridSlotData slot = inventoryBridge.GetWeaponSlotData(slotIndex);
+            if (slot != null)
+            {
+                magazineSize = slotWeapon.magazineSize;
+                int spentRounds = Mathf.Clamp(slot.remainingRounds, 0, magazineSize);
+                currentAmmo = magazineSize - spentRounds;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    // 장착 무기의 탄창 용량 (무기가 없으면 0). HUD 의 "현재 장탄수 / 최대 장탄수" 표시에 쓴다.
+    public int MagazineSize
+    {
+        get
+        {
+            int size = 0;
+            if (equippedWeapon != null)
+            {
+                size = equippedWeapon.magazineSize;
+            }
+
+            return size;
+        }
     }
 
     public int CurrentAmmo
