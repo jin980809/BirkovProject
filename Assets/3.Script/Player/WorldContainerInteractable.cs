@@ -64,6 +64,12 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
             case InventoryWorldKind.MapChest:
                 inventoryBench.OpenMapChest(container);
                 break;
+            case InventoryWorldKind.Shop:
+                inventoryBench.OpenShop(transform);
+                break;
+            case InventoryWorldKind.Crafting:
+                inventoryBench.OpenCrafting(transform);
+                break;
         }
     }
 
