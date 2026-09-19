@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -32,7 +32,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left || eventData.dragging) return;
+            if (eventData.dragging) return;
+            if (eventData.button == PointerEventData.InputButton.Right) { bench.RightClickSlot(this); return; }
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (eventData.clickCount >= 2) { bench.DoubleClickSlot(this); return; }
             bench.ClickSlot(this);
         }
 

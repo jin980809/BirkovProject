@@ -78,11 +78,53 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             if (warehousePanel == null || warehouseService == null) return;
             warehouseService.Open();
+            MoveWarehouse(false);
             warehousePanel.SetActive(true);
             RebuildInventoryColumn();
+            ScrollToWarehouse();
         }
 
         // 창고 칸이 세로 목록에 끼거나 빠지면 스크롤 길이를 다시 계산해야 한다.
+        // 창고는 세로 목록 아래쪽에 있어서 열자마자 보이도록 스크롤을 내린다.
+        // 창고만 열면 전리품 상자처럼 오른쪽에, 상점/제작대로 열면 왼쪽 세로 목록에 붙인다.
+        private void MoveWarehouse(bool solo)
+        {
+            if (warehousePanel == null || ui == null) return;
+            if (ui.warehouseSoloContent == null && screen != null)
+            {
+                Transform found = screen.Find("WarehouseSoloScroll");
+                if (found != null)
+                {
+                    ui.warehouseSoloScroll = found.gameObject;
+                    ui.warehouseSoloContent = found.Find("Content") as RectTransform;
+                }
+            }
+            if (ui.inventoryColumn == null && screen != null)
+            {
+                Transform found = screen.Find("InventoryScroll/Content");
+                if (found != null) ui.inventoryColumn = found as RectTransform;
+            }
+
+            RectTransform target = solo ? ui.warehouseSoloContent : ui.inventoryColumn;
+            if (target == null) return;
+            if (warehousePanel.transform.parent != target)
+            {
+                warehousePanel.transform.SetParent(target, false);
+                warehousePanel.transform.SetAsLastSibling();
+            }
+            if (ui.warehouseSoloScroll != null) ui.warehouseSoloScroll.SetActive(solo);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(target);
+        }
+
+        private void ScrollToWarehouse()
+        {
+            if (warehousePanel == null) return;
+            ScrollRect column = warehousePanel.GetComponentInParent<ScrollRect>();
+            if (column == null) return;
+            Canvas.ForceUpdateCanvases();
+            column.verticalNormalizedPosition = 0f;
+        }
+
         private void RebuildInventoryColumn()
         {
             if (warehousePanel == null) return;
