@@ -82,7 +82,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void OnDisable()
     {
-        if (inventoryBench != null)
+        // 씬 전환으로 이 플레이어가 파괴되는 중이라면 연결을 끊지 않는다. 벤치는 씬을 넘어 살아있고,
+        // 새 씬 플레이어가 이미 자기 자신을 등록했을 수 있어서 여기서 null 로 덮으면 회복이 안 먹는다.
+        if (inventoryBench != null && gameObject.scene.isLoaded)
         {
             inventoryBench.BindRecoveryTarget(null);
         }
@@ -105,6 +107,19 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void Update()
     {
+        // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
+        // 참조가 죽었으면 살아남은 벤치로 다시 찾고, 그 벤치의 데이터로 다시 연결한다.
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            didLinkWeaponData = false;
+
+            if (inventoryBench != null)
+            {
+                inventoryBench.BindRecoveryTarget(this);
+            }
+        }
+
         // InventoryTestBench 가 자기 데이터를 준비하는 타이밍이 이 스크립트의 초기화보다
         // 늦을 수 있어서, 준비될 때까지 매 프레임 확인하다가 딱 한 번만 연결한다.
         if (didLinkWeaponData || inventoryBench == null || weaponInventoryBridge == null)

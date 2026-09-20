@@ -10,7 +10,7 @@ using UnityEngine.UI;
 // 이 스크립트가 정해준다 - PromptParent 가 이 HUD 캔버스 하위를 가리킨다.
 //
 // Screen Space - Overlay 캔버스 밑에 있어야 한다.
-public class InteractionPromptUI : MonoBehaviour
+public class InteractionPromptUI : MonoBehaviour, ISceneRebindable
 {
     [Header("연결")]
     [SerializeField] private PlayerInteraction interaction;
@@ -18,6 +18,8 @@ public class InteractionPromptUI : MonoBehaviour
     [SerializeField] private ItemUseController itemUse;
     [Tooltip("재장전 게이지도 이 슬라이더를 같이 쓴다")]
     [SerializeField] private WeaponController weapon;
+    [Tooltip("귀환(B) 게이지도 이 슬라이더를 같이 쓴다")]
+    [SerializeField] private PlayerExtraction extraction;
     [Tooltip("상호작용/아이템 사용/재장전 진행 중 진행률을 보여주는 Slider (0~1, Interactable 체크 해제). 위치는 화면 하단 고정 - 스크립트가 움직이지 않는다")]
     [SerializeField] private Slider progressSlider;
 
@@ -28,21 +30,17 @@ public class InteractionPromptUI : MonoBehaviour
     private void Awake()
     {
         PromptParent = transform;
+        RebindSceneReferences();
+    }
 
-        if (interaction == null)
-        {
-            interaction = FindAnyObjectByType<PlayerInteraction>();
-        }
-
-        if (itemUse == null)
-        {
-            itemUse = FindAnyObjectByType<ItemUseController>();
-        }
-
-        if (weapon == null)
-        {
-            weapon = FindAnyObjectByType<WeaponController>();
-        }
+    // 씬이 바뀌면 플레이어가 새로 생기므로 다시 찾는다 (PersistentUiRoot 가 호출)
+    public void RebindSceneReferences()
+    {
+        PromptParent = transform;
+        interaction = FindAnyObjectByType<PlayerInteraction>();
+        itemUse = FindAnyObjectByType<ItemUseController>();
+        weapon = FindAnyObjectByType<WeaponController>();
+        extraction = FindAnyObjectByType<PlayerExtraction>();
     }
 
     private void Update()
@@ -60,7 +58,8 @@ public class InteractionPromptUI : MonoBehaviour
         bool interactionActive = interaction != null && interaction.IsInteracting;
         bool itemUseActive = itemUse != null && itemUse.IsUsing;
         bool reloadActive = weapon != null && weapon.IsReloading;
-        bool showProgress = interactionActive || itemUseActive || reloadActive;
+        bool extractionActive = extraction != null && extraction.IsExtracting;
+        bool showProgress = interactionActive || itemUseActive || reloadActive || extractionActive;
 
         // 위치는 건드리지 않는다 - 하단 고정, 에디터에서 잡아둔 자리 그대로
         progressSlider.gameObject.SetActive(showProgress);
@@ -76,6 +75,10 @@ public class InteractionPromptUI : MonoBehaviour
         else if (reloadActive)
         {
             progressSlider.value = weapon.ReloadProgress01;
+        }
+        else if (extractionActive)
+        {
+            progressSlider.value = extraction.ExtractProgress01;
         }
     }
 }
