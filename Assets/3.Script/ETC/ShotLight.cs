@@ -7,19 +7,24 @@ public class ShotLight : MonoBehaviour
     [SerializeField] private ParticleSystem particle;
     private bool canLight = true;
 
+    private void Awake()
+    {
+        TryGetComponent(out particle);
+    }
+
     private void Update()
     {
         if (particle.isPlaying && canLight)
         {
-            StartCoroutine(adsf());
+            StartCoroutine(OnLight());
         }
         else
         {
-            StopCoroutine(adsf());
+            StopCoroutine(OnLight());
             light.SetActive(false);
         }
     }
-    private IEnumerator adsf()
+    private IEnumerator OnLight()
     {
         canLight = false;
         light.SetActive(true);

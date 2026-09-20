@@ -25,6 +25,7 @@ namespace Birdkov.NaYeongMin.Rng
                 Loot.loot.slots[index].itemId = source.loot.slots[index].itemId;
                 Loot.loot.slots[index].amount = source.loot.slots[index].amount;
                 Loot.loot.slots[index].remainingRounds = source.loot.slots[index].remainingRounds;
+                Loot.loot.slots[index].durabilityDamage = source.loot.slots[index].durabilityDamage;
             }
         }
 

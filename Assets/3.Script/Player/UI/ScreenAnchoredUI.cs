@@ -57,6 +57,12 @@ public class ScreenAnchoredUI : MonoBehaviour
 
     private void UpdatePosition()
     {
+        // Awake 시점에 MainCamera 태그 카메라가 아직 없었으면(씬 로드 순서 등) 여기서 다시 찾는다
+        if (worldCamera == null)
+        {
+            worldCamera = Camera.main;
+        }
+
         if (anchor == null || worldCamera == null || rect == null)
         {
             return;

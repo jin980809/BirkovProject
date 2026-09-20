@@ -13,6 +13,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         // 탄약 전용. 이 슬롯의 박스 중 하나가 뜯다 만 박스일 때 그 잔탄 수다. 0 이면 전부 미개봉.
         public int remainingRounds;
+        // 누적 마모. 기존 저장 파일의 기본값 0은 새 무기를 뜻한다.
+        public int durabilityDamage;
 
         public bool IsEmpty()
         {
@@ -24,6 +26,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
             itemId = -1;
             amount = 0;
             remainingRounds = 0;
+            durabilityDamage = 0;
         }
     }
 

@@ -54,7 +54,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
         }
 
         // 재료 보유량만 본다. 가방 공간은 재료를 빼야 결정되므로 Craft 가 실제로 시도하고 실패 시 되돌린다.
-        public CraftResult CanCraft(PlayerInventoryData playerData, int mushroomItemId)
+        public CraftResult CanCraft(PlayerInventoryData playerData, int mushroomItemId, GridContainerData warehouse = null)
         {
             if (itemCatalog == null || playerData == null || playerData.inventory == null ||
                 playerData.inventory.slots == null)
@@ -71,12 +71,12 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return CraftResult.UnknownRecipe;
             }
 
-            if (Count(playerData.inventory, mushroomItemId) < MushroomCost)
+            if (Count(playerData.inventory, mushroomItemId) + Count(warehouse, mushroomItemId) < MushroomCost)
             {
                 return CraftResult.NotEnoughMushroom;
             }
 
-            if (Count(playerData.inventory, GunpowderItemId) < GunpowderCost)
+            if (Count(playerData.inventory, GunpowderItemId) + Count(warehouse, GunpowderItemId) < GunpowderCost)
             {
                 return CraftResult.NotEnoughGunpowder;
             }
@@ -86,9 +86,10 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         // 재료를 먼저 빼서 칸을 확보한 뒤 결과를 넣는다.
         // 지급에 실패하면 가방을 통째로 되돌려 재료와 결과 모두 변하지 않게 한다.
-        public CraftResult Craft(PlayerInventoryData playerData, int mushroomItemId)
+        public CraftResult Craft(PlayerInventoryData playerData, int mushroomItemId, GridContainerData warehouse = null)
         {
-            CraftResult check = CanCraft(playerData, mushroomItemId);
+            if (playerData != null && ReferenceEquals(playerData.inventory, warehouse)) return CraftResult.InvalidData;
+            CraftResult check = CanCraft(playerData, mushroomItemId, warehouse);
             if (check != CraftResult.Success)
             {
                 return check;
@@ -99,14 +100,16 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
             GridContainerData inventory = playerData.inventory;
             List<GridSlotData> snapshot = Snapshot(inventory);
+            List<GridSlotData> warehouseSnapshot = warehouse == null ? null : Snapshot(warehouse);
 
-            bool consumed = Consume(inventory, mushroomItemId, MushroomCost) &&
-                            Consume(inventory, GunpowderItemId, GunpowderCost);
+            bool consumed = ConsumeBoth(inventory, warehouse, mushroomItemId, MushroomCost) &&
+                            ConsumeBoth(inventory, warehouse, GunpowderItemId, GunpowderCost);
 
             if (!consumed ||
                 inventoryService.AddItem(inventory, ammoItemId, CraftedBoxAmount).Result != InventoryResult.Success)
             {
                 Restore(inventory, snapshot);
+                if (warehouseSnapshot != null) Restore(warehouse, warehouseSnapshot);
                 return CraftResult.NoSpace;
             }
 
@@ -132,8 +135,16 @@ namespace Birdkov.NaYeongMin.InventorySystem
             return total;
         }
 
+        private bool ConsumeBoth(GridContainerData inventory, GridContainerData warehouse, int itemId, int amount)
+        {
+            int fromBag = System.Math.Min(Count(inventory, itemId), amount);
+            return Consume(inventory, itemId, fromBag) && Consume(warehouse, itemId, amount - fromBag);
+        }
+
         private bool Consume(GridContainerData container, int itemId, int amount)
         {
+            if (amount == 0) return true;
+            if (container == null || container.slots == null) return false;
             int remaining = amount;
             for (int index = 0; index < container.slots.Count && remaining > 0; index++)
             {
@@ -153,7 +164,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
             List<GridSlotData> copy = new List<GridSlotData>(container.slots.Count);
             foreach (GridSlotData slot in container.slots)
             {
-                copy.Add(new GridSlotData { itemId = slot.itemId, amount = slot.amount });
+                copy.Add(new GridSlotData { itemId = slot.itemId, amount = slot.amount,
+                    remainingRounds = slot.remainingRounds, durabilityDamage = slot.durabilityDamage });
             }
 
             return copy;
@@ -165,6 +177,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
             {
                 container.slots[index].itemId = snapshot[index].itemId;
                 container.slots[index].amount = snapshot[index].amount;
+                container.slots[index].remainingRounds = snapshot[index].remainingRounds;
+                container.slots[index].durabilityDamage = snapshot[index].durabilityDamage;
             }
         }
     }

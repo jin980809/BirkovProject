@@ -37,11 +37,53 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Text itemPopupText;
         public Text[] craftLabels;
         public Button[] craftButtons;
+
+        // 상점/제작 - 기획서 5.1 / 5.3 임시 UI. 전부 하이어라키에서 만들어 연결한다.
+        // 비워 두면 벤치가 예전처럼 코드로 패널을 만든다.
+        public GameObject shopPanel;
+        public Text shopCurrency;
+        public Image[] shopRowBackgrounds;
+        public Image[] shopRowIcons;
+        public Text[] shopRowLabels;
+        public Button[] shopRowButtons;
+        public Button shopPrev;
+        public Button shopNext;
+        public Image shopDetailIcon;
+        public Text shopDetail;
+        public Button shopBuy;
+        public Button shopSell;
+        public Button shopRepair;
+        public Image[] craftRowBackgrounds;
+        public Image[] craftRowIcons;
+        public Image craftDetailIcon;
+        public Text craftDetail;
+        public Button craftConfirm;
+    }
+
+    // UI 색. 전부 인스펙터에서 바꾼다. 코드는 기본값만 들고 있다.
+    [Serializable]
+    public class InventoryUiColors
+    {
+        [Header("칸 배경")]
+        public Color slotEmpty = new Color(0.17f, 0.18f, 0.19f, 0.9f);
+        public Color slotFilled = new Color(0.24f, 0.25f, 0.26f, 0.95f);
+        public Color slotEquipment = new Color(0.2f, 0.2f, 0.24f, 0.95f);
+        public Color slotWeaponQuick = new Color(0.18f, 0.22f, 0.26f, 0.9f);
+        public Color slotSelectedWeapon = new Color(0.16f, 0.45f, 0.42f, 0.95f);
+        public Color slotCraftMaterial = new Color(0.2f, 0.65f, 0.3f, 0.95f);
+
+        [Header("상점·제작 목록 행")]
+        public Color rowReady = new Color(0.24f, 0.48f, 0.29f, 0.95f);
+        public Color rowBlocked = new Color(0.37f, 0.17f, 0.17f, 0.95f);
+        public Color rowReadySelected = new Color(0.36f, 0.66f, 0.42f, 1f);
+        public Color rowBlockedSelected = new Color(0.52f, 0.25f, 0.25f, 1f);
+        public Color craftLabelReady = new Color(0.65f, 0.92f, 0.7f);
+        public Color craftLabelBlocked = new Color(0.62f, 0.64f, 0.66f);
     }
 
     // 인벤토리 계열 기능을 육안으로 확인하는 테스트 벤치.
     [RequireComponent(typeof(Canvas))]
-    public sealed class InventoryTestBench : MonoBehaviour, IRecoveryTarget
+    public sealed partial class InventoryTestBench : MonoBehaviour, IRecoveryTarget
     {
         public TextAsset itemCsv;
         public TextAsset dropCsv;
@@ -54,6 +96,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
         [Header("하이어라키 UI")]
         [Tooltip("비워 두면 예전처럼 코드로 UI 를 만든다. 채우면 그 오브젝트를 그대로 쓴다.")]
         public InventoryUiReferences ui = new InventoryUiReferences();
+
+        [Header("UI 색")]
+        public InventoryUiColors colors = new InventoryUiColors();
 
         [Header("HONETi 스킨")]
         public Sprite honetiPanelSprite;
@@ -104,8 +149,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private bool mapChestOpen;
         public bool IsOpen => screen != null && screen.gameObject.activeSelf;
         // PlayerInventoryBridge 가 거리가 멀어지면 닫기 위해 쓴다.
-        public bool IsExternalOpen => IsOpen && (openedDrop != null || openedContainer != null);
-        public Transform ExternalAnchor => openedContainer != null ? openedContainer.transform :
+        public bool IsExternalOpen => IsOpen && (serviceAnchor != null || openedDrop != null || openedContainer != null);
+        public Transform ExternalAnchor => serviceAnchor != null ? serviceAnchor : openedContainer != null ? openedContainer.transform :
             openedDrop != null ? openedDrop.transform : null;
 
         public void OpenInventory()
@@ -202,6 +247,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void CloseLoot()
         {
+            serviceAnchor = null;
+            if (shopPanel != null) shopPanel.SetActive(false);
             openedDrop = null;
             openedContainer = null;
             mapChestOpen = false;
@@ -210,6 +257,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (mapChestPanel != null) mapChestPanel.SetActive(false);
             if (warehousePanel != null) warehousePanel.SetActive(false);
             if (craftPanel != null) craftPanel.SetActive(false);
+            RebuildInventoryColumn();
             loot = new LootContainerData(lootPreset);
             EndDrag();
             hovered = null;
@@ -256,6 +304,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
 
             catalog = new ItemCatalog(items);
+            WeaponDurability.Catalog = catalog; // 내구도 정본은 ItemData.csv
             inventoryService = new InventoryService(catalog);
             playerService = new PlayerInventoryService(catalog);
             craftingService = new CraftingService(catalog);
@@ -273,6 +322,17 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     spriteMap[binding.itemId] = binding.sprite;
                 }
             }
+
+#if UNITY_EDITOR
+            // 인스펙터 바인딩이 없는 아이템은 CSV 의 iconKey 경로에서 바로 가져온다.
+            // 기획팀이 CSV 만 고쳐도 아이콘이 붙는다. 빌드에서는 인스펙터 바인딩만 쓴다.
+            foreach (ItemData item in items)
+            {
+                if (spriteMap.ContainsKey(item.itemId) || string.IsNullOrEmpty(item.iconKey)) continue;
+                Sprite csvSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(item.iconKey);
+                if (csvSprite != null) spriteMap[item.itemId] = csvSprite;
+            }
+#endif
         }
 
         public void ResetAll()
@@ -285,18 +345,24 @@ namespace Birdkov.NaYeongMin.InventoryTest
             health = hunger = water = 10;
             selectedWeapon = 0;
 
-            foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
+            // 확장 테스트 지급을 쓰는 개인 씬에서는 이 기본 지급이 가방을 미리 채워 버려
+            // 제작 결과와 구매 아이템을 넣을 칸이 남지 않는다. 같은 품목이 창고로 들어간다.
+            if (!seedExtendedTestStock)
             {
-                playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
-            }
+                foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
+                {
+                    playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
+                }
 
-            // 무기 2종과 보호구 2종. 장비 슬롯 규칙을 눈으로 확인하는 용도다.
-            foreach (int id in new[] { 10001, 10002, 13001, 12001 })
-            {
-                playerService.AddToInventory(data.inventoryData, id, 1);
+                // 무기 2종과 보호구 2종. 장비 슬롯 규칙을 눈으로 확인하는 용도다.
+                foreach (int id in new[] { 10001, 10002, 13001, 12001 })
+                {
+                    playerService.AddToInventory(data.inventoryData, id, 1);
+                }
             }
 
             inventoryService.AddItem(data.warehouseData, 23001, 5);
+            if (seedExtendedTestStock) SeedExtendedTestStock();
 
             SetMessage("초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
             Refresh();
@@ -498,6 +564,14 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // ---------- 클릭 ----------
         public void ClickSlot(TestSlotView slot)
         {
+            if (shopPanel != null && shopPanel.activeSelf &&
+                (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment))
+            {
+                selectedShopEquipment = slot.container == TestContainer.Equipment;
+                selectedShopBagIndex = slot.index;
+                RefreshShop();
+                return;
+            }
             switch (slot.container)
             {
                 case TestContainer.Loot:
@@ -538,6 +612,23 @@ namespace Birdkov.NaYeongMin.InventoryTest
             GridSlotData slot = source.slots[index];
             if (slot.IsEmpty())
             {
+                return;
+            }
+
+            // 기존 슬롯 상태(총기 마모/잔탄, 개봉 탄약)를 유지한 채 회수한다.
+            if (catalog.TryGetItem(slot.itemId, out ItemData sourceItem) && sourceItem.itemType != ItemType.Currency)
+            {
+                int moved = 0;
+                for (int pass = 0; pass < 2 && !slot.IsEmpty(); pass++)
+                for (int targetIndex = 0; targetIndex < data.inventoryData.inventory.slots.Count && !slot.IsEmpty(); targetIndex++)
+                {
+                    GridSlotData target = data.inventoryData.inventory.slots[targetIndex];
+                    if (pass == 0 ? target.IsEmpty() || target.itemId != slot.itemId : !target.IsEmpty()) continue;
+                    moved += inventoryService.MoveItem(source, index, data.inventoryData.inventory, targetIndex, slot.amount).MovedAmount;
+                }
+                SetMessage(moved > 0 ? moved + "개 획득" : "가방이 꽉 찼습니다.");
+                NotifyLootChanged();
+                Refresh();
                 return;
             }
 
@@ -896,6 +987,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 view.caption.text = found ? item.displayName : PlaceholderCaption(view);
                 view.amount.text = found && amount > 1 ? amount.ToString() : string.Empty;
                 view.background.color = SlotColor(view, found);
+                if (found && craftPanel != null && craftPanel.activeSelf &&
+                    (itemId == CraftingService.GunpowderItemId || (itemId >= 27001 && itemId <= 27004)))
+                    view.background.color = colors.slotCraftMaterial;
+                if (found && item.itemType == ItemType.Weapon &&
+                    (view.container == TestContainer.Bag || view.container == TestContainer.Equipment || view.container == TestContainer.Warehouse))
+                    view.amount.text = WeaponDurability.Remaining(GetContainer(view.container).slots[view.index]) + "/" + WeaponDurability.Maximum(itemId);
             }
 
             if (statsText != null)
@@ -910,6 +1007,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             RefreshCraftPanel();
+            RefreshCraftVisuals();
+            RefreshShop();
             HoverSlot(hovered);
         }
 
@@ -943,26 +1042,26 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             if (view.container == TestContainer.WeaponQuick && view.index == selectedWeapon)
             {
-                return new Color(0.16f, 0.45f, 0.42f, 0.95f);
+                return colors.slotSelectedWeapon;
             }
 
             if (view.container == TestContainer.Equipment && view.index == selectedWeapon &&
                 EquipmentSlots.IsWeaponSlot(view.index))
             {
-                return new Color(0.16f, 0.45f, 0.42f, 0.95f);
+                return colors.slotSelectedWeapon;
             }
 
             if (view.container == TestContainer.WeaponQuick)
             {
-                return new Color(0.18f, 0.22f, 0.26f, 0.9f);
+                return colors.slotWeaponQuick;
             }
 
             if (view.container == TestContainer.Equipment)
             {
-                return new Color(0.2f, 0.2f, 0.24f, 0.95f);
+                return colors.slotEquipment;
             }
 
-            return filled ? new Color(0.24f, 0.25f, 0.26f, 0.95f) : new Color(0.17f, 0.18f, 0.19f, 0.9f);
+            return filled ? colors.slotFilled : colors.slotEmpty;
         }
 
         // ---------- UI 구축 ----------
@@ -1047,6 +1146,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 ui.craftButtons[index].onClick.RemoveAllListeners();
                 ui.craftButtons[index].onClick.AddListener(() => CraftAmmo(mushroomItemId));
             }
+
+            // 상점/제작 버튼은 하이어라키 참조 기준으로 다시 연결한다.
+            BindShopButtons();
 
             if (dragIcon != null)
             {
@@ -1283,7 +1385,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return CraftResult.InvalidData;
             }
 
-            CraftResult result = craftingService.Craft(data.inventoryData, mushroomItemId);
+            CraftResult result = craftingService.Craft(data.inventoryData, mushroomItemId, data.warehouseData);
             SetMessage(CraftMessage(result, mushroomItemId));
             Refresh();
             return result;
@@ -1324,20 +1426,19 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             IList<int> mushrooms = CraftingService.MushroomItemIds;
-            int gunpowder = craftingService.Count(data.inventoryData.inventory, CraftingService.GunpowderItemId);
+            int gunpowder = craftingService.Count(data.inventoryData.inventory, CraftingService.GunpowderItemId) + craftingService.Count(data.warehouseData, CraftingService.GunpowderItemId);
             for (int index = 0; index < craftLabels.Length && index < mushrooms.Count; index++)
             {
                 int mushroomItemId = mushrooms[index];
                 int ammoItemId;
                 CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
-                int owned = craftingService.Count(data.inventoryData.inventory, mushroomItemId);
-                bool ready = craftingService.CanCraft(data.inventoryData, mushroomItemId) == CraftResult.Success;
+                int owned = craftingService.Count(data.inventoryData.inventory, mushroomItemId) + craftingService.Count(data.warehouseData, mushroomItemId);
+                bool ready = craftingService.CanCraft(data.inventoryData, mushroomItemId, data.warehouseData) == CraftResult.Success;
         
-                craftLabels[index].text = DisplayName(mushroomItemId) + " " + owned + " / " + CraftingService.MushroomCost +
-                    "   화약 " + gunpowder + " / " + CraftingService.GunpowderCost + "\n-> " + DisplayName(ammoItemId);
-                craftLabels[index].color = ready
-                    ? new Color(0.65f, 0.92f, 0.7f)
-                    : new Color(0.62f, 0.64f, 0.66f);
+                // 행은 한 줄로 짧게. 자세한 재료 수량은 아래 상세 칸이 보여 준다.
+                craftLabels[index].text = DisplayName(mushroomItemId) + "  " + owned + " / " + CraftingService.MushroomCost +
+                    "   →   " + DisplayName(ammoItemId);
+                craftLabels[index].color = ready ? colors.craftLabelReady : colors.craftLabelBlocked;
             }
         }
 
