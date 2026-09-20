@@ -33,7 +33,10 @@ public class DebugInventorySeeder : MonoBehaviour
     [SerializeField] private InventoryTestBench inventoryBench;
 
     private PlayerInventoryService service;
-    private bool didSeed;
+
+    // 인벤토리 데이터는 씬을 넘어서 유지되므로(PersistentUiRoot + 벤치), 씬마다 다시 지급하면 계속 쌓인다.
+    // 게임 실행당 한 번만 지급한다. (static 이라 플레이 모드를 다시 시작하면 초기화된다)
+    private static bool didSeedThisSession;
 
     private void Awake()
     {
@@ -50,15 +53,21 @@ public class DebugInventorySeeder : MonoBehaviour
 
     private void Update()
     {
+        // 씬 전환 직후 중복 벤치(곧 파괴됨)를 잡았을 수 있으니 참조가 죽었으면 다시 찾는다
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
+
         // InventoryTestBench 가 자기 데이터를 준비하는 타이밍이 늦을 수 있어서,
         // 준비될 때까지 매 프레임 확인하다가 딱 한 번만 넣어준다.
-        if (didSeed || inventoryBench == null || !inventoryBench.IsReady ||
+        if (didSeedThisSession || inventoryBench == null || !inventoryBench.IsReady ||
             itemDatabase == null || itemDatabase.Catalog == null)
         {
             return;
         }
 
-        didSeed = true;
+        didSeedThisSession = true;
         service = new PlayerInventoryService(itemDatabase.Catalog);
         Seed();
     }

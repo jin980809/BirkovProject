@@ -15,6 +15,7 @@ public class PlayerInputHandler : MonoBehaviour
     public bool SprintHeld { get; private set; }
     public bool FireHeld { get; private set; }
     public bool ZoomHeld { get; private set; }
+    public bool ExtractHeld { get; private set; } // B - 귀환(탈출) 게이지. 누르고 있는 동안만 찬다
 
     // ---------- 단발 입력 이벤트 ----------
 
@@ -81,6 +82,18 @@ public class PlayerInputHandler : MonoBehaviour
         else if (context.canceled)
         {
             ZoomHeld = false;
+        }
+    }
+
+    public void OnExtract(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            ExtractHeld = true;
+        }
+        else if (context.canceled)
+        {
+            ExtractHeld = false;
         }
     }
 

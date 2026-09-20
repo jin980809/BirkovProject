@@ -52,6 +52,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Extract",
+                    "type": "Button",
+                    "id": "2c7f5a10-9b3e-4d62-8f41-7ac05e93b6d2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Dodge",
                     "type": "Button",
                     "id": "99ee8e66-9202-4fef-841f-16dcd50a8395",
@@ -239,6 +248,17 @@
                     "processors": "",
                     "groups": "PC",
                     "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5d1b8c74-0e62-4a39-9c85-3f4e7b20d918",
+                    "path": "<Keyboard>/b",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "PC",
+                    "action": "Extract",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

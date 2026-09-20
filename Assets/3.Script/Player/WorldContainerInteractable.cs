@@ -43,11 +43,24 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
 
     public bool CanInteract(GameObject interactor)
     {
+        EnsureBench();
         return inventoryBench != null && container != null;
+    }
+
+    // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
+    // 참조가 죽었으면 살아남은 벤치로 다시 찾는다.
+    private void EnsureBench()
+    {
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
     }
 
     public void OnInteractComplete(GameObject interactor)
     {
+        EnsureBench();
+
         if (inventoryBench == null || container == null)
         {
             return;
