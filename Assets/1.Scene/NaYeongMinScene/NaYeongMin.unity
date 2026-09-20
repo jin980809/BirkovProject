@@ -792,17 +792,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!114 &140273533 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 9199254940343010176, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
-  m_PrefabInstance: {fileID: 1873303882}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &140273534 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6880017219008297098, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
@@ -2941,6 +2930,9 @@ MonoBehaviour:
   enemyData: {fileID: 11400000, guid: efdd4ed22fcdfe34697917c2fb9cb842, type: 2}
   maxHealth: 0
   currentHealth: 0
+  hitParticle: {fileID: 0}
+  dieParticle: {fileID: 0}
+  hpEffect: {fileID: 0}
 --- !u!114 &284626484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3879,6 +3871,55 @@ SkinnedMeshRenderer:
     m_Center: {x: 0.003939785, y: 0.65468556, z: 0.6152144}
     m_Extent: {x: 0.10461142, y: 0.37637967, z: 0.23331255}
   m_DirtyAABB: 0
+--- !u!114 &535240150 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3969815006055869572, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
+  m_PrefabInstance: {fileID: 1873303882}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &535240151 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7184305219365718058, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
+  m_PrefabInstance: {fileID: 1873303882}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+--- !u!114 &535240152 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6979889560395071044, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
+  m_PrefabInstance: {fileID: 1873303882}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &535240153 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6236358489722446363, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
+  m_PrefabInstance: {fileID: 1873303882}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+--- !u!1 &535240154 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 891947715646907197, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
+  m_PrefabInstance: {fileID: 1873303882}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &541038108
 GameObject:
   m_ObjectHideFlags: 0
@@ -6705,6 +6746,7 @@ MonoBehaviour:
   moveSpeed: 5
   sprintSpeed: 9
   rotationSpeed: 720
+  compensateMuzzleOffset: 1
   dodgeSpeed: 10
   dodgeDuration: 0.35
   dodgeCooldown: -407.4
@@ -8744,10 +8786,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBulletPool
   bulletPrefab: {fileID: 8400544427079156264, guid: 8c44756f1fd14244da7b10e7108e812e, type: 3}
-  poolSize: 30
   particlePrefab: {fileID: 1395894354935488569, guid: 504802a4072e0da43a62670adec698b3, type: 3}
-  particlePoolSize: 30
-  partcleSystem: {fileID: 0}
+  poolSize: 30
 --- !u!4 &1491607232
 Transform:
   m_ObjectHideFlags: 0
@@ -11912,7 +11952,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.shopRepair
       value: 
-      objectReference: {fileID: 140273533}
+      objectReference: {fileID: 0}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.contextDrop
       value: 
@@ -11926,6 +11966,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1873303884}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
+      propertyPath: ui.repairPanel
+      value: 
+      objectReference: {fileID: 535240154}
+    - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.craftConfirm
       value: 
       objectReference: {fileID: 1873303883}
@@ -11933,6 +11977,14 @@ PrefabInstance:
       propertyPath: ui.lootGridRoot
       value: 
       objectReference: {fileID: 1873303899}
+    - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
+      propertyPath: ui.repairButton
+      value: 
+      objectReference: {fileID: 535240150}
+    - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
+      propertyPath: ui.repairDetail
+      value: 
+      objectReference: {fileID: 535240151}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.shopCurrency
       value: 
@@ -11974,6 +12026,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1400345688}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
+      propertyPath: ui.repairCurrency
+      value: 
+      objectReference: {fileID: 535240153}
+    - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.shopDetailIcon
       value: 
       objectReference: {fileID: 140273537}
@@ -12009,6 +12065,10 @@ PrefabInstance:
       propertyPath: ui.mapChestGridRoot
       value: 
       objectReference: {fileID: 1873303898}
+    - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
+      propertyPath: ui.repairDetailIcon
+      value: 
+      objectReference: {fileID: 535240152}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.shopRepairWeapon1
       value: 

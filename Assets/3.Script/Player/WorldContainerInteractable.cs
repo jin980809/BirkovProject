@@ -70,6 +70,9 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
             case InventoryWorldKind.Crafting:
                 inventoryBench.OpenCrafting(transform);
                 break;
+            case InventoryWorldKind.Repair:
+                inventoryBench.OpenRepair(transform);
+                break;
         }
     }
 

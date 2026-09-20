@@ -302,3 +302,11 @@ Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
 - ProjectSettings 는 손대지 않는 것이 규칙이라 Play 검증 때 켜졌던 runInBackground 를 0 으로 되돌렸다.
   git status 에 ProjectSettings 3개가 M 으로 보이지만 diff 는 비어 있다.
   커밋 전에 git checkout -- ProjectSettings 로 정리하면 된다.
+
+[내구도 수리 분리 - 2026-09-20]
+- InventoryWorldKind 에 Repair 추가. InventoryWorldContainer.kind 를 Repair 로 두면 F 로 수리대가 열린다.
+- 상점(ShopPanel)에서 '수리 1G' 버튼 제거. 수리는 RepairPanel 전용.
+- 하이어라키: InventoryUI 프리팹 Root/RepairPanel (TitleBar / Label(보유 G) / Detail(DetailIcon+Label) / Button_수리 1G).
+- 코드 참조가 비어 있으면 이름(RepairPanel)으로 자동 참조한다. 인스펙터 InventoryTestBench > ui > 수리대 에서 교체 가능.
+- 사용법: 수리대 열기 -> 가방/장비 칸 클릭으로 총기 선택 -> '수리 1G' 클릭. 1G 당 회복량은 ItemData.csv 의 repairAmountPerCurrency.
+- 검증: EditMode 128/128 통과. 플레이 모드에서 기관권총 내구도 60/100 -> 100/100, 지푸라기 200 -> 199 확인.

@@ -52,7 +52,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Text shopDetail;
         public Button shopBuy;
         public Button shopSell;
-        public Button shopRepair;
+
+        [Header("수리대")]
+        public GameObject repairPanel;
+        public Text repairCurrency;
+        public Image repairDetailIcon;
+        public Text repairDetail;
+        public Button repairButton;
         public Image[] craftRowBackgrounds;
         public Image[] craftRowIcons;
         public Image craftDetailIcon;
@@ -274,6 +280,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (mapChestPanel != null) mapChestPanel.SetActive(false);
             if (warehousePanel != null) warehousePanel.SetActive(false);
             if (craftPanel != null) craftPanel.SetActive(false);
+            if (ui != null && ui.repairPanel != null) ui.repairPanel.SetActive(false);
             if (ui != null && ui.warehouseSoloScroll != null) ui.warehouseSoloScroll.SetActive(false);
             RebuildInventoryColumn();
             ClearSelection();
@@ -584,7 +591,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public void ClickSlot(TestSlotView slot)
         {
             HideContextMenu();
-            if (shopPanel != null && shopPanel.activeSelf &&
+            if (IsServicePanelOpen &&
                 (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment))
             {
                 selectedShopEquipment = slot.container == TestContainer.Equipment;
@@ -1030,6 +1037,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             RefreshCraftPanel();
             RefreshCraftVisuals();
             RefreshShop();
+            RefreshRepair();
             HoverSlot(hovered);
         }
 
