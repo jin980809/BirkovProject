@@ -1,3 +1,4 @@
+using Birdkov.NaYeongMin.Integration;
 using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
@@ -26,8 +27,11 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     [SerializeField] private PlayerVitals playerVitals;
     [SerializeField] private PlayerInputHandler input;
     [SerializeField] private PlayerController player;
+    [Tooltip("총기 내구도를 깎는 NaYeongMin 의 WeaponDurabilityBridge. 비우면 같은 오브젝트에서 찾고, 없으면 쓰지 않는다")]
+    [SerializeField] private WeaponDurabilityBridge durabilityBridge;
 
     private bool didLinkWeaponData;
+    private PlayerInventoryData linkedData;
 
     private void Awake()
     {
@@ -65,6 +69,23 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         {
             player = FindAnyObjectByType<PlayerController>();
         }
+
+        if (durabilityBridge == null)
+        {
+            TryGetComponent(out durabilityBridge);
+        }
+
+        DisableDurabilityInLobby();
+    }
+
+    // 로비용(WeaponController.IsLobby)이면 총기 내구도가 닳지 않게 WeaponDurabilityBridge 를 끈다.
+    // 그 브리지는 발사 이벤트를 구독해서 내구도를 깎으므로, 꺼 두면 구독이 풀려 아무것도 닳지 않는다.
+    private void DisableDurabilityInLobby()
+    {
+        if (durabilityBridge != null && weaponController != null && weaponController.IsLobby && durabilityBridge.enabled)
+        {
+            durabilityBridge.enabled = false;
+        }
     }
 
     private void OnEnable()
@@ -82,7 +103,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void OnDisable()
     {
-        if (inventoryBench != null)
+        // 씬 전환으로 이 플레이어가 파괴되는 중이라면 연결을 끊지 않는다. 벤치는 씬을 넘어 살아있고,
+        // 새 씬 플레이어가 이미 자기 자신을 등록했을 수 있어서 여기서 null 로 덮으면 회복이 안 먹는다.
+        if (inventoryBench != null && gameObject.scene.isLoaded)
         {
             inventoryBench.BindRecoveryTarget(null);
         }
@@ -105,6 +128,36 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void Update()
     {
+        // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
+        // 참조가 죽었으면 살아남은 벤치로 다시 찾고, 그 벤치의 데이터로 다시 연결한다.
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            didLinkWeaponData = false;
+
+            if (inventoryBench != null)
+            {
+                inventoryBench.BindRecoveryTarget(this);
+            }
+        }
+
+        // WeaponDurabilityBridge 는 자기 벤치 참조를 스스로 다시 찾지 않는다. 씬을 옮기면 그 씬에 있던 벤치가
+        // 중복으로 파괴되면서 참조가 죽어 내구도가 더는 안 닳으므로, 살아있는 벤치를 여기서 계속 맞춰 준다.
+        if (durabilityBridge != null && inventoryBench != null && durabilityBridge.inventoryBench != inventoryBench)
+        {
+            durabilityBridge.inventoryBench = inventoryBench;
+        }
+
+        DisableDurabilityInLobby();
+
+        // 저장 불러오기나 초기화로 벤치의 PlayerInventoryData 가 새 객체로 바뀌면 그 데이터로 다시 연결한다.
+        // 안 그러면 무기/방어구 브리지가 옛 데이터를 계속 봐서 불러온 장비가 장착되지 않는다.
+        if (didLinkWeaponData && inventoryBench != null && inventoryBench.IsReady &&
+            !ReferenceEquals(inventoryBench.PlayerData, linkedData))
+        {
+            didLinkWeaponData = false;
+        }
+
         // InventoryTestBench 가 자기 데이터를 준비하는 타이밍이 이 스크립트의 초기화보다
         // 늦을 수 있어서, 준비될 때까지 매 프레임 확인하다가 딱 한 번만 연결한다.
         if (didLinkWeaponData || inventoryBench == null || weaponInventoryBridge == null)
@@ -115,6 +168,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         if (inventoryBench.IsReady)
         {
             didLinkWeaponData = true;
+            linkedData = inventoryBench.PlayerData;
             weaponInventoryBridge.SetPlayerInventoryData(inventoryBench.PlayerData);
 
             if (armorBridge != null)

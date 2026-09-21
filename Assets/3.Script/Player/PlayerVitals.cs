@@ -46,6 +46,10 @@ public class PlayerVitals : MonoBehaviour, IDamageable
     [Tooltip("장착된 헬멧/조끼로 피해를 감쇄한다. 비우면 씬에서 찾고, 그래도 없으면 감쇄 없이 원래 피해 그대로 적용한다")]
     [SerializeField] private PlayerArmorBridge armorBridge;
 
+    [Header("로비")]
+    [Tooltip("체크하면 로비용 - 허기와 수분이 줄지 않는다")]
+    [SerializeField] private bool isLobby;
+
     private bool exhausted;
     private float staminaRegenTimer;
     private bool sprinting;
@@ -53,6 +57,9 @@ public class PlayerVitals : MonoBehaviour, IDamageable
     // UI / 다른 시스템용
     public event Action<float, float> HealthChanged; // (current, max)
     public event Action Died;
+
+    // 공격 피해를 받았을 때(방어구 감쇄 적용 후의 피해량). 허기 0 으로 인한 지속 피해에는 발생하지 않는다.
+    public event Action<float> Damaged;
 
     public float Health { get { return health; } }
     public float MaxHealth { get { return maxHealth; } }
@@ -107,7 +114,12 @@ public class PlayerVitals : MonoBehaviour, IDamageable
 
         float dt = Time.deltaTime;
         TickStamina(dt);
-        TickSurvival(dt);
+
+        if (!isLobby)
+        {
+            TickSurvival(dt);
+        }
+
         TickStarvation(dt);
     }
 
@@ -119,7 +131,16 @@ public class PlayerVitals : MonoBehaviour, IDamageable
         // 장착된 헬멧/조끼(defense)로 감쇄한다 (허기 0 일 때의 자연 피해(TickStarvation)는
         // 여기를 거치지 않고 ReduceHealth 를 직접 부르므로 방어구 영향을 안 받는다).
         float multiplier = armorBridge != null ? armorBridge.GetDamageMultiplier() : 1f;
-        ReduceHealth(amount * multiplier);
+        float finalAmount = amount * multiplier;
+        bool wasAlive = !IsDead;
+
+        ReduceHealth(finalAmount);
+
+        // 마지막 일격(죽는 피해)에도 발생한다. 이미 죽은 뒤에 들어오는 피해에는 발생하지 않는다.
+        if (wasAlive && finalAmount > 0f && Damaged != null)
+        {
+            Damaged(finalAmount);
+        }
     }
 
     // 회복 아이템에서 호출

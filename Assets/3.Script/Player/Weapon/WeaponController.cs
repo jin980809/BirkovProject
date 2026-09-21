@@ -27,6 +27,10 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private BulletPool bulletPool;
     [SerializeField] private Collider ownerCollider; // 자기 자신과의 충돌 무시용, 비우면 자동 탐색
 
+    [Header("로비")]
+    [Tooltip("체크하면 로비용 - 쏴도 탄이 줄지 않고 탄창이 비어도 계속 쏠 수 있다")]
+    [SerializeField] private bool isLobby;
+
     [Header("탄약 매핑 (나중에 여기서 자유롭게 추가/수정)")]
     [SerializeField] private WeaponAmmoMapping[] ammoMappings = Array.Empty<WeaponAmmoMapping>();
 
@@ -35,6 +39,12 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float bloomGrowthFraction = 0.25f;
     [Tooltip("초당 maxSpread 의 이 비율만큼 현재 퍼짐이 줄어든다")]
     [SerializeField] private float bloomRecoverFraction = 1.5f;
+
+    [Header("근접 조준 안정화 (커서를 플레이어에 바짝 붙였을 때 방향이 튀는 것 방지)")]
+    [Tooltip("조준점이 플레이어에서 이 거리(수평, 월드 단위) 안이면 마우스 방향이 아니라 캐릭터가 바라보는 방향으로 쏜다")]
+    [SerializeField] private float aimBlendNearDistance = 1f;
+    [Tooltip("조준점이 플레이어에서 이 거리 이상 멀면 마우스 방향(총구 기준)으로 쏜다. 그 사이 구간은 두 방향을 섞는다")]
+    [SerializeField] private float aimBlendFarDistance = 2.5f;
 
     [Header("반동 킥 (크로스헤어 + 실제 조준점을 같이 흔든다)")]
     [Tooltip("무기의 maxSpread(도) 1당 한 발에 튀는 화면 픽셀 거리 - 무기마다 maxSpread 가 다르므로 반동 세기가 자동으로 무기에 비례한다")]
@@ -103,6 +113,11 @@ public class WeaponController : MonoBehaviour
     }
 
     private bool fireHeld;
+
+    // 무기를 집어넣은 상태 (같은 무기 키를 한 번 더 눌렀을 때). 장착 데이터(equippedWeapon)는 그대로 두고
+    // 손에서만 치운다 - 이 동안은 발사/재장전이 안 되고 맨손 모션으로 돌아간다.
+    private bool isHolstered;
+
     private float nextFireReadyTime;
     private float currentSpreadDegrees; // 0(완전 정조준) ~ EffectiveMaxSpread
 
@@ -122,7 +137,7 @@ public class WeaponController : MonoBehaviour
     {
         get
         {
-            return IsAutomaticWeaponEquipped && fireHeld && !isReloading && CurrentAmmo > 0 &&
+            return IsAutomaticWeaponEquipped && fireHeld && !isReloading && (isLobby || CurrentAmmo > 0) &&
                    player != null && player.CanFire;
         }
     }
@@ -141,9 +156,21 @@ public class WeaponController : MonoBehaviour
         aimSpreadMultiplier = multiplier;
     }
 
+    // 무기를 손에 들고 있는지 (장착 데이터가 있어도 집어넣은 상태면 false)
     public bool HasWeaponEquipped
     {
-        get { return equippedWeapon != null; }
+        get { return equippedWeapon != null && !isHolstered; }
+    }
+
+    public bool IsHolstered
+    {
+        get { return isHolstered; }
+    }
+
+    // 로비용으로 설정돼 있는지 (탄이 안 줄고, 내구도도 안 닳는다)
+    public bool IsLobby
+    {
+        get { return isLobby; }
     }
 
     // 지금 손에 든 무기 슬롯 (0 = 1번, 1 = 2번, 무기가 없으면 -1). HUD 가 선택된 슬롯의 장탄수만 보여줄 때 쓴다.
@@ -414,6 +441,35 @@ public class WeaponController : MonoBehaviour
         EquipSlot(equippedSlotIndex >= 0 ? equippedSlotIndex : 0);
     }
 
+    // 1/2 키로 무기를 고를 때 부른다. 지금 손에 들고 있는 무기의 슬롯을 한 번 더 누르면 집어넣고,
+    // 그 외(다른 슬롯 / 집어넣은 상태에서 누름)에는 그 슬롯의 무기를 꺼내 든다.
+    public void SelectSlot(int slotIndex)
+    {
+        if (equippedWeapon != null && equippedSlotIndex == slotIndex && !isHolstered)
+        {
+            Holster();
+            return;
+        }
+
+        isHolstered = false;
+        EquipSlot(slotIndex);
+    }
+
+    private void Holster()
+    {
+        // 재장전 도중에는 무기 교체와 같은 조건으로 막히지만(PlayerController.CanSwapWeapon), 안전하게 정리해 둔다
+        HandleCancelReload();
+
+        isHolstered = true;
+        fireHeld = false;
+        currentSpreadDegrees = 0f;
+
+        if (player != null)
+        {
+            player.SetArmed(false);
+        }
+    }
+
     // slotIndex: 0 = 주 무기, 1 = 보조 무기
     public void EquipSlot(int slotIndex)
     {
@@ -437,12 +493,17 @@ public class WeaponController : MonoBehaviour
 
         if (player != null)
         {
-            player.SetArmed(equippedWeapon != null);
+            player.SetArmed(equippedWeapon != null && !isHolstered);
         }
     }
 
     public void TryFire()
     {
+        if (isHolstered)
+        {
+            return;
+        }
+
         fireHeld = true;
         TryFireOnce();
     }
@@ -457,7 +518,7 @@ public class WeaponController : MonoBehaviour
     // 비추고, 진행 중엔 걷기/시야 회전만 가능하도록 CanFire/HandleDodge/HandleInteract 등이 확인한다)
     public void TryReload()
     {
-        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
+        if (isHolstered || isReloading || equippedWeapon == null || equippedSlotIndex < 0 || inventoryBridge == null)
         {
             return;
         }
@@ -506,7 +567,7 @@ public class WeaponController : MonoBehaviour
 
     private void TryFireOnce()
     {
-        if (isReloading || equippedWeapon == null || equippedSlotIndex < 0 || player == null)
+        if (isHolstered || isReloading || equippedWeapon == null || equippedSlotIndex < 0 || player == null)
         {
             return;
         }
@@ -530,7 +591,7 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        if (CurrentAmmo <= 0)
+        if (!isLobby && CurrentAmmo <= 0)
         {
             return; // TODO: 빈 탄창 소리
         }
@@ -538,7 +599,10 @@ public class WeaponController : MonoBehaviour
         float interval = equippedWeapon.fireRate > 0f ? 1f / equippedWeapon.fireRate : 0f;
         nextFireReadyTime = Time.time + interval;
 
-        SetCurrentAmmo(CurrentAmmo - 1);
+        if (!isLobby)
+        {
+            SetCurrentAmmo(CurrentAmmo - 1);
+        }
 
         // 크로스헤어와 실제 조준점(PlayerController)이 같은 방향으로 같이 튄다 - 무기의
         // maxSpread 가 클수록(퍼짐이 큰 무기일수록) 반동도 세진다.
@@ -645,6 +709,28 @@ public class WeaponController : MonoBehaviour
         }
         baseDirection.Normalize();
 
+        // 커서가 플레이어 몸 가까이에 있으면 총구에서 커서로 가는 방향이 조금만 움직여도 크게 튀거나 뒤로 뒤집힌다.
+        // 그래서 플레이어에서 가까울수록 캐릭터가 바라보는 방향으로 되돌리고, 멀어질수록 마우스 방향(총구 기준)을
+        // 쓴다. 두 방향을 각도로 섞어서 그 사이 구간에서도 방향이 뚝 끊기지 않는다.
+        Vector3 bodyToAim = aimPoint - transform.position;
+        bodyToAim.y = 0f;
+        float bodyToAimDistance = bodyToAim.magnitude;
+
+        if (bodyToAimDistance < aimBlendFarDistance)
+        {
+            Vector3 facing = transform.forward;
+            facing.y = 0f;
+
+            if (facing.sqrMagnitude > 0.0001f)
+            {
+                facing.Normalize();
+
+                float blend = Mathf.InverseLerp(aimBlendNearDistance, aimBlendFarDistance, bodyToAimDistance);
+                float angle = Vector3.SignedAngle(facing, baseDirection, Vector3.up) * blend;
+                baseDirection = Quaternion.AngleAxis(angle, Vector3.up) * facing;
+            }
+        }
+
         // 펠릿이 여러 개인 무기(샷건 등)는 한 발에 여러 알이 원래 부채꼴로 퍼져 나가야 하므로,
         // 연사 블룸 누적치(currentSpreadDegrees)와 상관없이 매번 무기 자체의 최대 퍼짐(maxSpread)
         // 범위에서 각자 독립적으로 흩어지게 한다. 첫 발엔 블룸이 0이라 이걸 안 하면 펠릿들이
@@ -654,9 +740,13 @@ public class WeaponController : MonoBehaviour
 
         Projectile projectile = bulletPool.Rent(shotPoint.position, Quaternion.LookRotation(direction));
 
+        // 몸통 위치(총구 높이). 총구가 벽을 넘어가 있는지 검사하는 시작점이다
+        Vector3 bodyOrigin = ownerCollider != null ? ownerCollider.bounds.center : transform.position;
+        bodyOrigin.y = shotPoint.position.y;
+
         // 지금 플레이어가 붙어있는 엄폐물이 있으면, 이번 총알은 그것들을 무시하고 통과한다
         // (엄폐물 너머의 적을 쏠 수 있게 - CoverObject.cs 참고)
-        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider, CoverObject.AttachedCoverColliders);
+        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider, bodyOrigin, CoverObject.AttachedCoverColliders);
     }
 
     private Vector3 ApplySpread(Vector3 direction, float maxSpreadDegrees)

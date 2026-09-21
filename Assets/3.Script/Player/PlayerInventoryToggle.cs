@@ -121,7 +121,7 @@ public class PlayerInventoryToggle : MonoBehaviour
     private void HandleToggle()
     {
         // 아이템 사용/재장전 중에는 인벤토리를 열 수 없다 (다 쓰거나 ESC 로 취소한 뒤에)
-        if (inventoryBench != null && (player == null || (!player.IsUsingItem && !player.IsReloading)))
+        if (inventoryBench != null && (player == null || (!player.IsUsingItem && !player.IsReloading && !player.IsDead)))
         {
             inventoryBench.ToggleInventory(); // 잠금/크로스헤어 전환은 Update() 폴링이 알아서 처리한다
         }

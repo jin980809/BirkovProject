@@ -530,7 +530,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private InventoryMoveResult Transfer(TestContainer from, int fromIndex, TestContainer to, int toIndex)
         {
-            const int all = 99;
+            const int all = int.MaxValue;
 
             if (from == TestContainer.Bag && to == TestContainer.Equipment)
             {
