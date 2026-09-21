@@ -17,7 +17,7 @@ public class WeaponInventoryBridge : MonoBehaviour
     {
         if (itemDatabase == null)
         {
-            Debug.LogError("WeaponInventoryBridge: ItemDatabase 가 필요합니다.", this);
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
         }
 
         // InventoryTestBenchLink.cs 가 준비되는 대로 SetPlayerInventoryData 로 진짜 데이터를 주입한다.
@@ -30,6 +30,12 @@ public class WeaponInventoryBridge : MonoBehaviour
     // 그래서 여기서 즉시 만들지 않고, 실제로 필요할 때(아래 두 공개 메서드) 딱 한 번만 만든다.
     private void EnsureServices()
     {
+        // 씬이 바뀌면 이전 씬의 ItemDatabase 가 파괴되므로, 참조가 죽었으면 지금 씬 것으로 다시 찾는다
+        if (itemDatabase == null)
+        {
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
+        }
+
         if (playerInventoryService != null || itemDatabase == null || itemDatabase.Catalog == null)
         {
             return;

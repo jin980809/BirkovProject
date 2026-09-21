@@ -28,7 +28,13 @@ public class DebugInventorySeeder : MonoBehaviour
             itemDatabase = FindAnyObjectByType<ItemDatabase>();
         }
 
-        if (inventoryBench == null)
+    }
+
+    // 벤치는 Awake 가 아니라 Start 에서 찾는다 - 씬 전환으로 들어온 경우 이 씬에 있던 중복 UI 캔버스를
+    // PersistentUiRoot 가 Awake 에서 비활성화하므로, 그 뒤인 Start 에서 찾아야 살아남은 벤치가 잡힌다.
+    private void Start()
+    {
+        if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();
         }
@@ -36,12 +42,6 @@ public class DebugInventorySeeder : MonoBehaviour
 
     private void Update()
     {
-        // 씬 전환 직후 중복 벤치(곧 파괴됨)를 잡았을 수 있으니 참조가 죽었으면 다시 찾는다
-        if (inventoryBench == null)
-        {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
-        }
-
         // InventoryTestBench 가 자기 데이터를 준비하는 타이밍이 늦을 수 있어서,
         // 준비될 때까지 매 프레임 확인하다가 딱 한 번만 넣어준다.
         if (didSeedThisSession || inventoryBench == null || !inventoryBench.IsReady ||

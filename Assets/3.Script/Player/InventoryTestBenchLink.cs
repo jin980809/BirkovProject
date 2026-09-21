@@ -33,12 +33,25 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     private bool didLinkWeaponData;
     private PlayerInventoryData linkedData;
 
-    private void Awake()
+    // 벤치는 Awake 가 아니라 여기서 찾는다 - 씬 전환으로 들어온 경우 이 씬에 있던 중복 UI 캔버스를
+    // PersistentUiRoot 가 Awake 에서 비활성화하므로, 그 뒤인 Start 에서 찾아야 살아남은 벤치가 잡힌다.
+    // (Awake 에서 찾으면 곧 파괴될 중복을 잡아 회복 아이템/무기 데이터 연결이 끊긴다)
+    private void Start()
     {
-        if (inventoryBench == null)
+        if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            didLinkWeaponData = false;
         }
+
+        if (inventoryBench != null)
+        {
+            inventoryBench.BindRecoveryTarget(this);
+        }
+    }
+
+    private void Awake()
+    {
 
         if (weaponInventoryBridge == null)
         {
@@ -128,19 +141,6 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void Update()
     {
-        // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
-        // 참조가 죽었으면 살아남은 벤치로 다시 찾고, 그 벤치의 데이터로 다시 연결한다.
-        if (inventoryBench == null)
-        {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
-            didLinkWeaponData = false;
-
-            if (inventoryBench != null)
-            {
-                inventoryBench.BindRecoveryTarget(this);
-            }
-        }
-
         // WeaponDurabilityBridge 는 자기 벤치 참조를 스스로 다시 찾지 않는다. 씬을 옮기면 그 씬에 있던 벤치가
         // 중복으로 파괴되면서 참조가 죽어 내구도가 더는 안 닳으므로, 살아있는 벤치를 여기서 계속 맞춰 준다.
         if (durabilityBridge != null && inventoryBench != null && durabilityBridge.inventoryBench != inventoryBench)

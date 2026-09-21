@@ -60,6 +60,10 @@ public class CrosshairUI : MonoBehaviour, ISceneRebindable
     public void RebindSceneReferences()
     {
         weapon = FindAnyObjectByType<WeaponController>();
+
+        // 사망 패널이나 인벤토리 때문에 꺼진 채로 씬을 넘어왔을 수 있다. 새 씬에서는 항상 켠 상태로 시작한다.
+        // (그 씬에서 바로 인벤토리를 열면 PlayerInventoryToggle 이 다시 꺼준다)
+        SetCrosshairActive(true);
     }
 
     private void Update()

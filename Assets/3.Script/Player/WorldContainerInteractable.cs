@@ -1,8 +1,10 @@
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
 
-// NaYeongMin 의 InventoryWorldContainer(상자/전리품/맵배치상자)를 내 상호작용 시스템으로 여는 어댑터.
-// NaYeongMin 파일은 건드리지 않고 공개 API(InventoryTestBench.OpenStorage/OpenLoot/OpenMapChest)만 쓴다.
+// NaYeongMin 의 InventoryWorldContainer(상자/전리품/맵배치상자/상점/제작/수리/사망 분실물)를
+// 내 상호작용 시스템으로 여는 어댑터.
+// NaYeongMin 파일은 건드리지 않고 공개 API(InventoryTestBench.OpenStorage/OpenLoot/... /OpenPlayerDeath)만 쓴다.
+// 종류(InventoryWorldContainer.kind)가 늘어나면 OnInteractComplete 의 switch 에 그 종류를 추가해야 한다.
 //
 // 주의: NaYeongMin 의 PlayerInventoryBridge 는 씬에 넣지 않는다. 그게 있으면 F키를 자기가 직접
 // 가로채서(범위만 보고, 게이지 없이) 즉시 열어버리기 때문에, 이 어댑터의 게이지/잠금과 동시에
@@ -85,6 +87,10 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
                 break;
             case InventoryWorldKind.Repair:
                 inventoryBench.OpenRepair(transform);
+                break;
+            case InventoryWorldKind.PlayerDeath:
+                // 사망 분실물(묘비). 내용물은 PlayerDeathContainer 가 들고 있고 벤치가 전용 30칸 UI 로 연다.
+                inventoryBench.OpenPlayerDeath(container);
                 break;
         }
     }

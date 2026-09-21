@@ -77,6 +77,10 @@ public class SaveCoordinator : MonoBehaviour
     // 첫 불러오기가 끝나기 전에 온 로드(게임을 로비에서 시작한 경우)는 저장하지 않는다 - 아직 불러온 데이터가 없다.
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // 벤치는 씬이 로드될 때만 바뀐다 (이 씬에 있던 중복 벤치는 PersistentUiRoot 가 정리한다).
+        // 그래서 여기서 한 번만 다시 잡는다 - 매 프레임 찾지 않는다.
+        bench = null;
+
         if (InitialLoadDone && scene.name == LobbySceneName)
         {
             lobbySaveCountdown = SettleFramesBeforeLobbySave;
@@ -85,7 +89,12 @@ public class SaveCoordinator : MonoBehaviour
 
     private void Update()
     {
-        // 씬 전환 직후에는 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고). 죽은 참조면 다시 찾는다.
+        // 할 일이 있을 때만(첫 불러오기 전 / 로비 저장 대기 중) 벤치를 찾는다. 평소에는 아무것도 하지 않는다.
+        if (InitialLoadDone && lobbySaveCountdown <= 0)
+        {
+            return;
+        }
+
         if (bench == null)
         {
             bench = FindAnyObjectByType<InventoryTestBench>();

@@ -204,7 +204,7 @@ GameObject:
   - component: {fileID: 707951057226248181}
   - component: {fileID: 936015666074246481}
   - component: {fileID: 1180055501358483783}
-  - component: {fileID: 722606252891412042}
+  - component: {fileID: 392944910894185093}
   m_Layer: 10
   m_Name: PlayerDeathObject
   m_TagString: Untagged
@@ -404,7 +404,7 @@ MonoBehaviour:
         amount: 0
         remainingRounds: 0
         durabilityDamage: 0
---- !u!114 &722606252891412042
+--- !u!114 &392944910894185093
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -413,11 +413,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 7584279720802048051}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ebf8fed2ffbf064b891b59e7312fb1b, type: 3}
+  m_Script: {fileID: 11500000, guid: 4a7c23f9e82efe44fbfefe9e06d0b585, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Birdkov.NaYeongMin.Integration.PlayerDeathInteractable
+  m_EditorClassIdentifier: Assembly-CSharp::WorldContainerInteractable
+  interactDuration: 1.5
   inventoryBench: {fileID: 0}
-  prompt: {fileID: 6323844890770674805}
+  promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
 --- !u!1 &7733655688378672899
 GameObject:
   m_ObjectHideFlags: 0

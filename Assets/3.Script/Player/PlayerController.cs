@@ -98,6 +98,10 @@ public class PlayerController : MonoBehaviour
     private Ray aimRay;
     private bool hasAimRay;
 
+    // 달리기 중 방향 전환 틈(이동 입력이 잠깐 0 이 되는 구간)을 메우는 시간. 이 시간 안에는 계속 달리는 중으로 본다.
+    private const float SprintInputGraceSeconds = 0.15f;
+    private float lastMoveInputTime = -999f;
+
     // 구르기 상태
     private bool isDodging;
     private float dodgeEndTime;
@@ -115,7 +119,12 @@ public class PlayerController : MonoBehaviour
     {
         get
         {
-            bool wantSprint = input.SprintHeld && input.MoveInput.sqrMagnitude > 0.01f;
+            // 이동 입력이 "방금 전까지" 있었으면 달리는 중으로 본다.
+            // 달리면서 방향을 바꿀 때(W 를 떼고 A 를 누르는 사이) 이동 입력이 한두 프레임 0 이 되는데,
+            // 그 순간만 달리기가 풀리면 발사 버튼을 누르고 있던 경우 그 틈에 총이 한 발 나가버린다.
+            // (회전 모드도 같이 튀어서 몸이 마우스 쪽으로 홱 돌아간다.)
+            bool movingRecently = input.MoveInput.sqrMagnitude > 0.01f || Time.time - lastMoveInputTime <= SprintInputGraceSeconds;
+            bool wantSprint = input.SprintHeld && movingRecently;
             return wantSprint && !IsUsingItem && !IsReloading && (vitals == null || vitals.CanSprint);
         }
     }
@@ -314,6 +323,12 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // 달리는 중 방향 전환에서 이동 입력이 잠깐 0 이 되는 것을 걸러내기 위해 마지막 입력 시각을 기록한다 (IsSprinting 참고)
+        if (input.MoveInput.sqrMagnitude > 0.01f)
+        {
+            lastMoveInputTime = Time.time;
+        }
+
         // 트랜스폼/Rigidbody 는 FixedUpdate 에서만 건드린다.
         UpdateAnimator();
 

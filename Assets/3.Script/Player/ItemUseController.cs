@@ -69,6 +69,12 @@ public class ItemUseController : MonoBehaviour
     // itemDatabase.Catalog 가 준비된 뒤 딱 한 번만 생성한다 (그 전까진 매번 호출해도 안전하게 그냥 리턴)
     private void EnsurePeekService()
     {
+        // 씬이 바뀌면 이전 씬의 ItemDatabase 가 파괴되므로, 참조가 죽었으면 지금 씬 것으로 다시 찾는다
+        if (itemDatabase == null)
+        {
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
+        }
+
         if (peekService != null || itemDatabase == null || itemDatabase.Catalog == null)
         {
             return;

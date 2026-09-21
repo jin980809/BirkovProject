@@ -8,7 +8,7 @@ using UnityEngine.UI;
 //    Panel Root 를 비우면 이 컴포넌트가 붙은 오브젝트 자체를 패널로 본다 (그 경우 꺼둔 채로 두면 된다).
 //  - Play Time Text 에 플레이 시간을 보여줄 Text, Lobby Button 에 로비로 가는 버튼을 연결한다.
 //  - PlayerDeathHandler 가 플레이어가 죽으면 이 패널을 띄운다.
-public class DeathPanelUI : MonoBehaviour
+public class DeathPanelUI : MonoBehaviour, ISceneRebindable
 {
     [Tooltip("죽었을 때 켜질 패널. 비우면 이 컴포넌트가 붙은 오브젝트를 켠다")]
     [SerializeField] private GameObject panelRoot;
@@ -40,6 +40,38 @@ public class DeathPanelUI : MonoBehaviour
         }
     }
 
+    // 씬이 바뀌면(로비로 돌아가거나 다시 전투로 들어가면) 패널을 닫는다.
+    // 이 UI 가 붙은 캔버스는 씬을 넘어서 유지되므로(PersistentUiRoot), 끄지 않으면 다음 씬까지 떠 있는다.
+    public void RebindSceneReferences()
+    {
+        crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include);
+        Hide();
+    }
+
+    public void Hide()
+    {
+        if (!isShown)
+        {
+            return;
+        }
+
+        isShown = false;
+
+        GameObject target = panelRoot != null ? panelRoot : gameObject;
+        target.SetActive(false);
+
+        if (lobbyButton != null)
+        {
+            lobbyButton.interactable = true; // 다음 사망에 대비해 다시 누를 수 있게 되돌린다
+        }
+
+        // 크로스헤어/커서를 원래대로. 인벤토리가 열려 있으면 PlayerInventoryToggle 이 다음 프레임에 다시 맞춘다.
+        if (crosshair != null)
+        {
+            crosshair.SetCrosshairActive(true);
+        }
+    }
+
     // 플레이어가 죽었을 때 PlayerDeathHandler 가 부른다. playSeconds 는 이번 판(전투 씬 진입 이후)의 시간.
     public void Show(float playSeconds)
     {
@@ -55,7 +87,7 @@ public class DeathPanelUI : MonoBehaviour
 
         if (crosshair == null)
         {
-            crosshair = FindAnyObjectByType<CrosshairUI>();
+            crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include);
         }
     }
 

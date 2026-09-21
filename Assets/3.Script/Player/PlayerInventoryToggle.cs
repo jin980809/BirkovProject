@@ -25,21 +25,28 @@ public class PlayerInventoryToggle : MonoBehaviour
     {
         player = GetComponent<PlayerController>();
         TryGetComponent(out input);
+    }
 
-        if (inventoryBench == null)
+    // 벤치/크로스헤어는 Awake 가 아니라 Start 에서 찾는다.
+    // 씬 전환으로 들어온 경우 이 씬에 있던 중복 UI 캔버스는 PersistentUiRoot 가 Awake 에서 바로 비활성화하고
+    // 지운다. Start 는 그 뒤라서, 여기서 찾으면 항상 살아남은 쪽이 잡힌다 (Awake 에서 찾으면 곧 파괴될
+    // 중복을 잡아 참조가 죽는다). 크로스헤어는 꺼져 있을 수 있어 비활성도 포함해서 찾는다.
+    private void Start()
+    {
+        if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
+
+        if (crosshair == null || !crosshair.transform.root.gameObject.activeInHierarchy)
+        {
+            crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include);
         }
 
         if (inventoryBench == null)
         {
             Debug.LogWarning("PlayerInventoryToggle: 씬에서 InventoryTestBench 를 찾지 못했습니다. " +
                              "인벤토리 토글/시작 시 자동 닫기가 동작하지 않습니다.", this);
-        }
-
-        if (crosshair == null)
-        {
-            crosshair = FindAnyObjectByType<CrosshairUI>();
         }
     }
 
@@ -67,13 +74,6 @@ public class PlayerInventoryToggle : MonoBehaviour
 
     private void Update()
     {
-        // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
-        // 참조가 죽었으면 살아남은 벤치로 다시 찾는다.
-        if (inventoryBench == null)
-        {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
-        }
-
         // 벤치가 준비(CSV 로드 + UI 바인딩)를 마친 뒤에 딱 한 번 처리한다. 첫 Update 에 무조건 하면,
         // 벤치 준비가 늦어져 아직 안 열린 상태일 때 닫기를 건너뛰고 그 뒤로 영영 안 닫히는 문제가 생긴다.
         if (!didInitialFixup && inventoryBench != null && inventoryBench.IsReady)
@@ -93,7 +93,6 @@ public class PlayerInventoryToggle : MonoBehaviour
                 crosshair.SetCrosshairActive(!isOpen); // 열리면 크로스헤어 끄고 OS 커서 보이게
             }
         }
-
         wasOpen = isOpen;
     }
 
