@@ -4531,7 +4531,11 @@ MonoBehaviour:
     shopDetail: {fileID: 0}
     shopBuy: {fileID: 0}
     shopSell: {fileID: 0}
-    shopRepair: {fileID: 0}
+    repairPanel: {fileID: 0}
+    repairCurrency: {fileID: 0}
+    repairDetailIcon: {fileID: 0}
+    repairDetail: {fileID: 0}
+    repairButton: {fileID: 0}
     craftRowBackgrounds: []
     craftRowIcons: []
     craftDetailIcon: {fileID: 0}
@@ -91006,7 +91010,7 @@ Transform:
   m_GameObject: {fileID: 1736955080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 85.15311, y: 54.970695, z: -154.68137}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

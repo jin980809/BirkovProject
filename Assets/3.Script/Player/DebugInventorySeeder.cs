@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
@@ -12,27 +11,11 @@ using UnityEngine;
 // NaYeongMin 파일은 건드리지 않고 공개 API(PlayerInventoryService)만 쓴다.
 public class DebugInventorySeeder : MonoBehaviour
 {
-    private const int PistolItemId = 10001;
-    private const int ShotgunItemId = 10002;
-    private const int AssaultRifleItemId = 10003;
-    private const int SniperItemId = 10004;
-    private const int PistolAmmoItemId = 11001;
-    private const int ShotgunAmmoItemId = 11002;
-    private const int AssaultRifleAmmoItemId = 11003;
-    private const int SniperAmmoItemId = 11004;
-    private const int AmmoBoxCount = 30; // 상자당 20발 (ItemData.csv 참고) - 3상자 = 60발
-
-    private const int VestBasicItemId = 12001; // 구형 조끼
-    private const int VestSturdyItemId = 12002; // 튼튼 조끼
-    private const int VestPremiumItemId = 12003; // 최고급 조끼
-    private const int HelmetBasicItemId = 13001; // 구형 헬멧
-    private const int HelmetSturdyItemId = 13002; // 튼튼 헬멧
-    private const int HelmetPremiumItemId = 13003; // 최고급 헬멧
+    [Tooltip("스택이 안 되는 아이템(무기/장비/특수)을 창고에 몇 개씩 넣을지")]
+    [SerializeField] private int nonStackableCopies = 3;
 
     [SerializeField] private ItemDatabase itemDatabase;
     [SerializeField] private InventoryTestBench inventoryBench;
-
-    private PlayerInventoryService service;
 
     // 인벤토리 데이터는 씬을 넘어서 유지되므로(PersistentUiRoot + 벤치), 씬마다 다시 지급하면 계속 쌓인다.
     // 게임 실행당 한 번만 지급한다. (static 이라 플레이 모드를 다시 시작하면 초기화된다)
@@ -67,54 +50,55 @@ public class DebugInventorySeeder : MonoBehaviour
             return;
         }
 
-        didSeedThisSession = true;
-        service = new PlayerInventoryService(itemDatabase.Catalog);
-        Seed();
-    }
-
-    private void Seed()
-    {
-        PlayerInventoryData data = inventoryBench.PlayerData;
-        if (data == null)
+        // 저장 파일이 있으면 SaveCoordinator 가 게임을 켠 직후 그걸 불러온다. 그 불러오기가 끝난 뒤에 판단해야
+        // 지급한 것이 덮어써지지 않고, 이미 저장된 진행이 있을 땐 지급하지 않는다 (안 그러면 실행할 때마다 창고가 쌓인다).
+        SaveCoordinator saveCoordinator = SaveCoordinator.Instance;
+        if (!saveCoordinator.InitialLoadDone)
         {
             return;
         }
 
-        EquipToSlot(data, AssaultRifleItemId, EquipmentSlots.PrimaryWeapon);
-        EquipToSlot(data, SniperItemId, EquipmentSlots.SecondaryWeapon);
-        EquipToSlot(data, HelmetBasicItemId, EquipmentSlots.Helmet);
-        EquipToSlot(data, VestBasicItemId, EquipmentSlots.Armor);
+        didSeedThisSession = true;
 
-        // 무기 슬롯 2개는 이미 위에서 채웠으니, 권총/샷건은 장착하지 않고 가방에만 넣어준다
-        service.AddToInventory(data, PistolItemId, 1);
-        service.AddToInventory(data, ShotgunItemId, 1);
+        if (saveCoordinator.LoadedFromSave)
+        {
+            return;
+        }
 
-        service.AddToInventory(data, PistolAmmoItemId, AmmoBoxCount);
-        service.AddToInventory(data, ShotgunAmmoItemId, AmmoBoxCount);
-        service.AddToInventory(data, AssaultRifleAmmoItemId, AmmoBoxCount);
-        service.AddToInventory(data, SniperAmmoItemId, AmmoBoxCount);
-
-        // 헬멧/조끼도 장비 슬롯 하나는 이미 위에서 채웠으니(등급별로 하나씩만 낄 수 있음),
-        // 나머지 등급은 가방에 넣어서 드래그로 바꿔 낄 수 있게 한다
-        service.AddToInventory(data, HelmetSturdyItemId, 1);
-        service.AddToInventory(data, HelmetPremiumItemId, 1);
-        service.AddToInventory(data, VestSturdyItemId, 1);
-        service.AddToInventory(data, VestPremiumItemId, 1);
+        Seed();
     }
 
-    private void EquipToSlot(PlayerInventoryData data, int itemId, int equipmentSlotIndex)
+    // 창고에 모든 아이템을 최대치로 채운다. 스택이 되는 아이템은 한 스택을 꽉 채우고,
+    // 스택이 안 되는 아이템은 nonStackableCopies 개씩 넣는다.
+    // 지푸라기(화폐)는 창고에 들어가지 않고, 특수 아이템(24002~24004)은 창고 제외 규칙이라 건너뛴다.
+    private void Seed()
     {
-        service.AddToInventory(data, itemId, 1);
-
-        // 방금 가방에 넣은 자리를 찾아서 장비 슬롯으로 옮긴다
-        List<GridSlotData> slots = data.inventory.slots;
-        for (int i = 0; i < slots.Count; i++)
+        GridContainerData warehouse = inventoryBench.WarehouseData;
+        if (warehouse == null || inventoryBench.itemCsv == null)
         {
-            if (slots[i].itemId == itemId)
+            return;
+        }
+
+        InventoryService inventoryService = new InventoryService(itemDatabase.Catalog);
+
+        foreach (ItemData item in ItemCsvLoader.Parse(inventoryBench.itemCsv.text))
+        {
+            if (item.itemType == ItemType.Currency || item.itemType == ItemType.Special)
             {
-                service.EquipFromInventory(data, i, equipmentSlotIndex);
-                return;
+                continue;
+            }
+
+            InventoryMoveResult result = inventoryService.AddItem(warehouse, item.itemId, GetSeedAmount(item));
+            if (result.Result != InventoryResult.Success)
+            {
+                Debug.LogWarning("DebugInventorySeeder: 창고 공간 부족으로 다 넣지 못했습니다. itemId=" + item.itemId, this);
             }
         }
+    }
+
+    private int GetSeedAmount(ItemData item)
+    {
+        bool stacks = item.stackable && item.itemType != ItemType.Weapon;
+        return stacks ? Mathf.Max(1, item.maxStack) : Mathf.Max(1, nonStackableCopies);
     }
 }

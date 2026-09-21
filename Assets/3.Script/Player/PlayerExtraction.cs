@@ -16,6 +16,10 @@ public class PlayerExtraction : MonoBehaviour
     [Tooltip("게이지가 다 차는 데 걸리는 시간(초)")]
     [SerializeField] private float extractDuration = 6f;
 
+    [Header("로비")]
+    [Tooltip("체크하면 로비용 - 귀환(B 키)이 막힌다")]
+    [SerializeField] private bool isLobby;
+
     [Header("소음")]
     [Tooltip("귀환 중 소음 반경. 총소리와 같은 종류로 전달된다 (적 감지 게이지 +50)")]
     [SerializeField] private float noiseRadius = 25f;
@@ -76,7 +80,7 @@ public class PlayerExtraction : MonoBehaviour
     {
         bool canContinue = false;
 
-        if (input != null && input.ExtractHeld && !GameSession.Instance.IsLoading)
+        if (!isLobby && input != null && input.ExtractHeld && !GameSession.Instance.IsLoading)
         {
             bool isAlive = vitals == null || !vitals.IsDead;
             bool isStandingStill = input.MoveInput.sqrMagnitude <= 0.01f;

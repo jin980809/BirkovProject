@@ -20,6 +20,8 @@ public class GameSession : MonoBehaviour
     [Tooltip("로딩 화면을 최소한 이 시간만큼은 보여준다 (너무 빨리 지나가는 것 방지)")]
     [SerializeField] private float minimumLoadingTime = 1f;
 
+    private const int SettleFramesAfterActivation = 3;
+
     private static GameSession instance;
 
     private SceneTransitionOverlay overlay;
@@ -72,6 +74,18 @@ public class GameSession : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += HandleSceneLoaded;
+
+        // 마우스가 게임 화면 밖으로 나가지 않게 가둔다. 조준 중에 커서가 창 밖으로 튀어나가 클릭이 빠지는 것을 막는다.
+        Cursor.lockState = CursorLockMode.Confined;
+    }
+
+    // 창을 벗어났다가 돌아오면 제한이 풀려 있으므로 포커스를 되찾을 때마다 다시 건다
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+        {
+            Cursor.lockState = CursorLockMode.Confined;
+        }
     }
 
     private void OnDestroy()
@@ -193,8 +207,13 @@ public class GameSession : MonoBehaviour
             yield return null;
         }
 
-        // 새 씬의 Awake/Start 가 한 번 돈 뒤에 밝히기 시작한다 (UI 재연결 등이 끝난 화면을 보여주기 위해)
-        yield return null;
+        // 새 씬의 Awake/Start 가 한 번 돈 뒤에 밝히기 시작한다 (UI 재연결 등이 끝난 화면을 보여주기 위해).
+        // 무거운 씬은 활성화 직후 몇 프레임이 셰이더/라이트맵 준비로 끊기므로, 그 프레임들을 검은 화면 뒤에서
+        // 넘기고 나서 밝힌다 - 안 그러면 밝아지는 도중에 끊겨서 페이드가 안 보인다.
+        for (int i = 0; i < SettleFramesAfterActivation; i++)
+        {
+            yield return null;
+        }
 
         PersistentUiRoot.SetVisible(true);
         yield return overlay.FadeTo(0f, fadeInDuration);

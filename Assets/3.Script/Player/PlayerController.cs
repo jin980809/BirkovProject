@@ -67,6 +67,7 @@ public class PlayerController : MonoBehaviour
     private static readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
     private static readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
     private static readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
+    private static readonly int DodgeTriggerHash = Animator.StringToHash("Dodge");
 
     private int fireLayerIndex = -1; // 상체 전용 발사 포즈 레이어 인덱스 (Awake 에서 이름으로 찾음, 없으면 -1)
     private float singleShotClipLength = 1f;
@@ -156,7 +157,13 @@ public class PlayerController : MonoBehaviour
     // 이동/회전/사격이 전부 막혀야 하는 상태 (상호작용 중이거나, 외부 UI 가 잠갔거나)
     public bool IsControlLocked
     {
-        get { return IsInteracting || movementLocked; }
+        get { return IsInteracting || movementLocked || IsDead; }
+    }
+
+    // 죽었는지. 죽으면 IsControlLocked 가 켜져서 사격/구르기/상호작용/무기교체/아이템 사용 등이 전부 막힌다.
+    public bool IsDead
+    {
+        get { return vitals != null && vitals.IsDead; }
     }
 
     // movementLocked 가 실제로 바뀌는 순간(상자/인벤토리 UI 열기/닫기)에만 발생한다.
@@ -397,11 +404,27 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(input.MoveInput.x, 0f, input.MoveInput.y);
         dodgeDirection = move.sqrMagnitude > 0.01f ? move.normalized : facingDirection;
 
+        // 구르기 클립은 "몸 정면으로 구르는" 하나짜리라서, 누른 키 방향으로 몸을 즉시 돌려 세운다.
+        // (평소엔 마우스를 보고 있어서 그대로 두면 옆/뒤로 구를 때 몸이 커서 쪽을 향한 채 미끄러진다.
+        //  회전 속도 제한(rotationSpeed)으로 서서히 돌면 구르는 동안 방향이 맞지 않으므로 여기서는 스냅한다)
+        // 구르는 동안엔 UpdateFacing 이 멈춰 있어서 이 방향이 유지되고, 끝나면 다시 마우스 쪽으로 돌아온다.
+        facingDirection = dodgeDirection;
+        Quaternion rollRotation = Quaternion.LookRotation(dodgeDirection, Vector3.up);
+        rb.rotation = rollRotation;
+        transform.rotation = rollRotation;
+
         isDodging = true;
         dodgeEndTime = Time.time + dodgeDuration;
         dodgeReadyTime = Time.time + dodgeCooldown;
 
-        // TODO: 구르기 애니메이션, 무적 프레임
+        // 구르기 시작 순간에만 한 번 쏜다. Animator 에서 Any State → Roll(조건: Dodge 트리거)로 연결하고,
+        // Roll → Idle 은 Has Exit Time 으로 클립이 끝나면 돌아오게 한다.
+        if (animator != null)
+        {
+            animator.SetTrigger(DodgeTriggerHash);
+        }
+
+        // TODO: 무적 프레임
     }
 
     private void UpdateDodge()
@@ -584,6 +607,14 @@ public class PlayerController : MonoBehaviour
     {
         bool autoFiring = weapon.IsAutoFiring;
         float weight = 0f;
+
+        if (isDodging)
+        {
+            // 구르는 동안엔 상체(오른팔) 발사 포즈가 구르기 클립을 덮어쓰지 않게 끈다
+            wasAutoFiring = false;
+            animator.SetLayerWeight(fireLayerIndex, 0f);
+            return;
+        }
 
         if (autoFiring)
         {
@@ -770,7 +801,7 @@ public class PlayerController : MonoBehaviour
     {
         if (weapon != null && CanSwapWeapon)
         {
-            weapon.EquipSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
+            weapon.SelectSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
         }
     }
 

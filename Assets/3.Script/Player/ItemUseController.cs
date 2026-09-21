@@ -41,6 +41,11 @@ public class ItemUseController : MonoBehaviour
         player = GetComponent<PlayerController>();
         TryGetComponent(out input);
 
+        if (itemDatabase == null)
+        {
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
+        }
+
         if (inventoryBench == null)
         {
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();

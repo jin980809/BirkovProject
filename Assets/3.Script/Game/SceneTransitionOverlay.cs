@@ -9,6 +9,11 @@ public class SceneTransitionOverlay : MonoBehaviour
 {
     private const int SortingOrder = 30000;
 
+    // 한 프레임에 페이드가 진행될 수 있는 시간의 상한(초). 무거운 씬이 활성화되는 프레임은 deltaTime 이
+    // 1~2초씩 튀는데, 그대로 더하면 그 한 프레임에 페이드 시간이 다 소진돼서 밝아지는 게 안 보이고
+    // 뚝 바뀐다. 상한을 두면 그런 프레임도 한 프레임 분량만 진행돼서 페이드가 끝까지 재생된다.
+    private const float MaxFadeStep = 0.05f;
+
     private CanvasGroup group;
 
     public static SceneTransitionOverlay Create()
@@ -62,7 +67,7 @@ public class SceneTransitionOverlay : MonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxFadeStep);
             group.alpha = Mathf.Lerp(startAlpha, targetAlpha, Mathf.Clamp01(elapsed / duration));
             yield return null;
         }
