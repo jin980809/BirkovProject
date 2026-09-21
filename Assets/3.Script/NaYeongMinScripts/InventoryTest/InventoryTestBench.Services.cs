@@ -11,6 +11,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
     {
         [Header("개인 씬 테스트 지급")]
         public bool seedExtendedTestStock;
+        [Header("방어구 내구도 임시 규칙")]
+        public ArmorDurability armorDurability = new ArmorDurability();
+
+        public void ApplyArmorHit()
+        {
+            if (!IsReady) return;
+            armorDurability.ApplyHit(catalog, PlayerData);
+            Refresh();
+        }
 
         // 행 색은 인스펙터의 colors 에서 온다. 살 수 있으면 녹색, 못 사면 적갈색.
 
@@ -206,7 +215,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             selectedShopBagIndex = -1;
             selectedShopEquipment = false;
             ui.repairPanel.SetActive(true);
-            SetMessage("가방 또는 장비 칸에서 수리할 총기를 고르세요.");
+            SetMessage("가방 또는 장비 칸에서 수리할 총기·방어구를 고르세요.");
             Refresh();
         }
 
@@ -215,8 +224,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (ui == null || ui.repairPanel == null || !ui.repairPanel.activeSelf || data == null) return;
             GridSlotData slot = SelectedSlot();
             int itemId = slot != null && !slot.IsEmpty() ? slot.itemId : 0;
-            int max = WeaponDurability.Maximum(itemId);
-            int now = max > 0 ? WeaponDurability.Remaining(slot) : 0;
+            bool armor = armorDurability.IsArmor(catalog, slot);
+            int max = armor ? Mathf.Max(1, armorDurability.maxDurability) : WeaponDurability.Maximum(itemId);
+            int now = armor ? armorDurability.Remaining(slot) : max > 0 ? WeaponDurability.Remaining(slot) : 0;
 
             if (ui.repairCurrency != null) ui.repairCurrency.text = "보유 " + PlayerData.currency + "G";
             if (ui.repairDetailIcon != null)
@@ -227,10 +237,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
             if (ui.repairDetail != null)
                 ui.repairDetail.text = max <= 0
-                    ? "가방 또는 장비 칸에서 수리할 총기를 고르세요."
-                    : DisplayName(itemId) + "\n내구도 " + now + " / " + max + "\n1G 당 회복량 " + RepairPerCurrencyOf(itemId);
+                    ? "가방 또는 장비 칸에서 수리할 총기·방어구를 고르세요."
+                    : DisplayName(itemId) + "\n내구도 " + now + " / " + max +
+                      (armor ? "\n" + Mathf.Max(1, armorDurability.repairCost) + "G 완전 수리" : "\n1G 당 회복량 " + RepairPerCurrencyOf(itemId));
             if (ui.repairButton != null)
-                ui.repairButton.interactable = max > 0 && now < max && PlayerData.currency > 0;
+            {
+                ui.repairButton.interactable = armor ? armorDurability.CanRepair(catalog, PlayerData, slot) : now > 0 && now < max && PlayerData.currency > 0;
+                Text label = ui.repairButton.GetComponentInChildren<Text>();
+                if (label != null) label.text = armor ? "완전 수리 " + Mathf.Max(1, armorDurability.repairCost) + "G" : "수리 1G";
+            }
         }
 
         private int RepairPerCurrencyOf(int itemId)
@@ -383,8 +398,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void RepairSelectedWeapon()
         {
-            bool success = WeaponDurability.Repair(PlayerData, SelectedSlot());
-            SetMessage(success ? "1G 수리 완료" : "수리 불가: 마모된 총기를 고르고 지푸라기가 있어야 합니다.");
+            GridSlotData slot = SelectedSlot();
+            bool armor = armorDurability.IsArmor(catalog, slot);
+            bool success = armor ? armorDurability.Repair(catalog, PlayerData, slot) : WeaponDurability.Repair(PlayerData, slot);
+            SetMessage(success ? (armor ? "방어구 완전 수리 완료" : "1G 수리 완료") : "수리 불가: 마모된 장비와 수리 비용을 확인하세요.");
             Refresh();
         }
 

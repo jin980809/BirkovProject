@@ -90,7 +90,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
         Box2x4,
         Box3x3,
         Box3x5,
-        Box4x1
+        Box4x1,
+        PlayerDeath5x6
     }
 
     public static class LootContainerSizes
@@ -101,6 +102,10 @@ namespace Birdkov.NaYeongMin.InventorySystem
         {
             switch (sizePreset)
             {
+                case LootContainerSize.PlayerDeath5x6:
+                    width = 5;
+                    height = 6;
+                    break;
                 case LootContainerSize.Box3x3:
                     width = 3;
                     height = 3;

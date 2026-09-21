@@ -74,7 +74,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             TestContainer target;
             if (warehousePanel != null && warehousePanel.activeSelf && warehouseService != null && warehouseService.IsOpen)
                 target = TestContainer.Warehouse;
-            else if ((lootPanel != null && lootPanel.activeSelf) || (mapChestPanel != null && mapChestPanel.activeSelf))
+            else if (playerDeathOpen || (lootPanel != null && lootPanel.activeSelf) || (mapChestPanel != null && mapChestPanel.activeSelf))
                 target = TestContainer.Loot;
             else { SetMessage("보낼 창고나 상자가 열려 있지 않습니다."); return; }
 

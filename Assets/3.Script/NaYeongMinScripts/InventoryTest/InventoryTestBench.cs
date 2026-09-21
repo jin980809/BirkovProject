@@ -114,6 +114,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public bool useStandaloneKeyboard = true;
         [Tooltip("프리팹 기반 새 UI 로 전환하면 끈다. 끄면 이 벤치는 UI 를 만들지 않는다.")]
         public bool buildLegacyUi = true;
+        [Tooltip("초기화 시 가방·장비·퀵슬롯을 비운다. 창고와 지푸라기는 유지한다.")]
+        public bool startWithEmptyInventory;
 
         [Header("하이어라키 UI")]
         [Tooltip("비워 두면 예전처럼 코드로 UI 를 만든다. 채우면 그 오브젝트를 그대로 쓴다.")]
@@ -270,6 +272,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void CloseLoot()
         {
+            playerDeathOpen = false;
+            if (playerDeathPanel != null) playerDeathPanel.SetActive(false);
             serviceAnchor = null;
             if (shopPanel != null) shopPanel.SetActive(false);
             openedDrop = null;
@@ -389,8 +393,9 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             inventoryService.AddItem(data.warehouseData, 23001, 5);
             if (seedExtendedTestStock) SeedExtendedTestStock();
+            if (startWithEmptyInventory) playerService.ClearOnDeath(data.inventoryData);
 
-            SetMessage("초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
+            SetMessage(startWithEmptyInventory ? "초기화 완료. 가방·장비·퀵슬롯이 비어 있습니다." : "초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
             Refresh();
         }
 
@@ -785,6 +790,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void NotifyLootChanged()
         {
+            if (playerDeathOpen && openedContainer != null)
+            {
+                openedContainer.GetComponent<PlayerDeathContainer>()?.NotifyChanged();
+                if (loot.IsEmpty()) SetMessage("분실물을 모두 회수했습니다.");
+                return;
+            }
             if (openedDrop != null)
             {
                 bool empty = loot.IsEmpty();
@@ -863,7 +874,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             warehouseService.Close();
             if (warehousePanel != null) warehousePanel.SetActive(false);
             playerService.ClearOnDeath(data.inventoryData);
-            SetMessage("사망 처리. 가방과 장비와 퀵슬롯이 비었고 창고는 유지됩니다.");
+            SetMessage("사망 처리. 가방과 장비와 퀵슬롯이 비었고 지푸라기와 창고는 유지됩니다.");
             Refresh();
         }
 
@@ -1511,15 +1522,16 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             ClearLootCells(lootGridRoot);
             ClearLootCells(mapChestGridRoot);
+            ClearLootCells(playerDeathGrid);
 
             LootContainerSizes.GetSize(loot.sizePreset, out int width, out int height);
-            RectTransform gridRoot = mapChestOpen ? mapChestGridRoot : lootGridRoot;
+            RectTransform gridRoot = playerDeathOpen ? playerDeathGrid : mapChestOpen ? mapChestGridRoot : lootGridRoot;
 
             // 상자 규격 그대로 그리되 가로를 긴 쪽으로 둔다. 2x4 -> 4x2, 3x3 -> 3x3, 3x5 -> 5x3, 4x1 -> 4x1.
             // 패널과 그리드의 위치·크기는 건드리지 않는다. 기획팀이 인스펙터에서 잡은 그대로 둔다.
             // 칸 크기만 그리드 폭에 맞춰 줄인다. 폭을 넓히면 칸도 커지고 LootCell 이 상한이다.
-            int columns = Mathf.Max(width, height);
-            int rows = Mathf.Min(width, height);
+            int columns = playerDeathOpen ? 5 : Mathf.Max(width, height);
+            int rows = playerDeathOpen ? 6 : Mathf.Min(width, height);
             int cell = Mathf.Clamp(Mathf.FloorToInt((gridRoot.rect.width + 4) / columns) - 4, 16, LootCell);
             BuildGrid(gridRoot, TestContainer.Loot, columns, rows, 0, 0, cell, width * height);
         }
