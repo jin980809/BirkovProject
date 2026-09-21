@@ -20,7 +20,7 @@ public class EnemyBulletParticle : MonoBehaviour
             {
                 if (!particleSystem.isPlaying)
                 {
-                    enemyBulletPool.ReturnParticle(gameObject);
+                    enemyBulletPool.ReturnRicocheParticle(gameObject);
                 }
             }
         }
