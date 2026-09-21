@@ -508,13 +508,13 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void ClearOnDeath_WipesCurrency()
+        public void ClearOnDeath_PreservesCurrency()
         {
             service.AddToInventory(playerData, StrawId, 40);
 
             service.ClearOnDeath(playerData);
 
-            Assert.AreEqual(0, playerData.currency);
+            Assert.AreEqual(40, playerData.currency);
         }
 
         [Test]

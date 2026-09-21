@@ -193,3 +193,167 @@ PlayMode API 호출: HONETi UI, 제작/구매, F 닫기, 실제 발사 및 내�
 inventoryBench / playerInput / player 는 Awake 에서 씬에서 자동으로 찾는다. 비워 둬도 된다.
 Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
 확인: 빈 큐브에 스크립트만 붙이고 레이어만 바꿔서 상점/제작 둘 다 열리는 것을 Play 에서 확인했다.
+
+[2026-09-19 - 칸 선택 표시 / 좌클릭 상세 / 우클릭 메뉴]
+- 가방 칸을 좌클릭해도 소모품이 바로 쓰이지 않는다. 칸이 선택되고 화면 가운데에 상세 창이 뜬다.
+- 선택된 칸은 colors.slotSelected 색으로 표시된다. 상점에서 판매/수리 대상을 고른 칸도 같은 색이다.
+- 우클릭하면 마우스 자리에 메뉴가 뜬다. 사용 / 버리기.
+  사용은 가방의 소모품·특수 아이템에만 보이고, 버리기는 가방과 창고에만 보인다.
+- 새 파일: InventoryTestBench.ItemMenu.cs. TestSlotView 에 우클릭 전달만 추가했다.
+- 하이어라키: Root/ItemDetailPanel(TitleBar/Title, Icon, Body, Button_닫기), Root/ContextMenu(Button_사용, Button_버리기).
+  이름을 그대로 두면 ui 참조를 비워 둬도 Bind 때 자동으로 찾는다. 위치/크기/색은 인스펙터에서 바꾸면 된다.
+
+[검증 2026-09-19]
+- EditMode 128/128 통과.
+- Play: 가방 좌클릭 -> 수량 그대로, 상세 창 열림(제목/아이콘/무게/종류/설명), 선택 칸 녹색.
+- Play: 우클릭 -> 재료는 사용 버튼 숨김, 버리기만 표시. 버리기 누르니 칸이 비워졌다.
+- Play: 회복약 우클릭 -> 사용, 체력 40 -> 46, 수량 3 -> 2.
+- Play: 상점 열고 가방 칸 클릭 -> 같은 녹색으로 표시되고 상세에 '선택: 회복약' 이 뜬다.
+
+[2026-09-19 2차 - 아이템 이동은 더블클릭]
+- 창고 / 전리품 / 맵 상자 칸: 한 번 클릭 = 선택 + 상세, 두 번 클릭 = 가방으로 가져오기.
+- 가방 칸: 한 번 클릭 = 선택 + 상세, 두 번 클릭 = 열려 있는 창고나 상자로 보내기.
+  보낼 곳 우선순위는 창고 > 전리품/맵 상자. 둘 다 닫혀 있으면 아무 일도 없고 안내만 뜬다.
+- 상점/제작대를 열면 창고가 같이 열리므로 그 상태에서도 더블클릭으로 창고와 주고받는다.
+  상점이 열려 있을 때 가방 한 번 클릭은 그대로 판매/수리 대상 선택이다.
+- 드래그로 옮기는 기존 방식은 그대로 둔다.
+
+[검증 2026-09-19 2차]
+- EditMode 128/128 통과.
+- Play(상점 열린 상태): 창고 한 번 클릭 -> 수량 1 그대로, 선택 녹색, 상세 열림.
+- Play: 창고 두 번 클릭 -> 창고 1 -> 0, 가방 사용 칸 15 -> 16.
+- Play: 가방 한 번 클릭 -> 수량 5 그대로. 두 번 클릭 -> 5 -> 0, '5개 보냄'.
+
+[2026-09-19 3차 - 상자 칸 누적 버그 / 우클릭 메뉴 위치]
+- 상자를 열 때마다 전리품 칸이 지워지지 않고 쌓였다. 맵 상자 9 -> 18 -> 27, 전리품 8 -> 16 -> 24.
+  쌓인 칸이 새 칸을 덮어서 상자를 열어도 내용이 안 보이는 것처럼 됐다.
+  원인: BuildLootGrid 가 views 목록만 보고 지웠고 Destroy 가 한 프레임 늦어 그리드 자식이 남았다.
+  수정: ClearLootCells 로 LootGrid 와 MapChestGrid 의 자식을 직접 떼어내고 지운다.
+- 우클릭 메뉴가 엉뚱한 자리에 떠서 안 보였다. Root 피벗이 가운데(0.5, 0.5)인데
+  메뉴 앵커는 좌상단(0, 1)이라 좌표가 800, 450 만큼 어긋났다.
+  수정: ScreenPointToWorldPointInRectangle 로 월드 좌표를 그대로 넣고 화면 안으로 clamp 한다.
+
+[검증 2026-09-19 3차]
+- EditMode 128/128 통과.
+- Play: 맵 상자 / 전리품을 3번씩 번갈아 열어도 MapChestGrid 9, LootGrid 8 로 고정. 반대쪽은 0.
+- Play: 창고(Storage) 도 정상 열림.
+- Play: 우클릭 -> 메뉴가 마우스 위치에 뜨고 사용/버리기 표시, 상세창과 선택 녹색도 같이 동작.
+
+[2026-09-19 4차 - 우클릭 메뉴 빈 박스 / 상자 오인]
+- 상자 칸을 우클릭하면 사용도 버리기도 숨겨져서 검은 빈 박스만 떴다.
+  수정: 전리품/맵 상자 칸에서도 버리기를 쓸 수 있게 하고, 보일 버튼이 하나도 없으면 메뉴를 띄우지 않는다.
+  ContextMenu 에 VerticalLayoutGroup + ContentSizeFitter 를 붙여 버튼 수에 맞게 박스가 줄어든다.
+  버튼 두 개면 84, 하나면 46. 버튼 위치는 코드가 아니라 레이아웃이 잡는다.
+- 상자 안 아이템을 버리면 NotifyLootChanged 로 상자 상태도 갱신한다.
+
+[상자로 보이지만 상자가 아닌 것]
+- 씬의 큰 노란/회색 박스 Cube (1) ~ Cube (4) 는 Layer 7 Obstacle 이다. 엄폐물이라 F 로 열리지 않는다.
+- 실제 상호작용 대상은 Layer 10 Interaction 인 6개뿐이다.
+  StorageInteraction(-3, 0, 0) / LootInteraction(3, 0, 0) / MapChestInteraction(3, 0.1, 3)
+  TemporaryShopNPC(-3.83, 0.6, -3) / TemporaryCraftingStation(3, 0.6, -3) / 적 드랍 LootDropObject
+- 세 상자 모두 코드로 열어 확인했고 정상 동작한다. 엄폐물을 상자로 쓰려면
+  그 오브젝트에 InventoryWorldContainer + WorldContainerInteractable 을 붙이고 레이어를 Interaction 으로 바꿔야 한다.
+
+[검증 2026-09-19 4차]
+- EditMode 128/128 통과.
+- Play: 상자 칸 우클릭 -> 버리기만 표시, 박스 높이 46. 버리기 누르니 23001 -> 비었음.
+- Play: 상자 빈 칸 우클릭 -> 메뉴가 뜨지 않는다.
+- Play: 가방 소모품 우클릭 -> 사용 + 버리기, 박스 높이 84.
+
+[2026-09-19 5차 - 우클릭 사용 확대 / 창고 자동 스크롤]
+- 우클릭 사용 버튼을 가방뿐 아니라 창고와 상자 칸에서도 쓸 수 있게 했다.
+  가방 밖에서 누르면 한 개만 가방으로 옮긴 뒤 그 자리에서 사용한다. 가방이 꽉 차면 안내만 뜬다.
+- StorageInteraction(보관상자)은 kind=Storage, dropSettings 가 비어 있는 허브 창고다. 전리품이 들어 있지 않다.
+  창고는 오른쪽 세로 목록의 맨 아래에 있어서 열어도 화면에 안 보였다.
+  수정: 창고를 열면 ScrollToWarehouse 로 스크롤을 창고 위치까지 내린다. 상점/제작대로 열 때도 같다.
+- 상자 안 전리품을 보려면 kind 가 Loot 이나 MapChest 인 상자를 열어야 한다.
+  LootInteraction(3,0,0) 은 Test_Loot_SelectedItems, MapChestInteraction(3,0.1,3) 은 Test_MapChest_SelectedItems 를 쓴다.
+
+[미검증]
+- 위 두 가지는 코드 수정까지만 마쳤고 Play 검증은 못 했다.
+  에디터가 스크립트 컴파일 중 상태에서 멈춰 Play 진입이 되지 않았다.
+  Unity 창을 한 번 클릭해 포커스를 준 뒤 컴파일이 끝나면 다시 확인해야 한다.
+
+[2026-09-19 6차 - 창고 단독 열기 / 버튼 글자]
+- 창고만 열면(F, 보관상자) 전리품 상자와 같은 자리인 오른쪽 WarehouseSoloScroll 에 뜬다.
+  이때 왼쪽 세로 목록에는 장비와 가방만 남는다(Content 높이 656).
+- 상점이나 제작대를 열면 창고가 왼쪽 세로 목록에 통합된다(Content 높이 2758). 오른쪽에는 상점/제작 패널이 뜬다.
+- 같은 WarehousePanel 을 SetParent 로 옮긴다. 슬롯 120칸과 데이터, 참조는 그대로다.
+  MoveWarehouse(true) 가 오른쪽 단독, MoveWarehouse(false) 가 왼쪽 통합이다.
+  ui.warehouseSoloScroll / warehouseSoloContent / inventoryColumn 은 비워 둬도 이름으로 자동 연결된다.
+- 사용 / 제작 / 구매 버튼 글자를 흰색 볼드로 바꿨다. 밝은 녹색 배경에서 잘 보인다.
+
+[검증 2026-09-19 6차]
+- EditMode 128/128 통과.
+- Play: 보관상자 -> 우측 SoloScroll, 좌측 656. 상점 -> 좌측 통합 2758, Solo 꺼짐. 제작대도 같다.
+- Play: 닫으면 둘 다 꺼진다.
+
+[2026-09-19 최종 일괄 점검]
+- EditMode 128/128 통과. 콘솔 에러/경고 0.
+- InventoryTestBench 의 인스펙터 참조 NULL 0건.
+- 남은 NULL 2건은 의도된 것이다.
+  EnemyBulletPool.partcleSystem 은 팀원 원본에서도 비어 있다.
+  StorageInteraction.dropSettings 는 허브 창고라 전리품 설정이 없다.
+- Play 통합 확인: 보관상자/전리품/맵상자/상점/제작대 전부 열림.
+  창고 위치는 단독일 때 우측, 상점·제작대일 때 좌측 통합으로 정상 전환.
+  전리품 1클릭 선택(수량 유지) / 2클릭 획득, 구매 200->195G, 수리 1G 로 90->140,
+  제작 완료, 저장->초기화->불러오기 후 내구도 손상 77 보존.
+- PlayerInventoryBridge.cs 는 어느 씬/프리팹에서도 쓰이지 않는다. 삭제 후보로 남겨 둔다.
+- ProjectSettings 는 손대지 않는 것이 규칙이라 Play 검증 때 켜졌던 runInBackground 를 0 으로 되돌렸다.
+  git status 에 ProjectSettings 3개가 M 으로 보이지만 diff 는 비어 있다.
+  커밋 전에 git checkout -- ProjectSettings 로 정리하면 된다.
+
+[내구도 수리 분리 - 2026-09-20]
+- InventoryWorldKind 에 Repair 추가. InventoryWorldContainer.kind 를 Repair 로 두면 F 로 수리대가 열린다.
+- 상점(ShopPanel)에서 '수리 1G' 버튼 제거. 수리는 RepairPanel 전용.
+- 하이어라키: InventoryUI 프리팹 Root/RepairPanel (TitleBar / Label(보유 G) / Detail(DetailIcon+Label) / Button_수리 1G).
+- 코드 참조가 비어 있으면 이름(RepairPanel)으로 자동 참조한다. 인스펙터 InventoryTestBench > ui > 수리대 에서 교체 가능.
+- 사용법: 수리대 열기 -> 가방/장비 칸 클릭으로 총기 선택 -> '수리 1G' 클릭. 1G 당 회복량은 ItemData.csv 의 repairAmountPerCurrency.
+- 검증: EditMode 128/128 통과. 플레이 모드에서 기관권총 내구도 60/100 -> 100/100, 지푸라기 200 -> 199 확인.
+
+[방어구 내구도 - 2026-09-21]
+- 임시 규칙(전 등급 통일): 최대 100 / 피격당 2 / 수리비 3G 완전 수리. 0 이 되면 그 부위만 소멸.
+  수치는 InventoryTestBench 인스펙터 '방어구 내구도 임시 규칙'(armorDurability)에서 바로 고친다. 코드 수정 불필요.
+- 1회 피격당 장착 중인 헬멧과 조끼가 각각 차감된다(기획서 6.7, 히트박스 구분 없음).
+- 신규 ArmorDurabilityBridge (NaYeongMinIntegration). PlayerVitals.HealthChanged 구독.
+  체력 감소폭이 minHitDamage(기본 0.5) 이상일 때만 ApplyArmorHit. 허기 0 자연 피해는 프레임당 값이 작아 걸러진다.
+  팀원 코드 수정 0. NaYeongMin.unity / Test.unity 의 Player 에 부착, playerVitals·inventoryBench 자동 연결.
+- 장비/가방/창고 칸에 방어구 내구도 숫자 표시 추가(무기와 같은 자리).
+- 수리대에서 방어구 선택 시 버튼 글자가 '완전 수리 3G' 로 바뀐다. 무기는 기존 '수리 1G'.
+- 검증: EditMode 145/145 통과(ArmorDurabilityTests 13개 신규).
+  Play: 피격 1회 -> 헬멧·조끼 각각 100->98, 2회 -> 96/100 표시. 잔여 2 에서 피격 -> 헬멧 소멸(itemId -1).
+  Play: 최고급 조끼 60/100 -> '완전 수리 3G' -> 100/100, 지푸라기 5 -> 2.
+
+[방어력 계산식 - 확정 2026-09-21]
+- 방어력은 팀원(김표진)이 설정해 둔 값과 방식을 그대로 쓴다. 내가 바꾸지 않는다.
+  PlayerArmorBridge.GetDamageMultiplier() 의 비율 곱연산, ItemData.csv 의 defense 10/20/30 유지.
+  실측: 공격력 5, 튼튼헬멧+최고급조끼 -> 2.8 피해.
+- 기획서 2차 수정(2026-09-10) 6.7 / 10.2.1 에는 정수 차감식(MAX(1, 공격력 - 총 방어력),
+  구형 1 / 튼튼 2 / 최고급 3)으로 적혀 있으나 적용하지 않는다. 기획서 6.7 안에도
+  '곱연산 / 부위당 50% 캡' 불릿과 6.2 '최고급 둘 다 60% 경감' 문장이 함께 있어 비율식과 모순되지 않는다.
+- 내 작업 범위는 방어구 '내구도' 뿐이다. 내구도는 방어력 수치와 독립이다.
+- 출처: 비율식과 defense 10/20/30 은 커밋 e763cd2e (2026-09-17, 김표진, '방어구 수치 모델 적용') 에서 들어왔다.
+  그 이전까지 CSV defense 는 기획서와 같은 1/2/3 이었다. 내 커밋에서 defense 열을 바꾼 적은 없다.
+
+[무기 최대 내구도 갱신 - 2026-09-21]
+- 기획서 2차 수정(2026-09-10) 5.2 표대로 최대 내구도를 올렸다.
+    기관권총 10001  100 -> 500
+    샷건     10002  120 -> 600
+    돌격소총 10003  180 -> 900
+    스나이퍼 10004  160 -> 800
+- 표의 '사격 당 소모' 칸 괄호값 (1) 은 '1발 발사당' 이라는 뜻이다. 소모량은 2 / 3 / 3 / 8 로 변경 없음.
+- 1G 당 회복 내구도 100 / 60 / 50 / 40 도 표와 같아 변경 없음. 상점 가격도 그대로다.
+- 고친 곳: ItemData.csv 의 maxDurability 열 4칸, WeaponDurability 폴백 상수, StationTests TestCase 4건.
+  WeaponDurability 는 CSV 를 먼저 읽으므로 수치 정본은 CSV 한 곳이다. 폴백은 CSV 가 없을 때만 쓴다.
+- 검증: EditMode 145/145 통과. Play: Maximum 500/600/900/800, 돌격소총 1발 마모 3, 칸 표시 897/900.
+
+[확인 필요 - 수리비가 기획서 표와 5배 차이]
+- 최대 내구도만 5배가 되고 1G 당 회복량은 그대로라 완전 수리 비용이 5배가 된다.
+  Play 실측(잔여 1 -> 만땅): 10001 5G / 10002 10G / 10003 18G / 10004 20G.
+  기획서 5.2 의 '수리비 최고 수치' 열은 1G / 2G / 3G / 4G 다. 정확히 5배 차이.
+- 1차 기획서에서는 최대 내구도와 1G 당 회복량이 맞아떨어져 1/2/3/4G 가 나왔다.
+  2차 수정에서 최대 내구도만 올리고 1G 당 회복량을 안 고친 것으로 보인다.
+- 어느 쪽이 정본인지 확정 전까지 1G 당 회복량은 표 그대로 100/60/50/40 을 유지한다. 임의 수정하지 않음.
+
+[CSV - 방어력 열은 손대지 않음]
+- ItemData.csv 의 defense 열(10/20/30)은 그대로 둔다. 이번 작업에서 바꾼 것은 maxDurability 열뿐이다.

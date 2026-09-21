@@ -418,7 +418,11 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         public void ClearOnDeath(PlayerInventoryData playerData)
         {
-            playerData?.ClearAll();
+            if (playerData == null) return;
+            playerData.inventory.Clear();
+            playerData.equipmentSlots.Clear();
+            playerData.ClearItemQuickSlots();
+            // 지푸라기는 사망해도 유지. 전체 초기화(ClearAll)와 분리한다.
         }
 
         public static bool IsQuickUsable(ItemData item)

@@ -41,7 +41,7 @@ namespace Birdkov.NaYeongMin.Tests
             Assert.AreEqual(beforeBag, JsonUtility.ToJson(player)); Assert.AreEqual(beforeWarehouse, JsonUtility.ToJson(warehouse));
         }
 
-        [TestCase(10001, 100, 2)] [TestCase(10002, 120, 3)] [TestCase(10003, 180, 3)] [TestCase(10004, 160, 8)]
+        [TestCase(10001, 500, 2)] [TestCase(10002, 600, 3)] [TestCase(10003, 900, 3)] [TestCase(10004, 800, 8)]
         public void Durability_PerShotAndRepair(int itemId, int max, int cost)
         {
             var player = new PlayerInventoryData { currency = 2 };

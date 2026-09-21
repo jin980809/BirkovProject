@@ -81,14 +81,15 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void DeathEvent_ClearsCarriedItems_PreservesWarehouse()
+        public void DeathEvent_ClearsCarriedItems_PreservesWarehouseAndCurrency()
         {
             PlayerSaveData data = (PlayerSaveData)Get(bench, "data");
             int stored = data.warehouseData.slots[0].amount;
+            int currency = data.inventoryData.currency;
             Call(vitals, "TakeDamage", 100f);
             Assert.IsTrue(data.inventoryData.inventory.slots.TrueForAll(slot => slot.IsEmpty()));
             Assert.AreEqual(stored, data.warehouseData.slots[0].amount);
-            Assert.AreEqual(0, data.inventoryData.currency);
+            Assert.AreEqual(currency, data.inventoryData.currency);
         }
 
         [Test]
