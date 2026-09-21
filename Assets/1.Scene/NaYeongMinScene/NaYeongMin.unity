@@ -6729,6 +6729,7 @@ GameObject:
   - component: {fileID: 1155194620}
   - component: {fileID: 1155194638}
   - component: {fileID: 1155194639}
+  - component: {fileID: 1155194640}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -7447,6 +7448,21 @@ MonoBehaviour:
   playerVitals: {fileID: 1155194631}
   inventoryBench: {fileID: 1938933528}
   deathPrefab: {fileID: 1180055501358483783, guid: f480687353fc14249a2a209303692eb6, type: 3}
+--- !u!114 &1155194640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155194618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f62d3e688f09374794255b4386e41a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Birdkov.NaYeongMin.Integration.ArmorDurabilityBridge
+  playerVitals: {fileID: 1155194631}
+  inventoryBench: {fileID: 1938933528}
+  minHitDamage: 0.5
 --- !u!1 &1159182653
 GameObject:
   m_ObjectHideFlags: 0

@@ -1029,9 +1029,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 if (found && craftPanel != null && craftPanel.activeSelf &&
                     (itemId == CraftingService.GunpowderItemId || (itemId >= 27001 && itemId <= 27004)))
                     view.background.color = colors.slotCraftMaterial;
-                if (found && item.itemType == ItemType.Weapon &&
+                if (found &&
                     (view.container == TestContainer.Bag || view.container == TestContainer.Equipment || view.container == TestContainer.Warehouse))
-                    view.amount.text = WeaponDurability.Remaining(GetContainer(view.container).slots[view.index]) + "/" + WeaponDurability.Maximum(itemId);
+                {
+                    GridSlotData durableSlot = GetContainer(view.container).slots[view.index];
+                    if (item.itemType == ItemType.Weapon)
+                        view.amount.text = WeaponDurability.Remaining(durableSlot) + "/" + WeaponDurability.Maximum(itemId);
+                    else if (armorDurability.IsArmor(catalog, durableSlot))
+                        view.amount.text = armorDurability.Remaining(durableSlot) + "/" + Mathf.Max(1, armorDurability.maxDurability);
+                }
             }
 
             if (statsText != null)
