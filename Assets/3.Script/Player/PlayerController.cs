@@ -79,7 +79,6 @@ public class PlayerController : MonoBehaviour
     private WeaponController weapon; // 선택 - 있으면 발사/재장전/무기교체를 위임
     private PlayerInteraction interaction; // 선택 - 있으면 상호작용 중 이동/회전/사격을 막음
     private ItemUseController itemUse; // 선택 - 있으면 아이템 사용 중 달리기/구르기/사격/상호작용만 막음 (이동/회전/시야는 그대로)
-    private PlayerExtraction extraction; // 선택 - 있으면 귀환(B) 게이지가 도는 동안 사격/구르기/상호작용/무기교체를 막음
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -133,12 +132,6 @@ public class PlayerController : MonoBehaviour
         get { return itemUse != null && itemUse.IsUsing; }
     }
 
-    // 귀환(B) 게이지가 도는 중인지. 제자리에서만 가능하므로 이동 입력이 들어오면 PlayerExtraction 이 알아서 취소한다.
-    public bool IsExtracting
-    {
-        get { return extraction != null && extraction.IsExtracting; }
-    }
-
     // 재장전 중인지 (그 시스템이 없으면 항상 false). IsUsingItem 과 완전히 동일한 규칙 -
     // 이동/회전/시야는 그대로 두고, 달리기/구르기/사격/상호작용/무기교체/인벤토리 열기/다른
     // 퀵슬롯 사용만 개별적으로 막는다.
@@ -187,14 +180,14 @@ public class PlayerController : MonoBehaviour
     // 달리는 중 / 구르는 중 / 상호작용 중 / 외부 UI 로 잠긴 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
     public bool CanFire
     {
-        get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting; }
+        get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading; }
     }
 
     // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI 중에는 불가.
     // 실제 장착(HandleWeaponSelected)과 인벤토리 UI 의 선택 표시(InventoryTestBenchLink)가 같은 조건을 쓰도록 한 곳에 둔다.
     public bool CanSwapWeapon
     {
-        get { return !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting; }
+        get { return !IsControlLocked && !IsUsingItem && !IsReloading; }
     }
 
     // 마우스 커서가 가리키는 월드 좌표
@@ -247,7 +240,6 @@ public class PlayerController : MonoBehaviour
         TryGetComponent(out weapon);
         TryGetComponent(out interaction);
         TryGetComponent(out itemUse);
-        TryGetComponent(out extraction);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
@@ -383,7 +375,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleDodge()
     {
-        if (isDodging || Time.time < dodgeReadyTime || IsControlLocked || IsUsingItem || IsReloading || IsExtracting)
+        if (isDodging || Time.time < dodgeReadyTime || IsControlLocked || IsUsingItem || IsReloading)
         {
             return; // 상자/인벤토리 UI, 상호작용, 아이템 사용, 재장전 중에는 구르기로 스테미나만 낭비되는 것 방지
         }
@@ -745,7 +737,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteract()
     {
-        if (isDodging || interaction == null || IsControlLocked || IsUsingItem || IsReloading || IsExtracting)
+        if (isDodging || interaction == null || IsControlLocked || IsUsingItem || IsReloading)
         {
             return; // 구르는 중/이미 잠긴 중(상자 등)/아이템 사용/재장전 중에는 상호작용 시작 불가
         }

@@ -52,33 +52,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Text shopDetail;
         public Button shopBuy;
         public Button shopSell;
-
-        [Header("수리대")]
-        public GameObject repairPanel;
-        public Text repairCurrency;
-        public Image repairDetailIcon;
-        public Text repairDetail;
-        public Button repairButton;
+        public Button shopRepair;
         public Image[] craftRowBackgrounds;
         public Image[] craftRowIcons;
         public Image craftDetailIcon;
         public Text craftDetail;
         public Button craftConfirm;
-
-        [Header("아이템 상세 / 우클릭 메뉴")]
-        public GameObject itemDetailPanel;
-        public Image itemDetailIcon;
-        public Text itemDetailTitle;
-        public Text itemDetailBody;
-        public Button itemDetailClose;
-        public RectTransform contextMenu;
-        public Button contextUse;
-        public Button contextDrop;
-
-        [Header("창고 단독 열기")]
-        public GameObject warehouseSoloScroll;
-        public RectTransform warehouseSoloContent;
-        public RectTransform inventoryColumn;
     }
 
     // UI 색. 전부 인스펙터에서 바꾼다. 코드는 기본값만 들고 있다.
@@ -92,7 +71,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Color slotWeaponQuick = new Color(0.18f, 0.22f, 0.26f, 0.9f);
         public Color slotSelectedWeapon = new Color(0.16f, 0.45f, 0.42f, 0.95f);
         public Color slotCraftMaterial = new Color(0.2f, 0.65f, 0.3f, 0.95f);
-        public Color slotSelected = new Color(0.25f, 0.72f, 0.36f, 1f);
 
         [Header("상점·제작 목록 행")]
         public Color rowReady = new Color(0.24f, 0.48f, 0.29f, 0.95f);
@@ -195,7 +173,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
             OpenInventory();
             openedContainer = source;
             warehouseService.Open();
-            MoveWarehouse(true);
             warehousePanel.SetActive(true);
             Refresh();
         }
@@ -280,10 +257,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (mapChestPanel != null) mapChestPanel.SetActive(false);
             if (warehousePanel != null) warehousePanel.SetActive(false);
             if (craftPanel != null) craftPanel.SetActive(false);
-            if (ui != null && ui.repairPanel != null) ui.repairPanel.SetActive(false);
-            if (ui != null && ui.warehouseSoloScroll != null) ui.warehouseSoloScroll.SetActive(false);
             RebuildInventoryColumn();
-            ClearSelection();
             loot = new LootContainerData(lootPreset);
             EndDrag();
             hovered = null;
@@ -590,13 +564,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // ---------- 클릭 ----------
         public void ClickSlot(TestSlotView slot)
         {
-            HideContextMenu();
-            if (IsServicePanelOpen &&
+            if (shopPanel != null && shopPanel.activeSelf &&
                 (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment))
             {
                 selectedShopEquipment = slot.container == TestContainer.Equipment;
                 selectedShopBagIndex = slot.index;
-                SelectSlot(slot);
                 RefreshShop();
                 return;
             }
@@ -604,14 +576,14 @@ namespace Birdkov.NaYeongMin.InventoryTest
             {
                 case TestContainer.Loot:
                 case TestContainer.Warehouse:
-                    SelectSlot(slot);
+                    Take(slot.container, slot.index);
                     break;
                 case TestContainer.Equipment:
                     if (EquipmentSlots.IsWeaponSlot(slot.index))
                     {
                         selectedWeapon = slot.index;
                         SetMessage((slot.index + 1) + "번 무기를 선택했습니다.");
-                        SelectSlot(slot);
+                        Refresh();
                     }
                     break;
                 case TestContainer.WeaponQuick:
@@ -623,7 +595,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     UseItemQuickSlot(slot.index);
                     break;
                 default:
-                    SelectSlot(slot);
+                    UseBagItem(slot.index);
                     break;
             }
         }
@@ -1037,7 +1009,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
             RefreshCraftPanel();
             RefreshCraftVisuals();
             RefreshShop();
-            RefreshRepair();
             HoverSlot(hovered);
         }
 
@@ -1069,8 +1040,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private Color SlotColor(TestSlotView view, bool filled)
         {
-            if (filled && view.container == selectedContainer && view.index == selectedIndex) return colors.slotSelected;
-
             if (view.container == TestContainer.WeaponQuick && view.index == selectedWeapon)
             {
                 return colors.slotSelectedWeapon;
@@ -1180,7 +1149,6 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             // 상점/제작 버튼은 하이어라키 참조 기준으로 다시 연결한다.
             BindShopButtons();
-            BindItemMenu();
 
             if (dragIcon != null)
             {
@@ -1492,25 +1460,19 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
         }
 
-        // 상자를 열 때마다 이전 칸이 남아 쌓이던 문제. 두 그리드를 모두 비운 뒤 다시 그린다.
-        private void ClearLootCells(RectTransform gridRoot)
-        {
-            if (gridRoot == null) return;
-            for (int index = gridRoot.childCount - 1; index >= 0; index--)
-            {
-                Transform child = gridRoot.GetChild(index);
-                TestSlotView view = child.GetComponent<TestSlotView>();
-                if (view == null || view.container != TestContainer.Loot) continue;
-                views.Remove(view);
-                child.SetParent(null, false);
-                Destroy(child.gameObject);
-            }
-        }
-
         private void BuildLootGrid()
         {
-            ClearLootCells(lootGridRoot);
-            ClearLootCells(mapChestGridRoot);
+            for (int index = views.Count - 1; index >= 0; index--)
+            {
+                if (views[index] == null || views[index].container != TestContainer.Loot)
+                {
+                    continue;
+                }
+
+                views[index].gameObject.SetActive(false);
+                Destroy(views[index].gameObject);
+                views.RemoveAt(index);
+            }
 
             LootContainerSizes.GetSize(loot.sizePreset, out int width, out int height);
             RectTransform gridRoot = mapChestOpen ? mapChestGridRoot : lootGridRoot;

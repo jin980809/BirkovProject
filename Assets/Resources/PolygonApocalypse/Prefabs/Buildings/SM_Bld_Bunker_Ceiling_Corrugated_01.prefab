@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 33862842973583976}
   - component: {fileID: 23356040531997056}
   - component: {fileID: 65151662127837286}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: SM_Bld_Bunker_Ceiling_Corrugated_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}

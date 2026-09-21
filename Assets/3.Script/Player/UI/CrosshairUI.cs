@@ -13,7 +13,7 @@ using UnityEngine.InputSystem;
 //
 // 이 오브젝트는 Screen Space - Overlay 캔버스 밑에 있어야 한다
 // (root.position 을 스크린 좌표로 바로 대입하기 때문)
-public class CrosshairUI : MonoBehaviour, ISceneRebindable
+public class CrosshairUI : MonoBehaviour
 {
     [Header("연결")]
     [SerializeField] private WeaponController weapon;
@@ -48,18 +48,15 @@ public class CrosshairUI : MonoBehaviour, ISceneRebindable
     {
         root = GetComponent<RectTransform>();
 
-        RebindSceneReferences();
+        if (weapon == null)
+        {
+            weapon = FindAnyObjectByType<WeaponController>();
+        }
 
         currentRadius = baseRadius;
         Cursor.visible = false;
 
         SetZoomVisual(false);
-    }
-
-    // 씬이 바뀌면 무기를 든 플레이어가 새로 생기므로 다시 찾는다 (PersistentUiRoot 가 호출)
-    public void RebindSceneReferences()
-    {
-        weapon = FindAnyObjectByType<WeaponController>();
     }
 
     private void Update()

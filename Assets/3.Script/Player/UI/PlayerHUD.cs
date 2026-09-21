@@ -11,7 +11,7 @@ using UnityEngine.UI;
 //  - 체력 잔상 이미지: Slider_red 의 Fill 과 같은 크기/위치로 Fill 보다 "뒤"(하이어라키 위쪽)에 Image 를 하나 두고,
 //    Image Type = Filled, Fill Method = Horizontal, Fill Origin = Left 로 설정한 뒤 healthTrailImage 에 연결한다.
 //    잔상 색은 이미지 색 그대로 쓴다 (밝은 흰색/노랑 추천).
-public class PlayerHUD : MonoBehaviour, ISceneRebindable
+public class PlayerHUD : MonoBehaviour
 {
     [Header("연결 (비우면 씬에서 찾음)")]
     [SerializeField] private PlayerVitals vitals;
@@ -67,7 +67,15 @@ public class PlayerHUD : MonoBehaviour, ISceneRebindable
 
     private void Awake()
     {
-        RebindSceneReferences();
+        if (vitals == null)
+        {
+            vitals = FindAnyObjectByType<PlayerVitals>();
+        }
+
+        if (weapon == null)
+        {
+            weapon = FindAnyObjectByType<WeaponController>();
+        }
 
         MakeDisplayOnly(healthSlider);
         MakeDisplayOnly(hungerSlider);
@@ -82,13 +90,6 @@ public class PlayerHUD : MonoBehaviour, ISceneRebindable
         {
             waterOriginalColor = waterWarningImage.color;
         }
-    }
-
-    // 씬이 바뀌면 플레이어가 새로 생기므로 다시 찾는다 (이 UI 가 씬을 넘어서 유지될 때 - PersistentUiRoot)
-    public void RebindSceneReferences()
-    {
-        vitals = FindAnyObjectByType<PlayerVitals>();
-        weapon = FindAnyObjectByType<WeaponController>();
     }
 
     private void Start()
