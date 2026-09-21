@@ -31,6 +31,12 @@ public class PlayerInventoryToggle : MonoBehaviour
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();
         }
 
+        if (inventoryBench == null)
+        {
+            Debug.LogWarning("PlayerInventoryToggle: 씬에서 InventoryTestBench 를 찾지 못했습니다. " +
+                             "인벤토리 토글/시작 시 자동 닫기가 동작하지 않습니다.", this);
+        }
+
         if (crosshair == null)
         {
             crosshair = FindAnyObjectByType<CrosshairUI>();
@@ -61,7 +67,16 @@ public class PlayerInventoryToggle : MonoBehaviour
 
     private void Update()
     {
-        if (!didInitialFixup)
+        // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
+        // 참조가 죽었으면 살아남은 벤치로 다시 찾는다.
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
+
+        // 벤치가 준비(CSV 로드 + UI 바인딩)를 마친 뒤에 딱 한 번 처리한다. 첫 Update 에 무조건 하면,
+        // 벤치 준비가 늦어져 아직 안 열린 상태일 때 닫기를 건너뛰고 그 뒤로 영영 안 닫히는 문제가 생긴다.
+        if (!didInitialFixup && inventoryBench != null && inventoryBench.IsReady)
         {
             didInitialFixup = true;
             RunInitialFixup();
@@ -109,13 +124,12 @@ public class PlayerInventoryToggle : MonoBehaviour
         }
 
         // InventoryTestBench.Start() 가 편의상 끝에 OpenInventory() 를 무조건 호출해서 게임
-        // 시작하자마자 인벤토리가 열려 보인다. 모든 오브젝트의 Start() 는 이 첫 Update() 호출
-        // 전에 이미 다 끝나 있으므로, 여기서 강제로 닫으면 화면에 보이기 전에(첫 프레임 렌더 전에)
-        // 닫혀서 깜빡임 없이 처리된다. (QuickPanel 은 이미 밖으로 옮겨서 이 닫기의 영향을 안 받는다.)
-        if (inventoryBench.IsOpen)
-        {
-            inventoryBench.CloseCurrent();
-        }
+        // 시작하자마자 인벤토리가 열려 보인다. 벤치 준비가 끝난 뒤(Update 의 IsReady 확인) 여기서 닫는다.
+        // IsOpen 을 확인하지 않고 무조건 닫는다 - IsOpen 은 벤치 내부 screen 참조가 채워져야 true 라서,
+        // 씬에 저장된 UI(Root)가 켜져 있는데 IsOpen 만 false 인 상태에서는 닫기를 건너뛰게 된다.
+        // CloseCurrent() 는 screen 이 없으면 알아서 아무것도 하지 않는다.
+        // (QuickPanel 은 이미 밖으로 옮겨서 이 닫기의 영향을 안 받는다.)
+        inventoryBench.CloseCurrent();
     }
 
     private void HandleToggle()

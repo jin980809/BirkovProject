@@ -10,7 +10,7 @@ using UnityEngine.UI;
 // 위치는 이 스크립트가 아니라 ScreenAnchoredUI 가 담당한다.
 // 두 바를 빈 부모 오브젝트 하나로 묶고 그 부모에 ScreenAnchoredUI 와 이 스크립트를 같이 붙이면 같이 따라다닌다.
 // ScreenAnchoredUI 의 Anchor 는 이 스크립트가 시작할 때 플레이어(PlayerVitals)로 자동 연결한다.
-public class PlayerFollowHUD : MonoBehaviour
+public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
 {
     [Header("연결 (비우면 씬에서 찾음)")]
     [SerializeField] private PlayerVitals vitals;
@@ -37,31 +37,7 @@ public class PlayerFollowHUD : MonoBehaviour
 
     private void Awake()
     {
-        if (vitals == null)
-        {
-            vitals = FindAnyObjectByType<PlayerVitals>();
-        }
-
-        // ScreenAnchoredUI 가 플레이어를 따라가게 한다. 인스펙터에서 Anchor 를 연결하지 않아도 되므로
-        // 이 UI 를 프리팹으로 만들어 로비/전투 씬마다 넣어도 그 씬의 플레이어에 자동으로 붙는다.
-        if (followAnchor == null)
-        {
-            followAnchor = GetComponentInChildren<ScreenAnchoredUI>(true);
-        }
-
-        if (vitals == null)
-        {
-            Debug.LogWarning("PlayerFollowHUD: 씬에서 PlayerVitals 를 찾지 못해 플레이어를 따라갈 수 없습니다.", this);
-        }
-        else if (followAnchor == null)
-        {
-            Debug.LogWarning("PlayerFollowHUD: ScreenAnchoredUI 를 찾지 못했습니다. 이 오브젝트(FollowHUD)에 ScreenAnchoredUI 를 붙이거나 " +
-                             "Follow Anchor 필드에 연결하세요.", this);
-        }
-        else
-        {
-            followAnchor.SetAnchor(vitals.transform);
-        }
+        RebindSceneReferences();
 
         MakeDisplayOnly(healthSlider);
         MakeDisplayOnly(staminaSlider);
@@ -89,6 +65,33 @@ public class PlayerFollowHUD : MonoBehaviour
             staminaGroup.alpha = 0f; // 시작할 땐 가득 차 있으므로 숨긴 채 시작
             staminaGroup.blocksRaycasts = false;
             staminaGroup.interactable = false;
+        }
+    }
+
+    // 씬이 바뀌면 플레이어가 새로 생기므로 다시 찾아서 따라갈 대상을 갱신한다 (PersistentUiRoot 가 호출)
+    public void RebindSceneReferences()
+    {
+        vitals = FindAnyObjectByType<PlayerVitals>();
+
+        // ScreenAnchoredUI 가 플레이어를 따라가게 한다. 인스펙터에서 Anchor 를 연결하지 않아도 되므로
+        // 이 UI 를 프리팹으로 만들어 로비/전투 씬마다 넣어도 그 씬의 플레이어에 자동으로 붙는다.
+        if (followAnchor == null)
+        {
+            followAnchor = GetComponentInChildren<ScreenAnchoredUI>(true);
+        }
+
+        if (vitals == null)
+        {
+            Debug.LogWarning("PlayerFollowHUD: 씬에서 PlayerVitals 를 찾지 못해 플레이어를 따라갈 수 없습니다.", this);
+        }
+        else if (followAnchor == null)
+        {
+            Debug.LogWarning("PlayerFollowHUD: ScreenAnchoredUI 를 찾지 못했습니다. 이 오브젝트(FollowHUD)에 ScreenAnchoredUI 를 붙이거나 " +
+                             "Follow Anchor 필드에 연결하세요.", this);
+        }
+        else
+        {
+            followAnchor.SetAnchor(vitals.transform);
         }
     }
 
