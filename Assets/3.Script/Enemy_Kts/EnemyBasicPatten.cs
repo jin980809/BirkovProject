@@ -194,7 +194,7 @@ public class EnemyBasicPatten : MonoBehaviour
             enemyDetect.FirstCheckOff();
         }
 
-        if (Vector3.Distance(target.position, transform.position) < 7f)
+        if (Vector3.Distance(target.position, transform.position) < enemyData.rayDistance - enemyData.minDistance)
         {
             switch (a)
             {
@@ -264,7 +264,7 @@ public class EnemyBasicPatten : MonoBehaviour
         yield return StartCoroutine(enemyShot.Fire_co());
     }
 
-    //----------------------------------플레이어를 발견해 전투 상태--------------------------------------
+    //---------------------------------스폰 포인트로 복귀--------------------------------------
 
     //스폰포인트로 돌아가기
     public void RevertMove()

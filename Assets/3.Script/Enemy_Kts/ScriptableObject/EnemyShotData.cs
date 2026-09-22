@@ -6,7 +6,7 @@ using UnityEngine;
 public class EnemyShotData : ScriptableObject
 {
     [Header("총알 설정")]
-    [SerializeField] public int damage = 10;
+    [SerializeField] public float damage = 10f;
 
     [Header("연발")]
     [SerializeField] public int minBulletsPerShot = 1;

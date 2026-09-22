@@ -20,6 +20,9 @@ public class EnemyData : ScriptableObject
     [Range(0f, 360f)]
     public float viewAngle = 90f;
 
+    [Header("최소 거리")]
+    public float minDistance = 5f;
+
     [Header("Raycast 설정")]
     public int rayCount = 5;
     public float detectInterval = 0.2f;
