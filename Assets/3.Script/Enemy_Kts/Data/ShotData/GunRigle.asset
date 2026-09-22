@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dea8193d9c6bcad4e8d8f8868cb7ca19, type: 3}
-  m_Name: Gun1
+  m_Name: GunRigle
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
   damage: 0
   minBulletsPerShot: 5
-  maxBulletsPerShot: 8
+  maxBulletsPerShot: 10
   minBulletsPerBurst: 1
   maxBulletsPerBurst: 1
   spreadAngle: 5
   fireInterval: 0.1
   magazineSize: 30
-  reloadTime: 2
+  reloadTime: 4

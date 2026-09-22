@@ -59,7 +59,7 @@ public class EnemyBasicPatten : MonoBehaviour
 
         patrolWaitingTimeWfs = new WaitForSeconds(patrolWaitingTime);
         exclamationTimeWfs = new WaitForSeconds(0.7f);
-        delayTimeWfs = new WaitForSeconds(1.5f);
+        delayTimeWfs = new WaitForSeconds(2f);
 
         respawnPoint = transform.position;
     }
@@ -274,6 +274,7 @@ public class EnemyBasicPatten : MonoBehaviour
             canRevert = false;
 
             agent.destination = respawnPoint;
+            ani.SetBool("Walk", true);
         }
 
         if (!agent.pathPending && agent.remainingDistance < 0.5f)
@@ -298,8 +299,7 @@ public class EnemyBasicPatten : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime
-            );
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
     }
     //랜덤 위치 찾기

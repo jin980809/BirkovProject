@@ -8,9 +8,6 @@ public class EnemyData : ScriptableObject
     [Header("Ã¼·Â")]
     public float maxHealth = 100f;
 
-    [Header("µ¥¹ÌÁö")]
-    public float damage = 20f; //¾Ö¸ÅÇÔ Àåºñ¿¡ µû¶ó ´Þ¶óÁúµí
-
     [Header("¼Óµµ")]
     public float moveSpeed = 3f;
     public float angleSpeed = 360f;
@@ -35,4 +32,14 @@ public class EnemyData : ScriptableObject
 
     [Header("¼øÂû Äð")]
     public float patrolWaitingTime = 10;
+
+    [Header("Çï¸ä ·¹º§ È®·ü(0~99)")]
+    [SerializeField] public int oneHelmet = 25;
+    [SerializeField] public int twoHelmet = 50;
+    [SerializeField] public int threeHelmet = 75;
+
+    [Header("°©¿Ê ·¹º§ È®·ü(0~99)")]
+    [SerializeField] public int oneArmor = 25;
+    [SerializeField] public int twoArmor = 50;
+    [SerializeField] public int threeArmor = 75;
 }

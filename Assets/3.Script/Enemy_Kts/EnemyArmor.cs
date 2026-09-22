@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class EnemyArmor : MonoBehaviour
 {
+    [SerializeField] private EnemyData enemyData;
+
     [Header("Çï¸ä")]
     [SerializeField] private EnemyArmorsData helmet;
     [SerializeField] private EnemyArmorsData[] helmetData;
@@ -32,6 +34,16 @@ public class EnemyArmor : MonoBehaviour
 
     [SerializeField] int rndHelmet;
     [SerializeField] int rndArmor;
+
+    private void Awake()
+    {
+        oneHelmet = enemyData.oneHelmet;
+        twoHelmet = enemyData.twoHelmet;
+        threeHelmet = enemyData.threeHelmet;
+        oneArmor = enemyData.oneArmor;
+        twoArmor = enemyData.twoArmor;
+        threeArmor = enemyData.threeArmor;
+    }
 
     private void OnEnable()
     {
