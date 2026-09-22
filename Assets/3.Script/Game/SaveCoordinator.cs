@@ -31,6 +31,10 @@ public class SaveCoordinator : MonoBehaviour
     // 그 첫 불러오기에서 실제로 저장 파일을 불러왔는지 (파일이 없어서 새로 시작이면 false)
     public bool LoadedFromSave { get; private set; }
 
+    // DebugInventorySeeder 가 이번 실행에서 이미 지급했는지. Player 는 씬마다 새로 생기므로
+    // (DebugInventorySeeder 자신은 static 을 안 쓴다) 씬을 넘어 유지되는 여기(싱글턴)에 대신 기록한다.
+    public bool DebugInventorySeeded { get; set; }
+
     public static SaveCoordinator Instance
     {
         get

@@ -16,17 +16,8 @@ public class SceneTransitionOverlay : MonoBehaviour
 
     private CanvasGroup group;
 
-    public static SceneTransitionOverlay Create()
-    {
-        GameObject root = new GameObject("SceneTransitionOverlay");
-        DontDestroyOnLoad(root);
-
-        SceneTransitionOverlay overlay = root.AddComponent<SceneTransitionOverlay>();
-        overlay.Build();
-        return overlay;
-    }
-
-    private void Build()
+    // GameSession(싱글턴)이 자기 자신을 준비할 때 새 오브젝트를 만들고 여기에 붙인 뒤 부른다
+    public void Build()
     {
         Canvas canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;

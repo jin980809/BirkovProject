@@ -21,31 +21,6 @@ public class DeathBoxRecord
     {
         get { return slots != null && slots.Count > 0; }
     }
-
-    // 슬롯 목록에서 비어 있지 않은 것만 복사해 모은다
-    public static List<GridSlotData> CopyNonEmpty(IEnumerable<GridSlotData> source)
-    {
-        List<GridSlotData> result = new List<GridSlotData>();
-
-        if (source != null)
-        {
-            foreach (GridSlotData slot in source)
-            {
-                if (slot != null && !slot.IsEmpty())
-                {
-                    result.Add(new GridSlotData
-                    {
-                        itemId = slot.itemId,
-                        amount = slot.amount,
-                        remainingRounds = slot.remainingRounds,
-                        durabilityDamage = slot.durabilityDamage
-                    });
-                }
-            }
-        }
-
-        return result;
-    }
 }
 
 // deathbox.json 읽기/쓰기. 인벤토리 저장과 같은 폴더를 쓴다.

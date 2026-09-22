@@ -19,6 +19,10 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
 
     [Header("체력")]
     [SerializeField] private Slider healthSlider;
+    [Tooltip("체력 바에 피격 애니메이션 + 딜레이 트레일이 있는 버전(KTS 의 HpEffect)을 쓸 때 연결한다. " +
+             "비우면 healthSlider 의 부모에서 자동으로 찾고, 그래도 없으면 이 효과 없이 슬라이더 값만 바로 갱신한다. " +
+             "HpEffect 자체는 건드리지 않고 공개 API(Initialize/SetHealth)만 쓴다")]
+    [SerializeField] private HpEffect healthEffect;
 
     [Header("스테미나")]
     [SerializeField] private Slider staminaSlider;
@@ -31,12 +35,29 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
     [Tooltip("탈진 상태일 때 스테미나 채움 색")]
     [SerializeField] private Color exhaustedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
 
+    // HpEffect(피격 히트 애니메이션)가 회복할 때는 재생되지 않게 막는 데 쓴다. HpEffect.SetHealth 는
+    // 값이 늘었는지 줄었는지 확인하지 않고 호출될 때마다 무조건 이 트리거 중 하나를 건다.
+    private readonly string[] HpMoveTriggers = { "HpMove0", "HpMove1", "HpMove2" };
+
     private Image staminaFillImage;
     private Color staminaOriginalColor;
     private float staminaFullSince = -1f; // 가득 찬 상태가 시작된 시각 (-1 = 지금 가득 차 있지 않음)
 
+    private Animator healthEffectAnimator;
+    private float lastHealthValue;
+
     private void Awake()
     {
+        if (healthEffect == null && healthSlider != null)
+        {
+            healthEffect = healthSlider.GetComponentInParent<HpEffect>();
+        }
+
+        if (healthEffect != null)
+        {
+            healthEffectAnimator = healthEffect.GetComponent<Animator>();
+        }
+
         RebindSceneReferences();
 
         MakeDisplayOnly(healthSlider);
@@ -71,6 +92,8 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
     // 씬이 바뀌면 플레이어가 새로 생기므로 다시 찾아서 따라갈 대상을 갱신한다 (PersistentUiRoot 가 호출)
     public void RebindSceneReferences()
     {
+        UnsubscribeHealth();
+
         vitals = FindAnyObjectByType<PlayerVitals>();
 
         // ScreenAnchoredUI 가 플레이어를 따라가게 한다. 인스펙터에서 Anchor 를 연결하지 않아도 되므로
@@ -93,13 +116,81 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
         {
             followAnchor.SetAnchor(vitals.transform);
         }
+
+        SubscribeHealth();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeHealth();
+    }
+
+    // 체력은 매 프레임 폴링하지 않고 PlayerVitals.HealthChanged 이벤트가 올 때만 반영한다 - HpEffect.SetHealth
+    // 를 매 프레임 부르면 안 맞았는데도 매번 피격 애니메이션(랜덤 HpMove 트리거)이 재생돼버리기 때문이다.
+    private void SubscribeHealth()
+    {
+        if (vitals == null)
+        {
+            return;
+        }
+
+        if (healthEffect != null)
+        {
+            // 씬을 새로 바인딩할 때마다(새 플레이어) 최대 체력 기준으로 다시 초기화한다.
+            // PlayerVitals.Awake() 가 씬이 로드될 때마다 체력을 항상 maxHealth 로 리셋하므로,
+            // 여기서는 이 초기화만으로 이미 시작 상태가 맞다 - Initialize() 는 애니메이터를 건드리지 않는다.
+            // (SetHealth 를 여기서 한 번 더 불러 "지금 값"에 맞추려 하면, HpEffect.SetHealth 가 값이
+            // 바뀌었는지 확인하지 않고 호출될 때마다 무조건 피격 애니메이션을 재생해서 시작할 때마다 한 번씩 튄다)
+            healthEffect.Initialize(vitals.MaxHealth);
+        }
+        else
+        {
+            // HpEffect 가 없는 씬은 애니메이터 트리거가 없는 단순 슬라이더라 부작용 없이 바로 값을 맞춘다
+            UpdateBar(healthSlider, vitals.Health, vitals.MaxHealth);
+        }
+
+        lastHealthValue = vitals.Health;
+        vitals.HealthChanged += HandleHealthChanged;
+    }
+
+    private void UnsubscribeHealth()
+    {
+        if (vitals != null)
+        {
+            vitals.HealthChanged -= HandleHealthChanged;
+        }
+    }
+
+    private void HandleHealthChanged(float current, float max)
+    {
+        if (healthEffect != null)
+        {
+            bool isDamage = current < lastHealthValue;
+
+            healthEffect.SetHealth(current);
+
+            // 회복(또는 변화 없음)이면 HpEffect 가 이번 호출로 건 피격 애니메이션 트리거를, 애니메이터가
+            // 아직 소비하기 전에 취소한다 - HpEffect.cs 자체는 건드리지 않고 이렇게 바깥에서 막는다.
+            if (!isDamage && healthEffectAnimator != null)
+            {
+                for (int i = 0; i < HpMoveTriggers.Length; i++)
+                {
+                    healthEffectAnimator.ResetTrigger(HpMoveTriggers[i]);
+                }
+            }
+        }
+        else
+        {
+            UpdateBar(healthSlider, current, max);
+        }
+
+        lastHealthValue = current;
     }
 
     private void Update()
     {
         if (vitals != null)
         {
-            UpdateBar(healthSlider, vitals.Health, vitals.MaxHealth);
             UpdateStamina();
         }
     }
@@ -166,7 +257,7 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
         return alpha;
     }
 
-    private static void UpdateBar(Slider slider, float current, float max)
+    private void UpdateBar(Slider slider, float current, float max)
     {
         if (slider != null)
         {
@@ -176,7 +267,7 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
         }
     }
 
-    private static void MakeDisplayOnly(Slider slider)
+    private void MakeDisplayOnly(Slider slider)
     {
         if (slider != null)
         {

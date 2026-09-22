@@ -175,6 +175,11 @@ public class Projectile : MonoBehaviour
             return false;
         }
 
+        if (IsCoverDetectionOnly(other))
+        {
+            return false;
+        }
+
         if (ownerPlayer != null && other.GetComponentInParent<PlayerController>() == ownerPlayer)
         {
             return false;
@@ -191,6 +196,15 @@ public class Projectile : MonoBehaviour
         }
 
         return true;
+    }
+
+    // CoverObject 소속인데 그 CoverObject 가 지정한 blockingCollider 가 아니면(=감지용 트리거 등)
+    // 맞는 판정 대상이 아니다. 붙어있는지 여부와 상관없이 항상 투명하게 통과시킨다 - 감지용 트리거는
+    // "근접 감지" 용도일 뿐 실제로 총알을 막는 표면이 아니기 때문이다.
+    private bool IsCoverDetectionOnly(Collider other)
+    {
+        CoverObject cover = other.GetComponentInParent<CoverObject>();
+        return cover != null && other != cover.BlockingCollider;
     }
 
     private void HitBySweep(RaycastHit hit)
@@ -219,6 +233,11 @@ public class Projectile : MonoBehaviour
         if (other.GetComponentInParent<Projectile>() != null)
         {
             return;
+        }
+
+        if (IsCoverDetectionOnly(other))
+        {
+            return; // 감지용 트리거 - 대미지도, 이펙트도, 소멸도 없이 그냥 통과
         }
 
         IDamageable target = other.GetComponentInParent<IDamageable>();

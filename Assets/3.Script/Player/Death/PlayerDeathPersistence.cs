@@ -151,7 +151,7 @@ public class PlayerDeathPersistence : MonoBehaviour
 
     private void SaveCorpse(PlayerDeathContainer corpse, bool destroyIfEmpty)
     {
-        List<GridSlotData> items = DeathBoxRecord.CopyNonEmpty(corpse.CopyItems());
+        List<GridSlotData> items = CopyNonEmpty(corpse.CopyItems());
 
         if (items.Count == 0)
         {
@@ -189,5 +189,30 @@ public class PlayerDeathPersistence : MonoBehaviour
         {
             corpse.ContentsChanged -= HandleContentsChanged;
         }
+    }
+
+    // 슬롯 목록에서 비어 있지 않은 것만 복사해 모은다
+    private List<GridSlotData> CopyNonEmpty(IEnumerable<GridSlotData> source)
+    {
+        List<GridSlotData> result = new List<GridSlotData>();
+
+        if (source != null)
+        {
+            foreach (GridSlotData slot in source)
+            {
+                if (slot != null && !slot.IsEmpty())
+                {
+                    result.Add(new GridSlotData
+                    {
+                        itemId = slot.itemId,
+                        amount = slot.amount,
+                        remainingRounds = slot.remainingRounds,
+                        durabilityDamage = slot.durabilityDamage
+                    });
+                }
+            }
+        }
+
+        return result;
     }
 }
