@@ -14,6 +14,8 @@ public class HpEffect : MonoBehaviour
     [SerializeField] private float damageDelay = 0.15f;
     [SerializeField] private float damageDuration = 0.4f;
 
+    [SerializeField] private RectTransform hitWhite;
+
     private float maxHealth;
     private float currentHealth;
 
@@ -44,6 +46,9 @@ public class HpEffect : MonoBehaviour
 
         // 실제 체력은 즉시 변경
         healthSlider.value = currentHealth;
+        float currentWidth = 1 - ((maxHealth - (previousHealth - currentHealth)) / 100f);
+        hitWhite.sizeDelta = new Vector2(currentWidth, hitWhite.sizeDelta.y);
+
         switch (rnd)
         {
             case 0:

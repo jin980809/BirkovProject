@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91817b9e9b91d854b94f6d5540c2ab52, type: 3}
   m_Name: Basic
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  maxHealth: 100
-  damage: 20
+  maxHealth: 30
+  damage: 0
   moveSpeed: 3
   angleSpeed: 720
-  rayDistance: 15
-  viewAngle: 90
-  rayCount: 10
+  rayDistance: 10
+  viewAngle: 180
+  minDistance: 5
+  rayCount: 25
   detectInterval: 0.1
   decrease: 2
   walkPoints: 30

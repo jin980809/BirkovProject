@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea8193d9c6bcad4e8d8f8868cb7ca19, type: 3}
   m_Name: Gun1
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
-  damage: 10
+  damage: 0
   minBulletsPerShot: 5
   maxBulletsPerShot: 8
   minBulletsPerBurst: 1

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,9 @@ public class EnemyController : MonoBehaviour, IDamageable
     [SerializeField] private ParticleSystem hitParticle;
 
     private GameObject dieParticle;
+
+    public event Action Damaged;
+
     private void Start()
     {
         maxHealth = enemyData.maxHealth;
@@ -35,6 +39,10 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
+        if (Damaged != null)
+        {
+            Damaged();
+        }
         currentHealth -= amount * enemyArmor.declineRate;
         hitParticle.Play();
         hpEffect.SetHealth(currentHealth);
