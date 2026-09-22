@@ -11,7 +11,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
     {
         [Header("개인 씬 테스트 지급")]
         public bool seedExtendedTestStock;
-        [Header("방어구 내구도 임시 규칙")]
+        [Header("방어구 내구도 - CSV 가 정본. 아래는 예비값")]
         public ArmorDurability armorDurability = new ArmorDurability();
 
         public void ApplyArmorHit()
@@ -33,6 +33,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private bool selectedShopEquipment;
         private int selectedShopRow;
         private int selectedCraftRow;
+        private MerchantKind merchantKind;
+        private Button merchantRepairButton;
+        private Button merchantBackButton;
+        private Button bulkRepairButton;
         public int SelectedWeaponIndex => selectedWeapon;
         public GridContainerData WarehouseData => data?.warehouseData;
 
@@ -70,16 +74,64 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void OpenShop(Transform anchor)
         {
+            OpenShop(anchor, MerchantKind.All);
+        }
+
+        public void OpenShop(Transform anchor, MerchantKind kind)
+        {
             if (!IsReady || anchor == null) return;
             OpenInventory();
+            merchantKind = kind;
+            shopItems.Clear();
             EnsureShopPanel();
             serviceAnchor = anchor;
             selectedShopBagIndex = -1;
+            selectedShopEquipment = false;
             selectedShopRow = 0;
             shopPage = 0;
             shopPanel.SetActive(true);
+            ConfigureMerchantButtons();
             OpenWarehouseBeside();
             Refresh();
+        }
+
+        private void ConfigureMerchantButtons()
+        {
+            Transform title = shopPanel.transform.Find("TitleBar/Label");
+            if (title != null) title.GetComponent<Text>().text = merchantKind == MerchantKind.Weapons ? "무기상" : merchantKind == MerchantKind.General ? "잡화상" : "상점";
+            if (merchantRepairButton == null)
+            {
+                MakeButton(shopPanel.transform, "무기·방어구 수리", 20, 618, 420, 40, OpenMerchantRepair);
+                merchantRepairButton = shopPanel.transform.Find("Button_무기·방어구 수리").GetComponent<Button>();
+            }
+            merchantRepairButton.gameObject.SetActive(merchantKind == MerchantKind.Weapons);
+            merchantRepairButton.targetGraphic.color = new Color(0.75f, 0.38f, 0.08f, 1f);
+            Transform legacyRepair = shopPanel.transform.Find("Button_선택 총기 수리 1G");
+            if (legacyRepair != null) legacyRepair.gameObject.SetActive(merchantKind != MerchantKind.General);
+            ((RectTransform)shopPanel.transform).sizeDelta = new Vector2(460, merchantKind == MerchantKind.Weapons ? 674 : 640);
+            Transform list = shopPanel.transform.Find("ListScroll/ListContent");
+            if (list != null)
+            {
+                ((RectTransform)list).sizeDelta = new Vector2(420, Mathf.Max(300, Mathf.Min(ShopRowCount, shopItems.Count) * 56));
+                ScrollRect scroll = list.GetComponentInParent<ScrollRect>();
+                if (scroll != null) scroll.verticalNormalizedPosition = 1f;
+            }
+        }
+
+        private void OpenMerchantRepair()
+        {
+            if (merchantKind != MerchantKind.Weapons || serviceAnchor == null || !shopPanel.activeSelf) return;
+            Transform anchor = serviceAnchor;
+            OpenRepair(anchor);
+            if (ui.repairPanel == null) return;
+            if (merchantBackButton == null)
+            {
+                MakeButton(ui.repairPanel.transform, "무기상 거래로 돌아가기", 20, 352, 420, 36,
+                    () => OpenShop(serviceAnchor, MerchantKind.Weapons));
+                merchantBackButton = ui.repairPanel.transform.Find("Button_무기상 거래로 돌아가기").GetComponent<Button>();
+            }
+            merchantBackButton.gameObject.SetActive(true);
+            ((RectTransform)ui.repairPanel.transform).sizeDelta = new Vector2(460, 404);
         }
 
         // 상점/제작은 가방과 창고 재고를 같이 보고 쓴다. 오른쪽에 창고를 같이 연다.
@@ -146,7 +198,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (shopItems.Count == 0)
             {
                 foreach (ItemData item in ItemCsvLoader.Parse(itemCsv.text))
-                    if (ShopService.IsTradable(item)) shopItems.Add(item);
+                    if (ShopService.Accepts(item, merchantKind)) shopItems.Add(item);
             }
 
             if (shopPanel != null) return;
@@ -215,6 +267,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
             selectedShopBagIndex = -1;
             selectedShopEquipment = false;
             ui.repairPanel.SetActive(true);
+            if (merchantBackButton != null) merchantBackButton.gameObject.SetActive(false);
+            Bind(ui.repairButton, RepairSelectedWeapon);
             SetMessage("가방 또는 장비 칸에서 수리할 총기·방어구를 고르세요.");
             Refresh();
         }
@@ -225,8 +279,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
             GridSlotData slot = SelectedSlot();
             int itemId = slot != null && !slot.IsEmpty() ? slot.itemId : 0;
             bool armor = armorDurability.IsArmor(catalog, slot);
-            int max = armor ? Mathf.Max(1, armorDurability.maxDurability) : WeaponDurability.Maximum(itemId);
-            int now = armor ? armorDurability.Remaining(slot) : max > 0 ? WeaponDurability.Remaining(slot) : 0;
+            int max = armor ? armorDurability.Maximum(catalog, slot) : WeaponDurability.Maximum(itemId);
+            int now = armor ? armorDurability.Remaining(catalog, slot) : max > 0 ? WeaponDurability.Remaining(slot) : 0;
 
             if (ui.repairCurrency != null) ui.repairCurrency.text = "보유 " + PlayerData.currency + "G";
             if (ui.repairDetailIcon != null)
@@ -239,12 +293,53 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 ui.repairDetail.text = max <= 0
                     ? "가방 또는 장비 칸에서 수리할 총기·방어구를 고르세요."
                     : DisplayName(itemId) + "\n내구도 " + now + " / " + max +
-                      (armor ? "\n" + Mathf.Max(1, armorDurability.repairCost) + "G 완전 수리" : "\n1G 당 회복량 " + RepairPerCurrencyOf(itemId));
+                      "\n1G 당 회복량 " + (armor ? armorDurability.RepairPerCurrency(catalog, slot) : RepairPerCurrencyOf(itemId));
             if (ui.repairButton != null)
             {
+                RectTransform repairRect = (RectTransform)ui.repairButton.transform;
+                repairRect.sizeDelta = new Vector2(204, 46);
+                if (bulkRepairButton == null)
+                {
+                    MakeButton(ui.repairPanel.transform, "일괄수리", 236, 300, 204, 46, RepairSelectedFully);
+                    bulkRepairButton = ui.repairPanel.transform.Find("Button_일괄수리").GetComponent<Button>();
+                }
                 ui.repairButton.interactable = armor ? armorDurability.CanRepair(catalog, PlayerData, slot) : now > 0 && now < max && PlayerData.currency > 0;
+                Image background = ui.repairButton.targetGraphic as Image;
+                if (background != null)
+                    ApplySkin(background, honetiPanelSprite, Color.white, Color.white);
+                ColorBlock buttonColors = ui.repairButton.colors;
+                buttonColors.normalColor = new Color(0.62f, 0.27f, 0.06f, 1f);
+                buttonColors.highlightedColor = new Color(0.76f, 0.35f, 0.08f, 1f);
+                buttonColors.selectedColor = buttonColors.normalColor;
+                buttonColors.pressedColor = new Color(0.44f, 0.18f, 0.04f, 1f);
+                buttonColors.disabledColor = new Color(0.25f, 0.29f, 0.32f, 1f);
+                buttonColors.colorMultiplier = 1f;
+                ui.repairButton.transition = Selectable.Transition.ColorTint;
+                ui.repairButton.colors = buttonColors;
                 Text label = ui.repairButton.GetComponentInChildren<Text>();
-                if (label != null) label.text = armor ? "완전 수리 " + Mathf.Max(1, armorDurability.repairCost) + "G" : "수리 1G";
+                if (label != null)
+                {
+                    label.text = "1G 수리";
+                    label.rectTransform.anchorMin = Vector2.zero;
+                    label.rectTransform.anchorMax = Vector2.one;
+                    label.rectTransform.offsetMin = Vector2.zero;
+                    label.rectTransform.offsetMax = Vector2.zero;
+                    label.alignment = TextAnchor.MiddleCenter;
+                    label.color = Color.white;
+                    label.fontStyle = FontStyle.Bold;
+                    label.fontSize = 18;
+                    label.resizeTextForBestFit = false;
+                }
+                ApplySkin((Image)bulkRepairButton.targetGraphic, honetiPanelSprite, Color.white, Color.white);
+                bulkRepairButton.colors = buttonColors;
+                int fullCost = FullRepairCost(slot);
+                bulkRepairButton.interactable = ui.repairButton.interactable && fullCost > 0 && PlayerData.currency >= fullCost;
+                Text bulkLabel = bulkRepairButton.GetComponentInChildren<Text>();
+                bulkLabel.text = fullCost > 0 ? "일괄수리 " + fullCost + "G" : "일괄수리";
+                bulkLabel.color = Color.white;
+                bulkLabel.fontStyle = FontStyle.Bold;
+                bulkLabel.fontSize = 18;
+                bulkLabel.resizeTextForBestFit = false;
             }
         }
 
@@ -376,15 +471,16 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (shopPanel == null || !shopPanel.activeSelf) return;
             int index = shopPage * Mathf.Max(1, UsesHierarchyShop ? ShopRowCount : 6) + row;
             if (index < 0 || index >= shopItems.Count) return;
-            bool success = new ShopService(catalog).Buy(PlayerData, shopItems[index].itemId);
+            bool success = new ShopService(catalog, merchantKind).Buy(PlayerData, shopItems[index].itemId);
             SetMessage(success ? "구매 완료" : "구매 불가: 지푸라기 또는 가방 공간 확인");
             Refresh();
         }
 
         private void SellSelectedShopItem()
         {
-            bool success = !selectedShopEquipment && new ShopService(catalog).Sell(PlayerData, selectedShopBagIndex);
-            SetMessage(success ? "1개 판매 완료" : "판매 불가: 아이템 선택 확인 (버섯/지푸라기 비매품)");
+            if (shopPanel == null || !shopPanel.activeSelf) return;
+            bool success = !selectedShopEquipment && new ShopService(catalog, merchantKind).Sell(PlayerData, selectedShopBagIndex);
+            SetMessage(success ? "1개 판매 완료" : "판매 불가: 이 상인의 취급 품목과 가방 선택을 확인하세요.");
             Refresh();
         }
 
@@ -396,12 +492,42 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 ? container.slots[selectedShopBagIndex] : null;
         }
 
+        private int FullRepairCost(GridSlotData slot)
+        {
+            if (slot == null || slot.IsEmpty()) return 0;
+            bool armor = armorDurability.IsArmor(catalog, slot);
+            int remaining = armor ? armorDurability.Remaining(catalog, slot) : WeaponDurability.Remaining(slot);
+            int repair = armor ? armorDurability.RepairPerCurrency(catalog, slot) : RepairPerCurrencyOf(slot.itemId);
+            return remaining > 0 && slot.durabilityDamage > 0 && repair > 0
+                ? (slot.durabilityDamage - 1) / repair + 1 : 0;
+        }
+
+        private void RepairSelectedFully()
+        {
+            if (ui == null || ui.repairPanel == null || !ui.repairPanel.activeSelf) return;
+            GridSlotData slot = SelectedSlot();
+            int cost = FullRepairCost(slot);
+            if (cost <= 0 || PlayerData.currency < cost)
+            {
+                SetMessage("일괄수리 불가: 장비 상태와 필요 지푸라기를 확인하세요.");
+                Refresh();
+                return;
+            }
+            bool armor = armorDurability.IsArmor(catalog, slot);
+            int spent = 0;
+            while (armor ? armorDurability.Repair(catalog, PlayerData, slot) : WeaponDurability.Repair(PlayerData, slot))
+                spent++;
+            SetMessage(spent > 0 ? "일괄수리 " + spent + "G 사용" : "수리 불가: 마모된 장비와 지푸라기를 확인하세요.");
+            Refresh();
+        }
+
         private void RepairSelectedWeapon()
         {
+            if (shopPanel != null && shopPanel.activeSelf && merchantKind == MerchantKind.General) return;
             GridSlotData slot = SelectedSlot();
             bool armor = armorDurability.IsArmor(catalog, slot);
             bool success = armor ? armorDurability.Repair(catalog, PlayerData, slot) : WeaponDurability.Repair(PlayerData, slot);
-            SetMessage(success ? (armor ? "방어구 완전 수리 완료" : "1G 수리 완료") : "수리 불가: 마모된 장비와 수리 비용을 확인하세요.");
+            SetMessage(success ? "1G 수리 완료" : "수리 불가: 마모된 장비와 지푸라기를 확인하세요.");
             Refresh();
         }
 

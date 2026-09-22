@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.SaveSystem;
 using NUnit.Framework;
@@ -6,11 +7,11 @@ using UnityEditor;
 
 namespace Birdkov.NaYeongMin.Tests
 {
-    // 임시 규칙: 헬멧/조끼 전 등급 최대 100, 피격당 2, 수리비 3G 고정. 0 이 되면 소멸.
+    // 기획서 5.2 방어구 행이 정본. 수리는 무기와 같은 1G 단위.
     public class ArmorDurabilityTests
     {
-        private const int HelmetId = 13001;
-        private const int VestId = 12001;
+        private const int HelmetId = 13001;   // 400 / 1G당 80
+        private const int VestId = 12001;     // 450 / 1G당 90
         private const int WeaponId = 10001;
 
         private ItemCatalog catalog;
@@ -33,33 +34,38 @@ namespace Birdkov.NaYeongMin.Tests
             return player;
         }
 
-        [TestCase(13001)] [TestCase(13002)] [TestCase(13003)]
-        [TestCase(12001)] [TestCase(12002)] [TestCase(12003)]
-        public void Armor_AllGradesShareTemporaryMaximum(int itemId)
+        private GridSlotData Slot(int itemId) => new GridSlotData { itemId = itemId, amount = 1 };
+
+        [TestCase(13001, 400, 1, 80)] [TestCase(13002, 500, 1, 75)] [TestCase(13003, 600, 1, 70)]
+        [TestCase(12001, 450, 1, 90)] [TestCase(12002, 550, 1, 85)] [TestCase(12003, 650, 1, 80)]
+        public void Armor_UsesCsvTable(int itemId, int max, int cost, int repair)
         {
-            var slot = new GridSlotData { itemId = itemId, amount = 1 };
+            GridSlotData slot = Slot(itemId);
             Assert.IsTrue(armor.IsArmor(catalog, slot));
-            Assert.AreEqual(100, armor.Remaining(slot));
+            Assert.AreEqual(max, armor.Maximum(catalog, slot));
+            Assert.AreEqual(max, armor.Remaining(catalog, slot));
+            Assert.AreEqual(cost, armor.DamagePerHit(catalog, slot));
+            Assert.AreEqual(repair, armor.RepairPerCurrency(catalog, slot));
         }
 
         [Test] public void Armor_OneHitWearsEveryEquippedPiece()
         {
             var player = Equipped();
             armor.ApplyHit(catalog, player);
-            Assert.AreEqual(98, armor.Remaining(player.equipmentSlots.slots[EquipmentSlots.Helmet]));
-            Assert.AreEqual(98, armor.Remaining(player.equipmentSlots.slots[EquipmentSlots.Armor]));
+            Assert.AreEqual(399, armor.Remaining(catalog, player.equipmentSlots.slots[EquipmentSlots.Helmet]));
+            Assert.AreEqual(449, armor.Remaining(catalog, player.equipmentSlots.slots[EquipmentSlots.Armor]));
             armor.ApplyHit(catalog, player);
-            Assert.AreEqual(96, armor.Remaining(player.equipmentSlots.slots[EquipmentSlots.Helmet]));
-            Assert.AreEqual(96, armor.Remaining(player.equipmentSlots.slots[EquipmentSlots.Armor]));
+            Assert.AreEqual(398, armor.Remaining(catalog, player.equipmentSlots.slots[EquipmentSlots.Helmet]));
+            Assert.AreEqual(448, armor.Remaining(catalog, player.equipmentSlots.slots[EquipmentSlots.Armor]));
         }
 
         [Test] public void Armor_DestroyedWhenDurabilityHitsZero()
         {
             var player = Equipped();
-            player.equipmentSlots.slots[EquipmentSlots.Helmet].durabilityDamage = 98;
+            player.equipmentSlots.slots[EquipmentSlots.Helmet].durabilityDamage = 399;
             armor.ApplyHit(catalog, player);
             Assert.IsTrue(player.equipmentSlots.slots[EquipmentSlots.Helmet].IsEmpty());
-            Assert.AreEqual(98, armor.Remaining(player.equipmentSlots.slots[EquipmentSlots.Armor]));
+            Assert.AreEqual(449, armor.Remaining(catalog, player.equipmentSlots.slots[EquipmentSlots.Armor]));
         }
 
         [Test] public void Armor_WeaponSlotsAreNotWorn()
@@ -71,37 +77,57 @@ namespace Birdkov.NaYeongMin.Tests
             Assert.AreEqual(0, player.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].durabilityDamage);
         }
 
-        [Test] public void Armor_RepairCostsFixedGoldAndRestoresFully()
+        [Test] public void Armor_RepairSpendsOneGoldPerStep()
         {
-            var player = Equipped(3);
-            player.equipmentSlots.slots[EquipmentSlots.Armor].durabilityDamage = 40;
+            var player = Equipped(5);
             GridSlotData vest = player.equipmentSlots.slots[EquipmentSlots.Armor];
+            vest.durabilityDamage = 200;
             Assert.IsTrue(armor.CanRepair(catalog, player, vest));
             Assert.IsTrue(armor.Repair(catalog, player, vest));
-            Assert.AreEqual(100, armor.Remaining(vest));
-            Assert.AreEqual(0, player.currency);
-            Assert.IsFalse(armor.Repair(catalog, player, vest));
+            Assert.AreEqual(110, vest.durabilityDamage);   // 1G 당 90 회복
+            Assert.AreEqual(4, player.currency);
+        }
+
+        [Test] public void Armor_RepairNeverExceedsMaximum()
+        {
+            var player = Equipped(3);
+            GridSlotData helmet = player.equipmentSlots.slots[EquipmentSlots.Helmet];
+            helmet.durabilityDamage = 30;
+            Assert.IsTrue(armor.Repair(catalog, player, helmet));
+            Assert.AreEqual(0, helmet.durabilityDamage);
+            Assert.AreEqual(400, armor.Remaining(catalog, helmet));
+            Assert.AreEqual(2, player.currency);
+            Assert.IsFalse(armor.Repair(catalog, player, helmet));
         }
 
         [Test] public void Armor_RepairRejectedWithoutGold()
         {
-            var player = Equipped(2);
+            var player = Equipped(0);
             GridSlotData vest = player.equipmentSlots.slots[EquipmentSlots.Armor];
-            vest.durabilityDamage = 40;
+            vest.durabilityDamage = 100;
             Assert.IsFalse(armor.CanRepair(catalog, player, vest));
             Assert.IsFalse(armor.Repair(catalog, player, vest));
-            Assert.AreEqual(60, armor.Remaining(vest));
+            Assert.AreEqual(350, armor.Remaining(catalog, vest));
         }
 
-        [Test] public void Armor_TuningFieldsAreRespected()
+        [Test] public void Armor_DestroyedPieceCannotBeRepaired()
         {
-            var tuned = new ArmorDurability { maxDurability = 50, damagePerHit = 5, repairCost = 1 };
-            var player = Equipped(1);
-            Assert.AreEqual(50, tuned.Remaining(player.equipmentSlots.slots[EquipmentSlots.Helmet]));
-            tuned.ApplyHit(catalog, player);
-            Assert.AreEqual(45, tuned.Remaining(player.equipmentSlots.slots[EquipmentSlots.Helmet]));
-            Assert.IsTrue(tuned.Repair(catalog, player, player.equipmentSlots.slots[EquipmentSlots.Helmet]));
-            Assert.AreEqual(0, player.currency);
+            var player = Equipped(9);
+            GridSlotData helmet = player.equipmentSlots.slots[EquipmentSlots.Helmet];
+            helmet.durabilityDamage = 400;
+            Assert.IsFalse(armor.CanRepair(catalog, player, helmet));
+        }
+
+        [Test] public void Armor_FallbackUsedWhenCsvValuesMissing()
+        {
+            var bare = new ItemCatalog(new List<ItemData> {
+                new ItemData { itemId = 19001, itemType = ItemType.Equipment,
+                    equipmentSlotType = EquipmentSlotType.Helmet, maxStack = 1 } });
+            var tuned = new ArmorDurability { fallbackMaxDurability = 60, fallbackDamagePerHit = 5 };
+            GridSlotData slot = Slot(19001);
+            Assert.AreEqual(60, tuned.Maximum(bare, slot));
+            Assert.AreEqual(5, tuned.DamagePerHit(bare, slot));
+            Assert.AreEqual(0, tuned.RepairPerCurrency(bare, slot));
         }
 
         [Test] public void Armor_JsonRoundTripKeepsWear()
@@ -111,8 +137,8 @@ namespace Birdkov.NaYeongMin.Tests
             data.inventoryData.equipmentSlots.slots[EquipmentSlots.Armor].amount = 1;
             armor.ApplyHit(catalog, data.inventoryData);
             var loaded = JsonUtility.FromJson<PlayerSaveData>(JsonUtility.ToJson(data));
-            Assert.AreEqual(2, loaded.inventoryData.equipmentSlots.slots[EquipmentSlots.Armor].durabilityDamage);
-            Assert.AreEqual(98, armor.Remaining(loaded.inventoryData.equipmentSlots.slots[EquipmentSlots.Armor]));
+            Assert.AreEqual(1, loaded.inventoryData.equipmentSlots.slots[EquipmentSlots.Armor].durabilityDamage);
+            Assert.AreEqual(449, armor.Remaining(catalog, loaded.inventoryData.equipmentSlots.slots[EquipmentSlots.Armor]));
         }
     }
 }
