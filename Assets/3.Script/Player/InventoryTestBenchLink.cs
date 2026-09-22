@@ -29,6 +29,8 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     [SerializeField] private PlayerController player;
     [Tooltip("총기 내구도를 깎는 NaYeongMin 의 WeaponDurabilityBridge. 비우면 같은 오브젝트에서 찾고, 없으면 쓰지 않는다")]
     [SerializeField] private WeaponDurabilityBridge durabilityBridge;
+    [Tooltip("피격 시 방어구 내구도를 깎는 NaYeongMin 의 ArmorDurabilityBridge. 비우면 같은 오브젝트에서 찾고, 없으면 쓰지 않는다")]
+    [SerializeField] private ArmorDurabilityBridge armorDurabilityBridge;
 
     private bool didLinkWeaponData;
     private PlayerInventoryData linkedData;
@@ -88,6 +90,11 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
             TryGetComponent(out durabilityBridge);
         }
 
+        if (armorDurabilityBridge == null)
+        {
+            TryGetComponent(out armorDurabilityBridge);
+        }
+
         DisableDurabilityInLobby();
     }
 
@@ -141,11 +148,17 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
     private void Update()
     {
-        // WeaponDurabilityBridge 는 자기 벤치 참조를 스스로 다시 찾지 않는다. 씬을 옮기면 그 씬에 있던 벤치가
-        // 중복으로 파괴되면서 참조가 죽어 내구도가 더는 안 닳으므로, 살아있는 벤치를 여기서 계속 맞춰 준다.
+        // WeaponDurabilityBridge / ArmorDurabilityBridge 둘 다 자기 벤치 참조를 스스로 다시 찾지 않는다.
+        // 씬을 옮기면 그 씬에 있던 벤치가 중복으로 파괴되면서 참조가 죽어 내구도가 더는 안 닳으므로,
+        // 살아있는 벤치를 여기서 계속 맞춰 준다.
         if (durabilityBridge != null && inventoryBench != null && durabilityBridge.inventoryBench != inventoryBench)
         {
             durabilityBridge.inventoryBench = inventoryBench;
+        }
+
+        if (armorDurabilityBridge != null && inventoryBench != null && armorDurabilityBridge.inventoryBench != inventoryBench)
+        {
+            armorDurabilityBridge.inventoryBench = inventoryBench;
         }
 
         DisableDurabilityInLobby();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
@@ -202,6 +203,31 @@ public class WeaponController : MonoBehaviour
                 magazineSize = slotWeapon.magazineSize;
                 int spentRounds = Mathf.Clamp(slot.remainingRounds, 0, magazineSize);
                 currentAmmo = magazineSize - spentRounds;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    // 무기 슬롯(0 = 1번, 1 = 2번)에 들어 있는 무기의 내구도. 지금 손에 든 무기가 아니어도 된다 - 그 슬롯에
+    // 무기가 있기만 하면 값을 돌려준다 (HUD 의 슬롯별 내구도 슬라이더가 "꽂아두기만 해도 켜지게" 쓴다).
+    // 내구도 계산은 NaYeongMin 의 WeaponDurability(정적 유틸리티, CSV 의 maxDurability 기준)를 그대로 쓴다.
+    // 내구도가 없는 아이템(WeaponDurability.Maximum 이 0)이거나 슬롯이 비어 있으면 false.
+    public bool TryGetSlotDurability(int slotIndex, out int remaining, out int maximum)
+    {
+        remaining = 0;
+        maximum = 0;
+        bool found = false;
+
+        if (inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(slotIndex, out ItemData slotWeapon))
+        {
+            maximum = WeaponDurability.Maximum(slotWeapon.itemId);
+            GridSlotData slot = inventoryBridge.GetWeaponSlotData(slotIndex);
+
+            if (slot != null && maximum > 0)
+            {
+                remaining = WeaponDurability.Remaining(slot);
                 found = true;
             }
         }
@@ -746,7 +772,8 @@ public class WeaponController : MonoBehaviour
 
         // 지금 플레이어가 붙어있는 엄폐물이 있으면, 이번 총알은 그것들을 무시하고 통과한다
         // (엄폐물 너머의 적을 쏠 수 있게 - CoverObject.cs 참고)
-        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider, bodyOrigin, CoverObject.AttachedCoverColliders);
+        IEnumerable<Collider> coversToIgnore = player != null ? player.AttachedCoverColliders : null;
+        projectile.Launch(direction, equippedWeapon.projectileSpeed, equippedWeapon.attackDamage, equippedWeapon.range, ownerCollider, bodyOrigin, coversToIgnore);
     }
 
     private Vector3 ApplySpread(Vector3 direction, float maxSpreadDegrees)

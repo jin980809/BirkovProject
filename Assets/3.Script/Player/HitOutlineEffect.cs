@@ -34,8 +34,8 @@ public class HitOutlineEffect : MonoBehaviour
     [Tooltip("아웃라인을 그리지 않을 모델의 루트들 (예: 시야 표시 메시, 이펙트용 메시). 그 아래 전부 제외된다")]
     [SerializeField] private Transform[] excludedRoots;
 
-    private static readonly int ColorId = Shader.PropertyToID("_Color");
-    private static readonly int WidthId = Shader.PropertyToID("_Width");
+    private readonly int ColorId = Shader.PropertyToID("_Color");
+    private readonly int WidthId = Shader.PropertyToID("_Width");
 
     private PlayerVitals vitals;
     private Material material;

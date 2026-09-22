@@ -17,10 +17,6 @@ public class DebugInventorySeeder : MonoBehaviour
     [SerializeField] private ItemDatabase itemDatabase;
     [SerializeField] private InventoryTestBench inventoryBench;
 
-    // 인벤토리 데이터는 씬을 넘어서 유지되므로(PersistentUiRoot + 벤치), 씬마다 다시 지급하면 계속 쌓인다.
-    // 게임 실행당 한 번만 지급한다. (static 이라 플레이 모드를 다시 시작하면 초기화된다)
-    private static bool didSeedThisSession;
-
     private void Awake()
     {
         if (itemDatabase == null)
@@ -42,30 +38,31 @@ public class DebugInventorySeeder : MonoBehaviour
 
     private void Update()
     {
+        // 인벤토리 데이터는 씬을 넘어서 유지되므로(PersistentUiRoot + 벤치), 씬마다 다시 지급하면 계속 쌓인다.
+        // 게임 실행당 한 번만 지급한다. Player 는 씬마다 새로 생겨서 이 컴포넌트 자신은 그 사실을 기억할
+        // 수 없으므로, 씬을 넘어 유지되는 SaveCoordinator(싱글턴)의 DebugInventorySeeded 에 대신 기록한다.
+        SaveCoordinator saveCoordinator = SaveCoordinator.Instance;
+
         // InventoryTestBench 가 자기 데이터를 준비하는 타이밍이 늦을 수 있어서,
         // 준비될 때까지 매 프레임 확인하다가 딱 한 번만 넣어준다.
-        if (didSeedThisSession || inventoryBench == null || !inventoryBench.IsReady ||
+        if (saveCoordinator.DebugInventorySeeded || inventoryBench == null || !inventoryBench.IsReady ||
             itemDatabase == null || itemDatabase.Catalog == null)
         {
             return;
         }
 
-        // 저장 파일이 있으면 SaveCoordinator 가 게임을 켠 직후 그걸 불러온다. 그 불러오기가 끝난 뒤에 판단해야
-        // 지급한 것이 덮어써지지 않고, 이미 저장된 진행이 있을 땐 지급하지 않는다 (안 그러면 실행할 때마다 창고가 쌓인다).
-        SaveCoordinator saveCoordinator = SaveCoordinator.Instance;
+        // 저장 파일이 있으면 SaveCoordinator 가 게임을 켠 직후 그걸 불러온다. 그 불러오기가 끝난 뒤에 넣어야
+        // 지급한 것이 불러오기로 덮어써지지 않는다 (저장 파일 유무와 상관없이 매번 지급한다).
         if (!saveCoordinator.InitialLoadDone)
         {
             return;
         }
 
-        didSeedThisSession = true;
-
-        if (saveCoordinator.LoadedFromSave)
-        {
-            return;
-        }
-
+        saveCoordinator.DebugInventorySeeded = true;
         Seed();
+
+        // 지급이 끝났으니 더 이상 매 프레임 확인할 필요가 없다
+        enabled = false;
     }
 
     // 창고에 모든 아이템을 최대치로 채운다. 스택이 되는 아이템은 한 스택을 꽉 채우고,

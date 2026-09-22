@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 플레이어 이동 / 회전 / 구르기 처리
@@ -64,10 +65,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float autoFireAnimSpeed = 1f;
 
     private const string SingleShotClipName = "ShootSingleshotOneWeapon";
-    private static readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
-    private static readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
-    private static readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
-    private static readonly int DodgeTriggerHash = Animator.StringToHash("Dodge");
+    private readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
+    private readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
+    private readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
+    private readonly int DodgeTriggerHash = Animator.StringToHash("Dodge");
 
     private int fireLayerIndex = -1; // 상체 전용 발사 포즈 레이어 인덱스 (Awake 에서 이름으로 찾음, 없으면 -1)
     private float singleShotClipLength = 1f;
@@ -101,6 +102,32 @@ public class PlayerController : MonoBehaviour
     // 달리기 중 방향 전환 틈(이동 입력이 잠깐 0 이 되는 구간)을 메우는 시간. 이 시간 안에는 계속 달리는 중으로 본다.
     private const float SprintInputGraceSeconds = 0.15f;
     private float lastMoveInputTime = -999f;
+
+    // 지금 이 플레이어가 붙어있는 엄폐물들의 콜라이더 모음 (막는 것 + 감지용 트리거 전부, CoverObject 가 채운다).
+    // WeaponController 가 발사할 때 이걸 읽어서 그 총알만 이 콜라이더들을 무시하게 만든다.
+    private readonly HashSet<Collider> attachedCoverColliders = new HashSet<Collider>();
+
+    public IReadOnlyCollection<Collider> AttachedCoverColliders
+    {
+        get { return attachedCoverColliders; }
+    }
+
+    // CoverObject.OnTriggerEnter/Exit 가 붙고 떨어질 때 부른다
+    public void AttachCover(Collider[] colliders)
+    {
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            attachedCoverColliders.Add(colliders[i]);
+        }
+    }
+
+    public void DetachCover(Collider[] colliders)
+    {
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            attachedCoverColliders.Remove(colliders[i]);
+        }
+    }
 
     // 구르기 상태
     private bool isDodging;
@@ -733,7 +760,7 @@ public class PlayerController : MonoBehaviour
         return found;
     }
 
-    private static bool RaycastHorizontalPlane(Ray ray, float worldY, out Vector3 point)
+    private bool RaycastHorizontalPlane(Ray ray, float worldY, out Vector3 point)
     {
         point = Vector3.zero;
         bool found = false;

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 // 엄폐물: 체력이 있고 데미지를 받으면 깎인다(모든 총알 - 플레이어 자신 것 포함). 0이 되면
@@ -7,43 +6,60 @@ using UnityEngine;
 // 플레이어가 붙어있는 동안에는 플레이어가 쏘는 총알이 이 엄폐물을 무시하고 통과한다
 // (엄폐물 너머의 적을 쏠 수 있게). "붙어있다"는 트리거 콜라이더로 자동 감지한다.
 //
-// 에디터 설정: 이 오브젝트에 콜라이더 2개가 필요하다.
-//  1) 실제로 총알/이동을 막는 콜라이더 (Is Trigger 체크 안 함) - blockingCollider 에 연결
-//  2) 플레이어 근접 감지용 콜라이더 (Is Trigger 체크, 1번보다 살짝 크게) - 필드 연결 불필요,
-//     같은 오브젝트에 있으면 OnTriggerEnter/Exit 가 알아서 반응한다
+// 에디터 설정: 콜라이더 2개가 필요하고, 계층 구조는 이렇게 둔다.
+//  1) 부모(이 스크립트가 붙은 오브젝트): 플레이어 근접 감지용 콜라이더 (Is Trigger 체크,
+//     막는 콜라이더보다 살짝 크게) - 필드 연결 불필요, OnTriggerEnter/Exit 가 알아서 반응한다
+//  2) 자식: 실제로 총알/이동을 막는 콜라이더 (Is Trigger 체크 안 함) - blockingCollider 에 연결
+//     (부모든 자식이든 상관없이 이 오브젝트 아래 어디에 있어도 찾는다)
 //
-// 붙었을 때 무시해야 하는 콜라이더는 blockingCollider "만"이 아니라 이 오브젝트의 콜라이더
-// 전부(2번 감지용 트리거 포함)다 - 총알(Projectile)은 트리거든 뭐든 뭔가에 닿으면 무조건
+// 붙었을 때 무시해야 하는 콜라이더는 blockingCollider "만"이 아니라 이 오브젝트(자식 포함)의
+// 콜라이더 전부(감지용 트리거 포함)다 - 총알(Projectile)은 트리거든 뭐든 뭔가에 닿으면 무조건
 // 소멸하기 때문에, 감지용 트리거를 무시 목록에서 빼먹으면 총알이 막는 콜라이더에 닿기도
 // 전에 그 감지용 트리거에서 먼저 사라져버린다.
 [RequireComponent(typeof(Collider))]
 public class CoverObject : MonoBehaviour, IDamageable
 {
     [SerializeField] private float maxHealth = 100f;
-    [Tooltip("실제로 총알/이동을 막는 콜라이더 (Is Trigger 체크 안 함). 데미지 판정 기준으로도 쓰인다")]
+    [Tooltip("실제로 총알/이동을 막는 콜라이더 (Is Trigger 체크 안 함, 보통 자식 오브젝트). 데미지 판정 기준으로도 쓰인다")]
     [SerializeField] private Collider blockingCollider;
 
-    private float health;
-    private Collider[] allColliders; // blockingCollider + 감지용 트리거 등 이 오브젝트의 콜라이더 전부
-
-    // 지금 플레이어가 붙어있는 엄폐물들의 콜라이더 모음 (막는 것 + 감지용 트리거 전부).
-    // WeaponController 가 발사할 때 이걸 읽어서 그 총알만 이 콜라이더들을 무시하게 만든다.
-    private static readonly HashSet<Collider> attachedCoverColliders = new HashSet<Collider>();
-
-    public static IReadOnlyCollection<Collider> AttachedCoverColliders
+    // Projectile 이 "이 콜라이더가 진짜 맞는 판정 대상인지"를 가릴 때 쓴다 - 감지용 트리거는
+    // blockingCollider 가 아니므로 이걸로 구분해서 항상 투명하게 통과시킨다 (붙었는지 여부와 무관하게).
+    public Collider BlockingCollider
     {
-        get { return attachedCoverColliders; }
+        get { return blockingCollider; }
     }
+
+    private float health;
+    private Collider[] allColliders; // blockingCollider + 감지용 트리거 등, 부모/자식 통틀어 이 오브젝트 아래 콜라이더 전부
+
+    // 지금 붙어있는 플레이어 (붙은 동안만 값이 있음) - OnDisable 때 트리거 이벤트 없이도 떼어낼 대상을 알기 위해 기억해 둔다
+    private PlayerController attachedPlayer;
 
     private void Awake()
     {
         health = maxHealth;
-        allColliders = GetComponents<Collider>();
+        allColliders = GetComponentsInChildren<Collider>(true); // 부모(감지용)와 자식(막는 콜라이더)을 전부 포함
 
         if (blockingCollider == null)
         {
-            blockingCollider = GetComponent<Collider>();
+            blockingCollider = FindBlockingCollider();
         }
+    }
+
+    // blockingCollider 를 인스펙터에서 안 채웠을 때의 안전장치. 감지용 콜라이더는 항상 Is Trigger 체크가
+    // 되어 있으므로, 트리거가 아닌 첫 콜라이더를 막는 콜라이더로 본다.
+    private Collider FindBlockingCollider()
+    {
+        for (int i = 0; i < allColliders.Length; i++)
+        {
+            if (!allColliders[i].isTrigger)
+            {
+                return allColliders[i];
+            }
+        }
+
+        return null;
     }
 
     private void OnDisable()
@@ -71,9 +87,10 @@ public class CoverObject : MonoBehaviour, IDamageable
     {
         if (other.CompareTag("Player"))
         {
-            for (int i = 0; i < allColliders.Length; i++)
+            attachedPlayer = other.GetComponentInParent<PlayerController>();
+            if (attachedPlayer != null)
             {
-                attachedCoverColliders.Add(allColliders[i]);
+                attachedPlayer.AttachCover(allColliders);
             }
         }
     }
@@ -88,14 +105,12 @@ public class CoverObject : MonoBehaviour, IDamageable
 
     private void RemoveFromAttached()
     {
-        if (allColliders == null)
+        if (allColliders == null || attachedPlayer == null)
         {
             return;
         }
 
-        for (int i = 0; i < allColliders.Length; i++)
-        {
-            attachedCoverColliders.Remove(allColliders[i]);
-        }
+        attachedPlayer.DetachCover(allColliders);
+        attachedPlayer = null;
     }
 }

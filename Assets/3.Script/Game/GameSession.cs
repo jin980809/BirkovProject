@@ -121,7 +121,11 @@ public class GameSession : MonoBehaviour
     {
         if (overlay == null)
         {
-            overlay = SceneTransitionOverlay.Create();
+            GameObject root = new GameObject("SceneTransitionOverlay");
+            DontDestroyOnLoad(root);
+
+            overlay = root.AddComponent<SceneTransitionOverlay>();
+            overlay.Build();
         }
     }
 

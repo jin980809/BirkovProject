@@ -82,7 +82,7 @@ public class UiDebugDump : MonoBehaviour
     }
 
     // 실제로 그려지는 요소(Image/Text)인지, 글자 내용은 무엇인지 같이 찍는다
-    private static string GraphicInfo(Transform target)
+    private string GraphicInfo(Transform target)
     {
         string info = string.Empty;
 
@@ -102,7 +102,7 @@ public class UiDebugDump : MonoBehaviour
         return info;
     }
 
-    private static string GetPath(Transform target)
+    private string GetPath(Transform target)
     {
         string path = target.name;
         Transform current = target.parent;

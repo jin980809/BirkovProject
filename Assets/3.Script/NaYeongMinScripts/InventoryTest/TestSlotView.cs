@@ -32,8 +32,16 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left || eventData.dragging) return;
+            if (eventData.dragging) return;
             if (bench == null) return;
+
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                bench.RightClickSlot(this);
+                return;
+            }
+
+            if (eventData.button != PointerEventData.InputButton.Left) return;
             if (eventData.clickCount == 2) bench.DoubleClickSlot(this);
             else if (eventData.clickCount <= 1) bench.ClickSlot(this);
         }
