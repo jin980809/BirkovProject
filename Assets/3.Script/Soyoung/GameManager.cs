@@ -5,10 +5,10 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public GameObject MenuPanel;
-
+    public bool escToggle = true;
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (escToggle &&  Input.GetKeyDown(KeyCode.Escape))
         {
             bool isActive = !MenuPanel.activeSelf;
             MenuPanel.SetActive(isActive);
