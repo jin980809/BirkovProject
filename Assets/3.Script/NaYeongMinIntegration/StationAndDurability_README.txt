@@ -357,3 +357,27 @@ Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
 
 [CSV - 방어력 열은 손대지 않음]
 - ItemData.csv 의 defense 열(10/20/30)은 그대로 둔다. 이번 작업에서 바꾼 것은 maxDurability 열뿐이다.
+
+[프리팹 재구성 - 2026-09-22]
+- 리베이스 과정에서 Test.unity 의 내 오브젝트들이 프리팹 연결을 잃고 씬에 직접 박혀 있었다. 전부 다시 프리팹으로 묶었다.
+- InventoryUI.prefab 을 현재 Test.unity 의 Root 내용으로 갱신하고 씬 오브젝트를 그 프리팹 인스턴스로 다시 연결했다.
+  프리팹이 09-18 버전이라 빠져 있던 RepairPanel / WarehouseSoloScroll / PlayerDeathPanel /
+  EquipmentPanel 의 StrawCurrencyIcon·StatsText 가 이제 프리팹에 들어 있다.
+- 새로 만든 프리팹: Chest, LootPickupTest, RandomChest_Food_Test, RandomChest_Ammo_Test,
+  RandomEnemyDeath_Test, PlayerDeath/PlayerDeath_Test.
+  갱신한 프리팹: TemporaryShopNPC, TemporaryCraftingStation.
+- 팀원 오브젝트는 건드리지 않았다. Player / Enemy / EnemyPool / Main Camera / VirtualCamera /
+  CameraTarget / Ground / Object / BulletPooling / EventSystem / KTS_Imported /
+  PreviousActors_Backup, 그리고 벤치 자식인 Crosshair / Interaction 은 그대로 둔다.
+- SaveAsPrefabAssetAndConnect 를 써서 씬 오브젝트를 그대로 유지한 채 연결했다.
+  벤치 ui 참조 39건 + 배열 원소 136건, TestSlotView 162개가 작업 전후로 동일하다.
+  각 상호작용 오브젝트의 씬 참조(dropSettings / inventoryBench / prompt / player)도 전후 동일하다.
+  씬 참조는 프리팹 에셋 쪽에서는 None 이 되고 씬 인스턴스에만 남는다. 정상이다.
+- NaYeongMin.unity 는 지시대로 손대지 않았다. 다만 그 씬도 InventoryUI.prefab 을 참조하므로
+  갱신된 UI 를 자동으로 받게 된다. 그 씬을 열면 벤치의 ui 참조를 한 번 점검해야 한다.
+- 참고: 런타임에 팀원 PlayerInventoryToggle 이 Root/QuickPanel 을 캔버스 바로 밑으로 옮긴다.
+  인벤토리 창을 닫아도 퀵슬롯이 보이게 하려는 의도다. 프리팹에서 QuickPanel 은 Root 자식이어야 한다.
+- 방어구 내구도는 기획 확정 전까지 인스펙터 고정값을 정본으로 쓴다. 전 등급 최대 100 / 피격당 2 / 수리비 3G.
+  ItemData.csv 의 방어구 maxDurability·durabilityCostPerHit 열은 값이 확정되지 않아 사용하지 않는다.
+- 검증: EditMode 153/153 통과. 콘솔 에러·경고 0. Play 에서 벤치 IsReady, 슬롯 162개,
+  패널 전부 존재, 수리대 열기 정상.

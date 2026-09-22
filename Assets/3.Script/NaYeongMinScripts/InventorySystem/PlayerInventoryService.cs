@@ -48,6 +48,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                     return new InventoryMoveResult(InventoryResult.InvalidAmount, 0, amount);
                 }
 
+                if (playerData.currency > int.MaxValue - amount)
+                    return new InventoryMoveResult(InventoryResult.DestinationFull, 0, amount);
                 playerData.currency += amount;
                 return new InventoryMoveResult(InventoryResult.Success, amount, 0);
             }

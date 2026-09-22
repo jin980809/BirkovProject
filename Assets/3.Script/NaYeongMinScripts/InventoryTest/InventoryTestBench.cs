@@ -116,6 +116,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public bool buildLegacyUi = true;
         [Tooltip("초기화 시 가방·장비·퀵슬롯을 비운다. 창고와 지푸라기는 유지한다.")]
         public bool startWithEmptyInventory;
+        [Tooltip("DebugInventorySeeder가 초기 지급을 담당. 벤치 자체 가방/창고/화폐 지급을 생략한다.")]
+        public bool useExternalTestSeeder;
 
         [Header("하이어라키 UI")]
         [Tooltip("비워 두면 예전처럼 코드로 UI 를 만든다. 채우면 그 오브젝트를 그대로 쓴다.")]
@@ -377,7 +379,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             // 확장 테스트 지급을 쓰는 개인 씬에서는 이 기본 지급이 가방을 미리 채워 버려
             // 제작 결과와 구매 아이템을 넣을 칸이 남지 않는다. 같은 품목이 창고로 들어간다.
-            if (!seedExtendedTestStock)
+            if (!useExternalTestSeeder && !seedExtendedTestStock)
             {
                 foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
                 {
@@ -391,8 +393,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 }
             }
 
-            inventoryService.AddItem(data.warehouseData, 23001, 5);
-            if (seedExtendedTestStock) SeedExtendedTestStock();
+            if (!useExternalTestSeeder) inventoryService.AddItem(data.warehouseData, 23001, 5);
+            if (!useExternalTestSeeder && seedExtendedTestStock) SeedExtendedTestStock();
             if (startWithEmptyInventory) playerService.ClearOnDeath(data.inventoryData);
 
             SetMessage(startWithEmptyInventory ? "초기화 완료. 가방·장비·퀵슬롯이 비어 있습니다." : "초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
@@ -531,6 +533,21 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private InventoryMoveResult Transfer(TestContainer from, int fromIndex, TestContainer to, int toIndex)
         {
             const int all = int.MaxValue;
+
+            if (to == TestContainer.Bag && (from == TestContainer.Loot || from == TestContainer.Warehouse))
+            {
+                GridContainerData source = GetContainer(from);
+                if (fromIndex >= 0 && fromIndex < source.slots.Count &&
+                    catalog.TryGetItem(source.slots[fromIndex].itemId, out ItemData item) && item.itemType == ItemType.Currency)
+                {
+                    if (from == TestContainer.Warehouse && !warehouseService.IsOpen)
+                        return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 0);
+                    InventoryMoveResult result = playerService.AddToInventory(data.inventoryData, item.itemId, source.slots[fromIndex].amount);
+                    if (result.MovedAmount > 0) inventoryService.RemoveItem(source, fromIndex, result.MovedAmount);
+                    NotifyLootChanged();
+                    return result;
+                }
+            }
 
             if (from == TestContainer.Bag && to == TestContainer.Equipment)
             {
@@ -992,6 +1009,14 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
+            // 이전 드래그 경로로 가방에 들어간 재화도 수량을 보존하며 보유값으로 회수한다.
+            foreach (GridSlotData slot in data.inventoryData.inventory.slots)
+            {
+                if (slot.IsEmpty() || !catalog.TryGetItem(slot.itemId, out ItemData item) || item.itemType != ItemType.Currency) continue;
+                InventoryMoveResult result = playerService.AddToInventory(data.inventoryData, slot.itemId, slot.amount);
+                slot.amount -= result.MovedAmount;
+                if (slot.amount == 0) slot.Clear();
+            }
             playerService.SanitizeItemQuickSlots(data.inventoryData);
 
             foreach (TestSlotView view in views)
@@ -1042,13 +1067,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             if (statsText != null)
             {
-                statsText.text = string.Format(
-                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    지푸라기 {5}    선택 무기 {3}번    창고 {4}",
-                    health, hunger, water, selectedWeapon + 1,
-                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘",
-                    data.inventoryData.currency);
-                if (externalStats != null)
-                    statsText.text = externalStats + "    지푸라기 " + data.inventoryData.currency + "    선택 무기 " + (selectedWeapon + 1);
+                statsText.text = ": " + data.inventoryData.currency.ToString("N0");
             }
 
             RefreshCraftPanel();
@@ -1258,13 +1277,18 @@ namespace Birdkov.NaYeongMin.InventoryTest
             BuildCraftPanel();
 
             // 상태 문구는 좌·우 패널 바로 아래 줄에 붙인다. 빈 가운데 열을 두지 않는다.
-            statsText = MakeLabel(screen, string.Empty, LeftX, HeaderBottom + 648, ColumnWidth, 56, 13);
+            statsText = MakeLabel(equipmentPanel.transform, string.Empty, 356, 58, 96, 80, 14);
+            statsText.alignment = TextAnchor.MiddleCenter;
             status = MakeLabel(screen, string.Empty, RightX, HeaderBottom + 648, ColumnWidth, 56, 13);
             status.alignment = TextAnchor.UpperLeft;
             status.color = new Color(0.95f, 0.83f, 0.45f);
 
             // 하단 중앙: 퀵슬롯
-            GameObject quickPanel = MakePanel("QuickPanel", MiddleX, 780, MiddleWidth, 110, null);
+            GameObject quickPanel = MakePanel("QuickPanel", 0, 780, 428, 110, null);
+            RectTransform quickRect = (RectTransform)quickPanel.transform;
+            quickRect.anchorMin = quickRect.anchorMax = new Vector2(0.5f, 0f);
+            quickRect.pivot = new Vector2(0.5f, 0f);
+            quickRect.anchoredPosition = new Vector2(0, 20);
             MakeLabel(quickPanel.transform, "무기 1 / 2", 16, 6, 150, 18, 12);
             BuildGrid(quickPanel.transform, TestContainer.WeaponQuick, 2, 1, 16, 26, QuickCell);
             MakeLabel(quickPanel.transform, "퀵슬롯 3 / 4 / 5", 200, 6, 190, 18, 12);
