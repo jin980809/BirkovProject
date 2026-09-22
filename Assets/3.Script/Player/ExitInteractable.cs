@@ -25,6 +25,16 @@ public class ExitInteractable : MonoBehaviour, IInteractable
         get { return interactDuration; }
     }
 
+    // Awake 가 아니라 Start 에서 만든다 - InteractionPromptUI.PromptParent 는 그쪽 Awake() 에서
+    // 설정되는데, 스크립트 간 Awake 실행 순서는 보장되지 않는다 (이쪽이 먼저 돌면 PromptParent 가
+    // 아직 null). 모든 Awake 가 끝난 뒤에 도는 Start 라면 항상 준비되어 있다.
+    private void Start()
+    {
+        // 근접 아이콘(ScreenAnchoredUI.proximityIcon)은 F 프롬프트 감지 범위보다 훨씬 먼 거리에서도
+        // 보여야 하므로, 감지될 때(ShowPrompt)까지 기다리지 않고 미리 만들어 둔다.
+        EnsurePromptInstance();
+    }
+
     public bool CanInteract(GameObject interactor)
     {
         // 이미 전환이 시작됐으면 더 받지 않는다
@@ -41,25 +51,22 @@ public class ExitInteractable : MonoBehaviour, IInteractable
     {
         EnsurePromptInstance();
 
-        if (promptInstance != null)
+        if (promptAnchoredUI != null)
         {
-            if (promptAnchoredUI != null)
-            {
-                promptAnchoredUI.SnapToAnchor();
-            }
-
-            promptInstance.SetActive(true);
+            promptAnchoredUI.SetPanelActive(true);
         }
     }
 
     public void HidePrompt()
     {
-        if (promptInstance != null)
+        if (promptAnchoredUI != null)
         {
-            promptInstance.SetActive(false);
+            promptAnchoredUI.SetPanelActive(false);
         }
     }
 
+    // 루트(promptInstance)는 항상 켜 둔다 - 근접 아이콘이 계속 갱신되려면 Update() 가 멈추면 안 된다.
+    // F 프롬프트만 ShowPrompt/HidePrompt 로 따로 켜고 끈다 (SetPanelActive 참고).
     private void EnsurePromptInstance()
     {
         if (promptInstance != null || promptPrefab == null)
@@ -74,8 +81,7 @@ public class ExitInteractable : MonoBehaviour, IInteractable
         if (promptAnchoredUI != null)
         {
             promptAnchoredUI.SetAnchor(transform);
+            promptAnchoredUI.SetPanelActive(false);
         }
-
-        promptInstance.SetActive(false);
     }
 }
