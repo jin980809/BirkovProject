@@ -7,6 +7,7 @@ namespace Birdkov.NaYeongMin.Integration
     {
         public InventoryTestBench inventoryBench;
         public bool crafting;
+        public Birdkov.NaYeongMin.InventorySystem.MerchantKind merchantKind = Birdkov.NaYeongMin.InventorySystem.MerchantKind.Weapons;
         public GameObject prompt;
         public PlayerInputHandler playerInput;
         public Transform player;
@@ -44,7 +45,7 @@ namespace Birdkov.NaYeongMin.Integration
         {
             if (!CanInteract(interactor)) return;
             if (crafting) inventoryBench.OpenCrafting(transform);
-            else inventoryBench.OpenShop(transform);
+            else inventoryBench.OpenShop(transform, merchantKind);
         }
         public void ShowPrompt() { if (prompt != null) prompt.SetActive(true); }
         public void HidePrompt() { if (prompt != null) prompt.SetActive(false); }

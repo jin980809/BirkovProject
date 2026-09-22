@@ -1061,7 +1061,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     if (item.itemType == ItemType.Weapon)
                         view.amount.text = WeaponDurability.Remaining(durableSlot) + "/" + WeaponDurability.Maximum(itemId);
                     else if (armorDurability.IsArmor(catalog, durableSlot))
-                        view.amount.text = armorDurability.Remaining(durableSlot) + "/" + Mathf.Max(1, armorDurability.maxDurability);
+                        view.amount.text = armorDurability.Remaining(catalog, durableSlot) + "/" + armorDurability.Maximum(catalog, durableSlot);
                 }
             }
 

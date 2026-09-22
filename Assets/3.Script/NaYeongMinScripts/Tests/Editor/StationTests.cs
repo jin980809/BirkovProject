@@ -77,5 +77,38 @@ namespace Birdkov.NaYeongMin.Tests
             Assert.AreEqual(before, JsonUtility.ToJson(player));
             player.currency = 0; Assert.IsFalse(shop.Buy(player, 10001));
         }
+
+        [TestCase(10001, MerchantKind.Weapons)]
+        [TestCase(11001, MerchantKind.Weapons)]
+        [TestCase(12001, MerchantKind.Weapons)]
+        [TestCase(13001, MerchantKind.Weapons)]
+        [TestCase(21001, MerchantKind.General)]
+        [TestCase(22001, MerchantKind.General)]
+        [TestCase(23001, MerchantKind.General)]
+        [TestCase(25001, MerchantKind.General)]
+        [TestCase(26001, MerchantKind.General)]
+        public void Merchant_OnlyTradesAssignedCategory(int itemId, MerchantKind kind)
+        {
+            var player = new PlayerInventoryData { currency = 100 };
+            var allowed = new ShopService(catalog, kind);
+            var denied = new ShopService(catalog, kind == MerchantKind.Weapons ? MerchantKind.General : MerchantKind.Weapons);
+            string before = JsonUtility.ToJson(player);
+            Assert.IsFalse(denied.Buy(player, itemId)); Assert.AreEqual(before, JsonUtility.ToJson(player));
+            Assert.IsTrue(allowed.Buy(player, itemId));
+            before = JsonUtility.ToJson(player);
+            Assert.IsFalse(denied.Sell(player, 0)); Assert.AreEqual(before, JsonUtility.ToJson(player));
+            Assert.IsTrue(allowed.Sell(player, 0)); Assert.AreEqual(100, player.currency);
+        }
+
+        [Test] public void Merchant_CatalogPartitionExcludesNonTradeItems()
+        {
+            foreach (var item in ItemCsvLoader.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataTeble/NaYeongMinCsvData/ItemData.csv").text))
+            {
+                bool weapons = ShopService.Accepts(item, MerchantKind.Weapons);
+                bool general = ShopService.Accepts(item, MerchantKind.General);
+                Assert.IsFalse(weapons && general, item.displayName);
+                Assert.AreEqual(ShopService.IsTradable(item), weapons || general, item.displayName);
+            }
+        }
     }
 }
