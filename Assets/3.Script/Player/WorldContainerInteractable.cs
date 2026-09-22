@@ -1,3 +1,4 @@
+using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
 
@@ -23,6 +24,10 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
     [SerializeField] private InventoryTestBench inventoryBench;
     [Tooltip("감지됐을 때 뜨는 프롬프트 아이콘 프리팹 (ScreenAnchoredUI 가 붙어 있어야 함). DebugInteractable 과 같은 방식")]
     [SerializeField] private GameObject promptPrefab;
+
+    [Header("상점 (InventoryWorldContainer 의 kind 가 Shop 일 때만 쓰인다)")]
+    [Tooltip("상인 종류. Weapons = 무기상(무기/탄약/방어구), General = 잡화상(소모품/재료/판매용), All = 전 품목")]
+    [SerializeField] private MerchantKind merchantKind = MerchantKind.All;
 
     private InventoryWorldContainer container;
     private GameObject promptInstance;
@@ -90,7 +95,8 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
                 inventoryBench.OpenMapChest(container);
                 break;
             case InventoryWorldKind.Shop:
-                inventoryBench.OpenShop(transform);
+                // 무기상/잡화상은 여는 쪽이 정한다 (ShopService.Accepts 가 이 종류로 취급 품목을 거른다)
+                inventoryBench.OpenShop(transform, merchantKind);
                 break;
             case InventoryWorldKind.Crafting:
                 inventoryBench.OpenCrafting(transform);

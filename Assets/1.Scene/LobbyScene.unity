@@ -1425,6 +1425,7 @@ MonoBehaviour:
   interactDuration: 1.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &256786440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1837,6 +1838,7 @@ MonoBehaviour:
   interactDuration: 0
   inventoryBench: {fileID: 1000849022}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &319432519
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5788,9 +5790,8 @@ MonoBehaviour:
   playerDeathGrid: {fileID: 0}
   seedExtendedTestStock: 1
   armorDurability:
-    maxDurability: 100
-    damagePerHit: 2
-    repairCost: 3
+    fallbackMaxDurability: 100
+    fallbackDamagePerHit: 1
 --- !u!114 &1000849023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7772,10 +7773,10 @@ Transform:
   m_Children:
   - {fileID: 1577975735}
   - {fileID: 1900794397}
+  - {fileID: 1673487868}
   - {fileID: 319432516}
   - {fileID: 1467941578}
   - {fileID: 373351826}
-  - {fileID: 1673487868}
   m_Father: {fileID: 8034231368110265730}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1344572445
@@ -8594,6 +8595,7 @@ MonoBehaviour:
   interactDuration: 0
   inventoryBench: {fileID: 1000849022}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &1467941581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9482,6 +9484,7 @@ MonoBehaviour:
   interactDuration: 0
   inventoryBench: {fileID: 1000849022}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &1577975737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10062,6 +10065,7 @@ MonoBehaviour:
   interactDuration: 0
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 1
 --- !u!114 &1673487870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11111,6 +11115,7 @@ MonoBehaviour:
   interactDuration: 0
   inventoryBench: {fileID: 1000849022}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 2
 --- !u!114 &1900794400
 MonoBehaviour:
   m_ObjectHideFlags: 0
