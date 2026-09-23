@@ -8,15 +8,9 @@ public class GameManager : MonoBehaviour
     //여기는 가이드 팝업용
     public Button openGuide;
     public GameObject guidePopup;
-    public Image displayImg;  //튜토팝업에 나올 이미지
-    public Text displayText;  //튜토팝업에 나올 문구
-    public Button nextImg;    //튜토팝업용 버튼
-    public Text nextButtonText;   //튜토팝업용 텍스트
+    public Image displayImg;
+    public Button nextImg;
     public Sprite[] guideImg;
-    [TextArea] public string[] guideTexts;
-    public string nextLabel = "다음";
-    public string lastLabel = "확인";
-
     private int currentIndex = 0;
 
     private void Start()
@@ -74,7 +68,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         currentIndex = 0;
-        UpdateDisplay();
+        displayImg.sprite = guideImg[currentIndex];
         guidePopup.SetActive(true);
         StartCoroutine(ShowButton());
     }
@@ -96,55 +90,8 @@ public class GameManager : MonoBehaviour
             nextImg.gameObject.SetActive(false);
             return;
         }
-        UpdateDisplay();
+        displayImg.sprite = guideImg[currentIndex];
         StartCoroutine(ShowButton());   //다음 이미지 넘어갈 때 버튼이 시간차로 안 뜨게 하고 싶다면 이 부분 삭제 가능!
     }
 
-    //페이드 전환 구현하기
-    [Header("전환효과")]
-    public float fadeTime = 0.25f;
-    private Coroutine fadeCo;
-
-    private void UpdateDisplay()
-    {
-        if (fadeCo != null)
-        {
-            StopCoroutine(fadeCo);
-        }
-        fadeCo = StartCoroutine(FadetoNew());
-    }
-
-    private IEnumerator FadetoNew()
-    {
-        yield return StartCoroutine(FadeImg(displayImg,1f,0f));
-        displayImg.sprite = guideImg[currentIndex];
-
-        if (displayText != null && guideTexts != null && currentIndex < guideTexts.Length)
-        {
-            displayText.text = guideTexts[currentIndex];
-        }
-
-        if (nextButtonText != null)
-        {
-            bool isLast = currentIndex == guideImg.Length - 1;
-            nextButtonText.text = isLast ? lastLabel : nextLabel;
-        }
-        yield return StartCoroutine(FadeImg(displayImg, 0f, 1f));
-    }
-    private IEnumerator FadeImg(Image img, float from, float to)
-    {
-        float elapsed = 0f;
-        Color c = img.color;
-
-        while (elapsed < fadeTime)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / fadeTime);
-            c.a = Mathf.Lerp(from, to, t);
-            img.color = c;
-            yield return null;
-        }
-        c.a = to;
-        img.color = c;
-    }
 }
