@@ -7,12 +7,12 @@ itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlo
 11002,Ammo,샷건 총알,1박스 20발. 사용 시 샷건 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-shotgun.png,,1,1,TRUE,100,,,,20,,,,,,,,,0,0,0,0,
 11003,Ammo,돌격소총 총알,1박스 20발. 사용 시 돌격소총 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-AR.png,,1,1,TRUE,200,,,,20,,,,,,,,,0,0,0,0,
 11004,Ammo,스나이퍼 총알,1박스 20발. 사용 시 스나이퍼 탄약이 20발 늘어난다.,5,,,Assets/4.Sprite/ICONs/ICon/ammo-sniper.png,,1,1,TRUE,50,,,,20,,,,,,,,,0,0,0,0,
-13001,Equipment,구형 헬멧,피격 데미지를 1 차감한다.,3,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv1.png,Helmet,1,1,FALSE,1,,,,,,,,,,400,1,80,10,0,0,0,
-13002,Equipment,튼튼 헬멧,피격 데미지를 2 차감한다.,5,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv2.png,Helmet,1,1,FALSE,1,,,,,,,,,,500,1,75,20,0,0,0,
-13003,Equipment,최고급 헬멧,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv3.png,Helmet,1,1,FALSE,1,,,,,,,,,,600,1,70,30,0,0,0,
-12001,Equipment,구형 조끼,기획서 표기는 피격 데미지 10% 감소. 감쇄 방식 확정 대기.,3,,,Assets/4.Sprite/ICONs/ICon/Armor/vest-lv1.png,Armor,1,1,FALSE,1,,,,,,,,,,450,1,90,10,0,0,0,
-12002,Equipment,튼튼 조끼,기획서 표기는 피격 데미지 20% 감소. 감쇄 방식 확정 대기.,5,,,Assets/4.Sprite/ICONs/ICon/Armor/vest-lv2.png,Armor,1,1,FALSE,1,,,,,,,,,,550,1,85,20,0,0,0,
-12003,Equipment,최고급 조끼,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/ICon/Armor/vest-lv3.png,Armor,1,1,FALSE,1,,,,,,,,,,650,1,80,30,0,0,0,
+13001,Equipment,구형 헬멧,피격 데미지를 1 차감한다.,3,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,FALSE,1,,,,,,,,,,400,1,80,10,0,0,0,
+13002,Equipment,튼튼 헬멧,피격 데미지를 2 차감한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,FALSE,1,,,,,,,,,,500,1,75,20,0,0,0,
+13003,Equipment,최고급 헬멧,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_gas-mask_LP.png,Helmet,1,1,FALSE,1,,,,,,,,,,600,1,70,30,0,0,0,
+12001,Equipment,구형 조끼,기획서 표기는 피격 데미지 10% 감소. 감쇄 방식 확정 대기.,3,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,FALSE,1,,,,,,,,,,450,1,90,10,0,0,0,
+12002,Equipment,튼튼 조끼,기획서 표기는 피격 데미지 20% 감소. 감쇄 방식 확정 대기.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,FALSE,1,,,,,,,,,,550,1,85,20,0,0,0,
+12003,Equipment,최고급 조끼,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_backbag_LP.png,Armor,1,1,FALSE,1,,,,,,,,,,650,1,80,30,0,0,0,
 20001,Currency,지푸라기,새들의 조직에서 사용하는 화폐. 상점에서 사고팔 수 없다.,,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_wheat_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
 21001,Consumable,회복약,최대 체력의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_potion_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,6,0,0,1
 21002,Consumable,회복키트,최대 체력의 40%를 회복한다.,2,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,12,0,0,3

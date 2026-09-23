@@ -5,7 +5,6 @@ using UnityEngine.AI;
 
 public class EnemyBasicPatten : MonoBehaviour
 {
-    [Header("데이터")]
     [SerializeField] private EnemyData enemyData;
 
     private Animator ani;
@@ -60,7 +59,7 @@ public class EnemyBasicPatten : MonoBehaviour
 
         patrolWaitingTimeWfs = new WaitForSeconds(patrolWaitingTime);
         exclamationTimeWfs = new WaitForSeconds(0.7f);
-        delayTimeWfs = new WaitForSeconds(enemyData.delayTime);
+        delayTimeWfs = new WaitForSeconds(1.5f);
 
         respawnPoint = transform.position;
     }
@@ -195,7 +194,7 @@ public class EnemyBasicPatten : MonoBehaviour
             enemyDetect.FirstCheckOff();
         }
 
-        if (Vector3.Distance(target.position, transform.position) < enemyData.moveDistance)
+        if (Vector3.Distance(target.position, transform.position) < enemyData.rayDistance - enemyData.minDistance)
         {
             switch (a)
             {
@@ -226,7 +225,7 @@ public class EnemyBasicPatten : MonoBehaviour
         canBattle = true ;
     
     }
-
+    //딜레이 정도 무기에 따라 수정해야함------------------------<--------------
     //전진 공격 패턴
     private IEnumerator Patten1_co()
     {
@@ -242,7 +241,6 @@ public class EnemyBasicPatten : MonoBehaviour
 
         yield return StartCoroutine(enemyShot.Fire_co());
     }
-
     //정지 공격 패턴
     private IEnumerator Patten2_co()
     {
@@ -250,7 +248,6 @@ public class EnemyBasicPatten : MonoBehaviour
 
         yield return StartCoroutine(enemyShot.Fire_co());
     }
-
     //랜덤 위치 이동 패턴
     private IEnumerator Patten3_co()
     {
@@ -264,10 +261,7 @@ public class EnemyBasicPatten : MonoBehaviour
         agent.isStopped = true;
         ani.SetBool("Run", false);
 
-        if (Vector3.Distance(target.position, transform.position) > enemyData.minDistance)
-        {
-            yield return StartCoroutine(enemyShot.Fire_co());
-        }
+        yield return StartCoroutine(enemyShot.Fire_co());
     }
 
     //---------------------------------스폰 포인트로 복귀--------------------------------------

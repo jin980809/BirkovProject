@@ -20,6 +20,10 @@ public class HpEffect : MonoBehaviour
     private float currentHealth;
 
     private Coroutine damageCoroutine;
+    private void Awake()
+    {
+        TryGetComponent(out ani);
+    }
     public void Initialize(float maxHealth)
     {
         this.maxHealth = maxHealth;
