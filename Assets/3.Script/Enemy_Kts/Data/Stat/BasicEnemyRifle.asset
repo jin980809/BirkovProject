@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 50
   moveSpeed: 2
-  angleSpeed: 720
+  angleSpeed: 1000
   rayDistance: 20
-  viewAngle: 180
+  viewAngle: 90
   minDistance: 2
   moveDistance: 7
-  rayCount: 25
-  detectInterval: 0.1
+  rayCount: 15
+  detectInterval: 0.5
   decrease: 2
   walkPoints: 30
   runPoints: 40
