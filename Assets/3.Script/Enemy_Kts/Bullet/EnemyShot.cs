@@ -82,7 +82,6 @@ public class EnemyShot : MonoBehaviour
             magazineSize = enemyShotData.magazineSize;
             reloadTime = enemyShotData.reloadTime;
         }
-
         enemyBulletPool = FindAnyObjectByType<EnemyBulletPool>();
 
         fireIntervalWfs = new WaitForSeconds(fireInterval);
