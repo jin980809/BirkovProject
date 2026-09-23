@@ -20687,6 +20687,8 @@ GameObject:
   - component: {fileID: 6387644336988624300}
   - component: {fileID: 5267868490896649471}
   - component: {fileID: 1787165106254593266}
+  - component: {fileID: 988875279872834700}
+  - component: {fileID: 2904946291763932118}
   m_Layer: 6
   m_Name: Enemy_Shotgun
   m_TagString: Untagged
@@ -20986,6 +20988,33 @@ MonoBehaviour:
   duration: 0.25
   decayPower: 2.5
   excludedRoots: []
+--- !u!114 &988875279872834700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3592570976236322626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 721b7f7769ac468438d7f3112721e09b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.EnemyLootReceiver
+  lootRuntime: {fileID: 0}
+  sourceType: 7
+  dropWornArmor: 1
+--- !u!114 &2904946291763932118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3592570976236322626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d2d2724f05bd8f46a0846019576b98b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.EnemyDeathWatcher
 --- !u!1 &3600706049003012526
 GameObject:
   m_ObjectHideFlags: 0

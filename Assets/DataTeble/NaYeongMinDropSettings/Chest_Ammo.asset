@@ -19,15 +19,15 @@ MonoBehaviour:
     minAmount: 30
     maxAmount: 60
   - itemId: 11002
-    chancePercent: 50
+    chancePercent: 25
     minAmount: 20
     maxAmount: 50
   - itemId: 11003
-    chancePercent: 50
+    chancePercent: 15
     minAmount: 30
     maxAmount: 60
   - itemId: 11004
-    chancePercent: 50
+    chancePercent: 5
     minAmount: 10
     maxAmount: 30
   - itemId: 26001

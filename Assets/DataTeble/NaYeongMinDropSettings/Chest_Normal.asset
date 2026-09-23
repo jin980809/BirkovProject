@@ -78,3 +78,59 @@ MonoBehaviour:
     chancePercent: 1
     minAmount: 1
     maxAmount: 1
+  - itemId: 10001
+    chancePercent: 5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10002
+    chancePercent: 3
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10003
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 10004
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 11001
+    chancePercent: 5
+    minAmount: 40
+    maxAmount: 40
+  - itemId: 11002
+    chancePercent: 3
+    minAmount: 40
+    maxAmount: 40
+  - itemId: 11003
+    chancePercent: 1
+    minAmount: 20
+    maxAmount: 20
+  - itemId: 11004
+    chancePercent: 0.5
+    minAmount: 20
+    maxAmount: 20
+  - itemId: 13001
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13002
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 13003
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12001
+    chancePercent: 4
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12002
+    chancePercent: 1
+    minAmount: 1
+    maxAmount: 1
+  - itemId: 12003
+    chancePercent: 0.5
+    minAmount: 1
+    maxAmount: 1

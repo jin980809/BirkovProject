@@ -17056,6 +17056,8 @@ GameObject:
   - component: {fileID: 3665875575660552084}
   - component: {fileID: 6906910954251833346}
   - component: {fileID: 8038782950274905946}
+  - component: {fileID: 648343365763594036}
+  - component: {fileID: 5961962603978394798}
   m_Layer: 6
   m_Name: Enemy_Rifle
   m_TagString: Untagged
@@ -17355,6 +17357,33 @@ MonoBehaviour:
   duration: 0.25
   decayPower: 2.5
   excludedRoots: []
+--- !u!114 &648343365763594036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702741525700540377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 721b7f7769ac468438d7f3112721e09b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.EnemyLootReceiver
+  lootRuntime: {fileID: 0}
+  sourceType: 8
+  dropWornArmor: 1
+--- !u!114 &5961962603978394798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702741525700540377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d2d2724f05bd8f46a0846019576b98b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.EnemyDeathWatcher
 --- !u!1 &5719515301704529039
 GameObject:
   m_ObjectHideFlags: 0

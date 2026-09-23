@@ -68,7 +68,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             selectedCraftRow = 0;
             craftPanel.SetActive(true);
             OpenWarehouseBeside();
-            SetMessage("가방 + 창고의 재료를 합산합니다. 버섯 5 + 화약 5 → 20발 1박스.");
+            SetMessage("가방 + 창고의 재료를 합산합니다. 버섯 5 + 화약 5 → 20발.");
             Refresh();
         }
 
@@ -375,7 +375,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
                 if (ui.shopRowButtons[index] != null) ui.shopRowButtons[index].gameObject.SetActive(item != null);
                 if (index < ui.shopRowLabels.Length && ui.shopRowLabels[index] != null)
-                    ui.shopRowLabels[index].text = item == null ? string.Empty : item.displayName + "  " + item.price + "G";
+                    ui.shopRowLabels[index].text = item == null ? string.Empty : item.displayName +
+                        (ShopService.TradeAmount(item) > 1 ? " x" + ShopService.TradeAmount(item) : string.Empty) + "  " + item.price + "G";
                 if (index < ui.shopRowIcons.Length && ui.shopRowIcons[index] != null)
                 {
                     Sprite sprite = item != null && spriteMap.TryGetValue(item.itemId, out Sprite found) ? found : null;
@@ -456,7 +457,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             {
                 int mushroom = craftingService.Count(data.inventoryData.inventory, mushroomItemId) + craftingService.Count(data.warehouseData, mushroomItemId);
                 int powder = craftingService.Count(data.inventoryData.inventory, CraftingService.GunpowderItemId) + craftingService.Count(data.warehouseData, CraftingService.GunpowderItemId);
-                ui.craftDetail.text = DisplayName(ammoItemId) + "  1박스 (20발)\n" +
+                ui.craftDetail.text = DisplayName(ammoItemId) + "  " + craftingService.CraftedAmount(ammoItemId) + "발\n" +
                     DisplayName(mushroomItemId) + " " + mushroom + " / " + CraftingService.MushroomCost + "\n" +
                     DisplayName(CraftingService.GunpowderItemId) + " " + powder + " / " + CraftingService.GunpowderCost + "\n" +
                     "가방 재료를 먼저 쓰고 모자란 만큼 창고에서 가져옵니다.";
@@ -480,7 +481,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             if (shopPanel == null || !shopPanel.activeSelf) return;
             bool success = !selectedShopEquipment && new ShopService(catalog, merchantKind).Sell(PlayerData, selectedShopBagIndex);
-            SetMessage(success ? "1개 판매 완료" : "판매 불가: 이 상인의 취급 품목과 가방 선택을 확인하세요.");
+            SetMessage(success ? "판매 완료" : "판매 불가: 이 상인의 취급 품목과 가방 선택을 확인하세요. 탄약은 20발 단위로 팝니다.");
             Refresh();
         }
 
@@ -535,7 +536,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private void BuildShop()
         {
             shopPanel = MakePanel("ShopPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "까마귀 상점 (임시)");
-            MakeLabel(shopPanel.transform, "구매/판매 동일 가격 · 탄약 가격은 1박스 기준", 16, 45, 420, 28, 13);
+            MakeLabel(shopPanel.transform, "구매/판매 동일 가격 · 탄약은 20발 단위", 16, 45, 420, 28, 13);
             for (int index = 0; index < 6; index++)
             {
                 int row = index;

@@ -1411,7 +1411,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private void BuildCraftPanel()
         {
             craftPanel = MakePanel("CraftPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "총알 제작대");
-            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 1박스", 20, 48, ColumnWidth - 40, 26, 14);
+            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 20발", 20, 48, ColumnWidth - 40, 26, 14);
 
             IList<int> mushrooms = CraftingService.MushroomItemIds;
             craftLabels = new Text[mushrooms.Count];
@@ -1471,7 +1471,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 case CraftResult.Success:
                     int ammoItemId;
                     CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
-                    return "제작 완료. " + DisplayName(ammoItemId) + " 1박스를 가방에 넣었습니다.";
+                    return "제작 완료. " + DisplayName(ammoItemId) + " " + craftingService.CraftedAmount(ammoItemId) + "발을 가방에 넣었습니다.";
                 case CraftResult.NotEnoughMushroom:
                     return DisplayName(mushroomItemId) + "이(가) " + CraftingService.MushroomCost + "개 필요합니다.";
                 case CraftResult.NotEnoughGunpowder:
