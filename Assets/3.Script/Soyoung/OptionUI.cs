@@ -47,4 +47,10 @@ public class OptionUI : MonoBehaviour
         PlayerPrefs.Save();
         Destroy(gameObject);
     }
+
+    public void OpenPanel()
+    {
+        gameObject.SetActive(true);
+        AudioManager.instance.PlaySFX("shotgun_fire");
+    }
 }

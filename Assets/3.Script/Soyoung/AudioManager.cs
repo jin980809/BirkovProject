@@ -37,8 +37,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private Sound[] SFX;
 
     [Header("Audio Source (인스펙터에서 직접 연결)")]
-    private AudioSource BGMPlayer;
-    private AudioSource[] SFXPlayer;
+    [SerializeField] private AudioSource BGMPlayer;
+    [SerializeField] private AudioSource[] SFXPlayer;
 
     private int sfxRoundRobinIndex = 0;  //혹시 SFX 풀이 꽉 차면 재생 중인 거 하나 끊고 재사용하라는 목적으로 만듦
 
@@ -46,7 +46,7 @@ public class AudioManager : MonoBehaviour
     {
         if (BGMPlayer == null)
         {
-            Debug.LogError("AudioManager: BGMPlayer가 연결되지 않았습니다.");
+            Debug.Log("AudioManager: BGMPlayer가 연결되지 않았습니다.");
             return;
         }
         foreach (Sound s in BGM)
@@ -61,10 +61,9 @@ public class AudioManager : MonoBehaviour
                 BGMPlayer.clip = s.clips[0];
                 BGMPlayer.volume = s.volume;
                 BGMPlayer.Play();
-                break;
+                return;
             }
         }
-        Debug.Log($"해당 BGM을 가진 sound가 없습니다. [{name}]");
     }
 
     public void StopBGM()
