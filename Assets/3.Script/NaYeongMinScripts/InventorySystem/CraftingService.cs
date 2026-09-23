@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-// 총알 자체제작. 기획서 5.3 : 같은 종류 버섯 5 + 화약 5 -> 해당 탄종 1박스.
+// 총알 자체제작. 기획서 5.3 : 같은 종류 버섯 5 + 화약 5 -> 해당 탄종 20발. 탄약 1개 = 1발.
 namespace Birdkov.NaYeongMin.InventorySystem
 {
     public enum CraftResult
@@ -18,7 +18,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
         public const int GunpowderItemId = 25001;
         public const int MushroomCost = 5;
         public const int GunpowderCost = 5;
-        public const int CraftedBoxAmount = 1;
 
         // 투입한 버섯이 결과 탄종을 결정한다. 별도 탄종 선택 UI 는 두지 않는다.
         private static readonly int[] mushroomItemIds = { 27001, 27002, 27003, 27004 };
@@ -106,7 +105,7 @@ namespace Birdkov.NaYeongMin.InventorySystem
                             ConsumeBoth(inventory, warehouse, GunpowderItemId, GunpowderCost);
 
             if (!consumed ||
-                inventoryService.AddItem(inventory, ammoItemId, CraftedBoxAmount).Result != InventoryResult.Success)
+                inventoryService.AddItem(inventory, ammoItemId, CraftedAmount(ammoItemId)).Result != InventoryResult.Success)
             {
                 Restore(inventory, snapshot);
                 if (warehouseSnapshot != null) Restore(warehouse, warehouseSnapshot);
@@ -114,6 +113,13 @@ namespace Birdkov.NaYeongMin.InventorySystem
             }
 
             return CraftResult.Success;
+        }
+
+        // 제작 1회로 얻는 발 수. CSV magazineSize(20) 를 1회 단위로 쓴다.
+        public int CraftedAmount(int ammoItemId)
+        {
+            ItemData ammo;
+            return itemCatalog != null && itemCatalog.TryGetItem(ammoItemId, out ammo) && ammo.magazineSize > 0 ? ammo.magazineSize : 1;
         }
 
         public int Count(GridContainerData container, int itemId)

@@ -152,7 +152,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     text += "\n내구도 " + WeaponDurability.Remaining(container.slots[slot.index]) + " / " + WeaponDurability.Maximum(item.itemId);
             }
             if (item.healthRecovery != 0 || item.hungerRecovery != 0 || item.waterRecovery != 0)
-                text += "\n효과  체력 " + item.healthRecovery + "  허기 " + item.hungerRecovery + "  수분 " + item.waterRecovery;
+                text += "\n효과" + RecoveryText("체력", item.healthRecovery) + RecoveryText("허기", item.hungerRecovery) +
+                    RecoveryText("수분", item.waterRecovery);
             if (item.price > 0) text += "\n가격 " + item.price + "G";
             return text;
         }
@@ -239,6 +240,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (slot.container == TestContainer.Loot) NotifyLootChanged();
             CloseItemDetail();
             Refresh();
+        }
+
+        private static string RecoveryText(string label, float amount)
+        {
+            return amount > 0 ? "  " + label + " +" + Mathf.RoundToInt(PlayerInventoryService.RecoveryPercent(amount)) + "%" : string.Empty;
         }
     }
 }

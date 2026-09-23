@@ -53,7 +53,7 @@ namespace Birdkov.NaYeongMin.Tests
             ItemCatalog catalog = (ItemCatalog)Get(bench, "catalog");
             catalog.TryGetItem(21001, out ItemData potion);
             float maxHealth = (float)Get(vitals, "maxHealth");
-            return Mathf.Min(maxHealth, maxHealth - damage + maxHealth * potion.healthRecovery / 100f);
+            return Mathf.Min(maxHealth, maxHealth - damage + maxHealth * PlayerInventoryService.RecoveryPercent(potion.healthRecovery) / 100f);
         }
 
         [Test]

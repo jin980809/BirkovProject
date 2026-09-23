@@ -300,7 +300,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return InventoryResult.DestinationRejected;
             }
 
-            if (!target.TryApplyRecovery(item.healthRecovery, item.hungerRecovery, item.waterRecovery))
+            if (!target.TryApplyRecovery(RecoveryPercent(item.healthRecovery), RecoveryPercent(item.hungerRecovery),
+                    RecoveryPercent(item.waterRecovery)))
             {
                 return InventoryResult.DestinationRejected;
             }
@@ -310,9 +311,18 @@ namespace Birdkov.NaYeongMin.InventorySystem
             return result.Result;
         }
 
+        // CSV 회복량은 기획 최대치 30 기준 절대량이다(6/12/27 = 20/40/90%).
+        // IRecoveryTarget 은 % 를 받으므로 여기서 한 번만 환산한다.
+        public const float RecoveryDesignMax = 30f;
+
+        public static float RecoveryPercent(float amount)
+        {
+            return amount * 100f / RecoveryDesignMax;
+        }
+
         private static bool IsValidRecovery(float amount)
         {
-            return amount >= 0 && amount <= 100 && !float.IsNaN(amount) && !float.IsInfinity(amount);
+            return amount >= 0 && amount <= RecoveryDesignMax && !float.IsNaN(amount) && !float.IsInfinity(amount);
         }
 
         // 탄약 1박스에 든 발 수. CSV 의 magazineSize 를 박스 용량으로 읽는다. 기획서 9.2 : 1박스 = 20발.

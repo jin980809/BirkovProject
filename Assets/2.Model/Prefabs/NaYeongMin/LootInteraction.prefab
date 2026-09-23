@@ -13,7 +13,8 @@ GameObject:
   - component: {fileID: 2631366659750680801}
   - component: {fileID: 4463276269523265098}
   - component: {fileID: 2607074140879130026}
-  m_Layer: 0
+  - component: {fileID: 2988070810243128530}
+  m_Layer: 10
   m_Name: LootInteraction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,3 +128,19 @@ MonoBehaviour:
   kind: 1
   displayName: "\uC804\uB9AC\uD488"
   dropSettings: {fileID: 11400000, guid: f12e30d5917abea48b8f1633a889fc2e, type: 2}
+--- !u!114 &2988070810243128530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 770849466462804480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7c23f9e82efe44fbfefe9e06d0b585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldContainerInteractable
+  interactDuration: 1.5
+  inventoryBench: {fileID: 0}
+  promptPrefab: {fileID: 0}
+  merchantKind: 0

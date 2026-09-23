@@ -403,3 +403,89 @@ Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
   해당 씬의 InventoryTestBench > Icons 목록에서 itemId 12001~12003, 13001~13003 의 Sprite 칸에
   위 png 6개를 끌어다 놓으면 된다.
 - 검증: EditMode 165/165 통과. Play(Test.unity): 가방 6칸과 장비 머리/몸통 칸에 새 아이콘 표시 확인.
+
+[적 드롭 - 기획서 10.3 최신 표 + 착용 방어구 드롭 2026-09-23]
+- 드롭 확률 갱신
+    DropTable.csv : 적 3종이 자기 무기와 그 탄약을 100% 떨어뜨리도록 7행 변경, 확률 0 이 된 12행 삭제.
+                    기본 = 기관권총+총알 / 중무장 = 샷건+총알 (+스나이퍼·총알 50) / 원거리 = 돌격소총+총알 (+스나이퍼·총알 5)
+    상자 SO       : Chest_Normal 에 무기 4·탄약 4·보호구 6 항목 추가, Chest_Weapon 기관권총 30->50,
+                    Chest_Ammo 확률 50/50/50/50 -> 50/25/15/5. 수량은 건드리지 않았다.
+    나머지 열(보호구·회복·음식·판매·특수)은 이전 값과 이미 같았다. 상세는 DataTeble/.../DropTableNotes.txt.
+- 적 프리팹 연결 (KTS/Enemy, 사용자 승인으로 컴포넌트만 추가. 팀원 코드 수정 0)
+    Enemy_Pistol  -> EnemyLootReceiver(BasicEnemy)  + EnemyDeathWatcher
+    Enemy_Shotgun -> EnemyLootReceiver(HeavyEnemy)  + EnemyDeathWatcher
+    Enemy_Rifle   -> EnemyLootReceiver(RangedEnemy) + EnemyDeathWatcher
+  팀원 EnemyController 는 사망 시 Destroy 만 한다. EnemyDeathWatcher 가 그 파괴 시점을 잡아 드롭을 만든다.
+  EnemyLootReceiver 의 LootRuntime 칸은 비워 둬도 씬에서 자동으로 찾는다(프리팹은 씬 참조를 못 가지므로).
+- 착용 방어구 드롭
+  팀원 EnemyArmor 가 스폰(OnEnable) 때 EnemyData 확률로 헬멧·조끼를 골라 HeadGear/Belly 밑에 붙인다.
+  EnemyLootReceiver 가 Start 에서 그 모델 이름(1LvHelmet(Clone) ~ 3LvArmor(Clone))을 읽어
+  헬멧 13001~13003 / 조끼 12001~12003 으로 바꿔 둔다. 사망 시 전리품 앞칸에 1개씩 넣는다.
+  앞칸이라 8칸이 넘쳐도 착용 방어구는 버려지지 않는다. 넘치면 뒤쪽 추첨분이 버려진다(기존 규칙).
+  팀원 코드를 고치지 않으려고 private 필드 대신 붙은 모델 이름을 본다. 모델 이름을 바꾸면 이 판별도 같이 바꿔야 한다.
+  인스펙터 Drop Worn Armor 를 끄면 착용 방어구를 넣지 않는다.
+  표의 방어구 확률 추첨은 착용분과 별개다. 같은 방어구가 2개 나올 수 있다.
+- LootRuntime.Spawn 에 보장 아이템 인자(guaranteedItemIds)를 선택 인자로 추가했다. 기존 호출은 그대로 동작한다.
+- Test.unity
+    적 3종 배치: Enemy_Pistol(-6,6) / Enemy_Shotgun(0,8) / Enemy_Rifle(8,2). 기존 Enemy 는 그대로 둠.
+    EnemyPool 의 ricocheParticlePrefab / dieParticlePrefab 가 비어 있어 적이 죽지 못했다(사망 처리 중 예외).
+    팀원 Text_KTS 씬과 같은 ObstarcleHit / EnemyDie 프리팹으로 연결했다. 팀원 씬은 수정하지 않았다.
+- 검증: EditMode 176/176 통과 (EnemyDropTests 11개 신규). 콘솔 에러 0.
+  Play 통합(Test.unity):
+    스폰 착용 캡처가 EnemyArmor 의 실제 추첨 결과와 일치 (착용 없음 포함).
+    사살 -> 사망 위치에 노란 오브제 생성.
+      권총   [최고급 헬멧, 튼튼 조끼] + 지푸라기5 + 기관권총 + 기관권총 총알2 + 구형 헬멧 + 구형 조끼 + 회복약4
+      샷건   [튼튼 조끼] + 지푸라기19 + 샷건 + 스나이퍼 + 샷건 총알2 + 튼튼 조끼 + 회복약 + 회복키트
+      라이플 [구형 헬멧, 최고급 조끼] + 지푸라기6 + 돌격소총 + 돌격소총 총알 + 튼튼 조끼
+    권총 적 드롭을 F 상호작용으로 열어 전리품 8칸과 새 방어구 아이콘 표시 확인.
+  손조작(실제 사격으로 사살)은 하지 않았다. TakeDamage 직접 호출로 사살했다.
+- 확인 필요
+    NaYeongMin.unity 의 LootRuntime 에 '원거리 적 돌격소총 총알 5%' 확률 조정이 남아 있다.
+    예전 표의 깨진 칸 대응용인데 새 표(100%)와 어긋난다. 최신화 보류 중인 씬이라 손대지 않았다.
+    Chest_Ammo 수량(30~60 등)과 적·일반상자 탄약 수량(1~2 박스)의 단위가 다르다.
+
+[확인 결과 2026-09-23]
+- NaYeongMin.unity 는 통합 테스트용 씬이다. 그 씬 LootRuntime 의 '원거리 적 돌격소총 총알 5%' 조정을 지웠다. 이제 CSV(100%) 그대로 쓴다.
+- 탄약은 발 단위다. 탄약 아이템 1개 = 1발. 박스 단위 개념은 폐기됐다.
+  Chest_Ammo 의 30~60 은 30~60발이다.
+  팀원 WeaponController 재장전도 WeaponInventoryBridge.ConsumeAmmo 로 아이템 1개를 1발로 소모한다.
+- 8칸이 넘쳐 뒤쪽 추첨분이 버려지는 것은 허용.
+
+[탄약 수량 발 단위로 통일 - 2026-09-23]
+- 탄약 아이템 1개 = 1발. 예전 '1박스 = 20발' 수량을 전부 x20 해서 발 수로 바꿨다.
+    DropTable.csv 탄약 13행: 2개 -> 40발, 1개 -> 20발 (Box / AmmoBox / 적 3종)
+      기본 적 기관권총 총알 40 / 중무장 샷건 총알 40, 스나이퍼 총알 20 / 원거리 돌격소총 총알 20, 스나이퍼 총알 20
+    Chest_Normal 탄약 4항목: 40 / 40 / 20 / 20발
+    Chest_Ammo 는 원래 발 단위(30~60 등)라 그대로.
+- 제작대: 버섯 5 + 화약 5 -> 20발. CraftingService.CraftedAmount 가 ItemData.csv 의 magazineSize(20)를 읽는다.
+- 상점: 탄약은 20발 묶음으로 사고판다 (ShopService.TradeAmount, 역시 magazineSize). 가격은 그대로 묶음당 2/3/3/5G.
+  판매는 한 칸에 20발 이상 있어야 된다. 구매 때 가방이 모자라 일부만 들어가면 통째로 되돌린다.
+  상점 목록에 탄약은 '이름 x20  가격G' 으로 보인다.
+  묶음 크기를 바꾸려면 ItemData.csv 의 탄약 magazineSize 만 고치면 된다.
+- UI 문구의 '1박스' 를 '20발' 로 바꿨다 (제작 안내·상세·완료 문구, 판매 실패 문구).
+- 검증: EditMode 186/186 통과 (AmmoUnitTests 10개 신규, 제작 테스트 3건 기대값 1 -> 20).
+  Play: 권총·샷건 적 드롭 탄약 40발, 라이플 적 20발. 상점 돌격소총 총알 구매 20발 / 3G. 제작 20발.
+- 남은 것
+    ItemData.csv 탄약 설명이 아직 '1박스 20발. 사용 시 탄약이 20발 늘어난다.' 이다. 기획 문구라 고치지 않았다.
+    PlayerInventoryService 의 GetRoundsPerBox / GetAmmoRounds / ConsumeAmmoRounds 는 박스 기준 계산이다.
+    게임에서는 쓰지 않고(재장전은 팀원 WeaponInventoryBridge.ConsumeAmmo) 테스트만 쓴다. 정리 후보.
+    상점 판매 버튼 글자 '1개 판매' 는 탄약일 때 20발이 팔린다. 프리팹 글자는 기획팀이 바꿀 수 있다.
+
+[회복량 버그 수정 - 2026-09-23]
+- 증상: 회복약을 먹으면 체력이 +6 만 올랐다(최대 100 의 6%). 기획은 최대 체력의 20%.
+- 원인(내 코드만): ItemData.csv 회복량 6/12/27 은 기획 최대치 30 기준 절대량이다(= 20/40/90%).
+  그런데 PlayerInventoryService.UseRecoveryItem 이 그 값을 IRecoveryTarget.TryApplyRecovery 의 % 인자에 그대로 넘겼다.
+  팀원 InventoryTestBenchLink 는 인터페이스 이름대로 % 로 받아 MaxHealth 에 곱한다. 팀원 쪽은 맞게 구현돼 있다.
+- 수정: PlayerInventoryService 에 RecoveryPercent(값 x 100 / 30) 를 두고 넘기기 전에 한 번 환산한다.
+  허용 범위 검사도 0~100 -> 0~30 으로 맞췄다. 아이템 상세창 효과 표기를 '체력 +20%' 형식으로 바꿨다.
+  CSV 와 팀원 코드는 건드리지 않았다.
+- 검증: EditMode 186/186 (회복 테스트 기대값을 절대량 6/12/27 -> 20/40/90% 로 갱신).
+  Play: 체력 30 -> 회복약 50 (+20) -> 회복키트 90 (+40). 밥·물은 최대치에서 멈춤. 상세창 '체력 +90%'.
+
+[프리팹 최신화 - 2026-09-23]
+- InventoryTestBench.prefab: 씬에서만 붙어 있던 Root(중첩 InventoryUI.prefab)를 프리팹에 반영. RectTransform/Canvas/CanvasScaler/InventoryTestBench 설정도 반영.
+  UI 참조 39개 연결. shopPrev/shopNext 2개는 비어 있음(의도, 상점 페이지 안 씀). 슬롯 162개.
+- StorageInteraction / LootInteraction / MapChestInteraction.prefab: 씬에서 추가한 WorldContainerInteractable + Interaction 레이어 반영.
+- NaYeongMin.unity: 예전 씬 전용 Root(PlayerDeathPanel 중복 포함) 삭제 -> 프리팹 Root 사용. 벤치 컴포넌트 오버라이드 되돌림(= Test.unity 와 같은 설정).
+- 제외: 팀원 Crosshair / Interaction 오브젝트는 씬에만 둠. 씬 오브젝트 참조(lootRuntime, player 등)는 프리팹에 넣을 수 없어 씬 오버라이드 유지(없으면 자동 탐색).
+- 검증: EditMode 186/186. Play(Test/NaYeongMin 둘 다, 코드 호출): IsReady, Root 1개, 슬롯 162, 사망패널 1개, 인벤/창고/제작대 열기·닫기 오류 0. 손조작 검증 아님.

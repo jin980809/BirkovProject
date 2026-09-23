@@ -24,10 +24,9 @@ namespace Birdkov.NaYeongMin.Tests
             inventory.AddItem(warehouse, 25001, 5);
             var service = new CraftingService(catalog);
             Assert.AreEqual(CraftResult.Success, service.Craft(player, mushroom, warehouse));
-            Assert.AreEqual(1, service.Count(player.inventory, ammo));
+            Assert.AreEqual(20, service.Count(player.inventory, ammo));   // 탄약 1개 = 1발
             Assert.AreEqual(0, service.Count(warehouse, mushroom));
             Assert.AreEqual(0, service.Count(warehouse, 25001));
-            Assert.AreEqual(20, new PlayerInventoryService(catalog).GetAmmoRounds(player, ammo));
         }
 
         [Test] public void Craft_FullBagRestoresBothAndMetadata()

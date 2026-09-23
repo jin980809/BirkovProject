@@ -15,7 +15,7 @@ MonoBehaviour:
   containerSize: 2
   entries:
   - itemId: 10001
-    chancePercent: 30
+    chancePercent: 50
     minAmount: 1
     maxAmount: 1
   - itemId: 10002
