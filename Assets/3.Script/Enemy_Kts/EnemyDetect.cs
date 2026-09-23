@@ -55,6 +55,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
     Vector3 rayDirection;   //각도 벡터값으로 변환용
     RaycastHit hit;         //타겟
     Transform target;       //타겟 위치값
+    private WaitForSeconds delay;
 
     private void Awake()
     {
@@ -75,7 +76,8 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
     private void Start()
     {
-        StartCoroutine(FindTargetsWithDelay(detectInterval));
+        delay = new WaitForSeconds(detectInterval);
+        StartCoroutine(FindTargetsWithDelay());
     }
 
     private void Update()
@@ -130,11 +132,11 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
     //죽었을때 조건 초가해야함---------------------------------------------<-----------------------------------------
     //실행문
-    private IEnumerator FindTargetsWithDelay(float delay)
+    private IEnumerator FindTargetsWithDelay()
     {
         while (true)
         {
-            yield return new WaitForSeconds(delay);
+            yield return delay;
             FindVisibleTargets();
         }
     }

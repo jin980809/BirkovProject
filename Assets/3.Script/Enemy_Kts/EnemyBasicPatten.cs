@@ -194,8 +194,11 @@ public class EnemyBasicPatten : MonoBehaviour
             agent.isStopped = false;
             enemyDetect.FirstCheckOff();
         }
-
-        if (Vector3.Distance(target.position, transform.position) < enemyData.moveDistance)
+        if (Vector3.Distance(target.position, transform.position) < enemyData.minDistance)
+        {
+            yield return StartCoroutine(Patten3_co());
+        }
+        else if (Vector3.Distance(target.position, transform.position) < enemyData.moveDistance)
         {
             switch (a)
             {
@@ -264,12 +267,24 @@ public class EnemyBasicPatten : MonoBehaviour
         agent.isStopped = true;
         ani.SetBool("Run", false);
 
-        if (Vector3.Distance(target.position, transform.position) > enemyData.minDistance)
-        {
-            yield return StartCoroutine(enemyShot.Fire_co());
-        }
-    }
 
+        yield return StartCoroutine(enemyShot.Fire_co());
+
+    }
+    //랜덤 위치 이동
+    private IEnumerator Patten4_co()
+    {
+        ani.SetBool("Run", true);
+        agent.isStopped = false;
+
+        agent.destination = GetRandomPositionOnNavMesh();
+
+        yield return delayTimeWfs;
+
+        agent.isStopped = true;
+        ani.SetBool("Run", false);
+
+    }
     //---------------------------------스폰 포인트로 복귀--------------------------------------
 
     //스폰포인트로 돌아가기
@@ -304,7 +319,7 @@ public class EnemyBasicPatten : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 7f * Time.deltaTime
             );
         }
     }

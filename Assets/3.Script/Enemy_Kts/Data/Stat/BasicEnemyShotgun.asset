@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 40
   moveSpeed: 3
-  angleSpeed: 1000
+  angleSpeed: 720
   rayDistance: 20
   viewAngle: 90
   minDistance: 2
