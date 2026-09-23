@@ -79,6 +79,8 @@ public class WeaponInventoryBridge : MonoBehaviour
 
     // 가방에 흩어진 같은 탄약 itemId 재고를 소모 없이 합산만 한다 - 재장전 게이지를 시작하기 전에
     // 실제로 탄약이 있는지 미리 확인하기 위함 (없으면 게이지를 아예 시작하지 않는다).
+    // HUD 의 보유 탄환수 표시(WeaponController.TryGetSlotAmmo)에도 그대로 쓴다 - 1개 = 1발 규칙이라
+    // ConsumeAmmo 가 실제로 소모하는 수량과 정확히 같다.
     public int PeekAmmoCount(int ammoItemId)
     {
         if (playerData == null)

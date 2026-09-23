@@ -80,6 +80,11 @@ public class WeaponController : MonoBehaviour
     private ItemData equippedWeapon;
     private int equippedSlotIndex = -1;
 
+    // 지금 "선택된" 슬롯 (0/1). equippedSlotIndex 와 달리 그 슬롯이 비어 있어도 -1 로 안 돌아간다 -
+    // 빈 슬롯을 선택해 둔 채로 나중에 그 슬롯에 무기가 들어오면(드래그 장착 등) Update() 가 자동으로
+    // 집어 들 수 있도록 "의도한 슬롯"을 계속 기억해 둔다.
+    private int selectedSlotIndex = 0;
+
     // 장착 무기가 들어있는 장비 슬롯 데이터. 잔탄은 여기(remainingRounds)에 저장한다.
     // 인스턴스별 ID 가 없어서 무기 개체를 구분할 방법이 슬롯 데이터뿐인데, 인벤토리 이동(MoveItem)이
     // remainingRounds 를 같이 옮겨주므로 가방/창고/전리품으로 옮겼다가 다시 껴도 잔탄이 그대로 따라온다.
@@ -168,6 +173,13 @@ public class WeaponController : MonoBehaviour
         get { return isHolstered; }
     }
 
+    // 사격 버튼을 누르고 있는 중인지 (자동/단발 모두, 실제로 발사가 나갔는지와는 무관). 쏘는 도중에
+    // 무기를 바꾸면 어색하므로 PlayerController.CanSwapWeapon 이 이 값을 확인한다.
+    public bool IsFiring
+    {
+        get { return fireHeld; }
+    }
+
     // 로비용으로 설정돼 있는지 (탄이 안 줄고, 내구도도 안 닳는다)
     public bool IsLobby
     {
@@ -186,13 +198,13 @@ public class WeaponController : MonoBehaviour
         get { return equippedWeapon != null ? equippedWeapon.itemId : -1; }
     }
 
-    // 무기 슬롯(0 = 1번, 1 = 2번)에 들어 있는 무기의 잔탄/탄창 용량. 지금 손에 든 무기가 아니어도 된다.
+    // 무기 슬롯(0 = 1번, 1 = 2번)에 들어 있는 무기의 잔탄/가방 보유 탄환 수. 지금 손에 든 무기가 아니어도 된다.
     // 잔탄은 장비 슬롯 데이터(remainingRounds = 비운 발 수)에 있으므로 슬롯 데이터에서 바로 읽는다 (CurrentAmmo 와 같은 규칙).
-    // 슬롯이 비어 있으면 false. HUD 의 슬롯별 장탄수 표시에 쓴다.
-    public bool TryGetSlotAmmo(int slotIndex, out int currentAmmo, out int magazineSize)
+    // 슬롯이 비어 있으면 false. HUD 의 슬롯별 "현재 장전량 / 보유 탄환수" 표시에 쓴다.
+    public bool TryGetSlotAmmo(int slotIndex, out int currentAmmo, out int reserveAmmo)
     {
         currentAmmo = 0;
-        magazineSize = 0;
+        reserveAmmo = 0;
         bool found = false;
 
         if (inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(slotIndex, out ItemData slotWeapon))
@@ -200,9 +212,17 @@ public class WeaponController : MonoBehaviour
             GridSlotData slot = inventoryBridge.GetWeaponSlotData(slotIndex);
             if (slot != null)
             {
-                magazineSize = slotWeapon.magazineSize;
+                int magazineSize = slotWeapon.magazineSize;
                 int spentRounds = Mathf.Clamp(slot.remainingRounds, 0, magazineSize);
                 currentAmmo = magazineSize - spentRounds;
+
+                if (TryGetAmmoItemId(slotWeapon.itemId, out int ammoItemId))
+                {
+                    // 이 프로젝트는 탄약 1개 = 1발로 쓴다 (CompleteReload 의 ConsumeAmmo 도 1:1 로 소모한다).
+                    // NaYeongMin 의 GetAmmoRounds 는 "1개 = 1박스(20발)" 로 계산해서 이 프로젝트 규칙과 안 맞는다.
+                    reserveAmmo = inventoryBridge.PeekAmmoCount(ammoItemId);
+                }
+
                 found = true;
             }
         }
@@ -350,6 +370,13 @@ public class WeaponController : MonoBehaviour
         if (equippedWeapon != null && (equippedWeaponSlot == null || equippedWeaponSlot.itemId != equippedWeapon.itemId))
         {
             EquipSlot(equippedSlotIndex);
+        }
+        // 선택은 해 뒀는데 그 슬롯이 비어 있어서 손에 든 게 없던 경우(집어넣은 상태는 제외) - 그 사이
+        // 드래그 장착 등으로 그 슬롯에 무기가 들어왔으면 바로 집어 든다.
+        else if (equippedWeapon == null && !isHolstered && selectedSlotIndex >= 0 &&
+                 inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(selectedSlotIndex, out _))
+        {
+            EquipSlot(selectedSlotIndex);
         }
 
         RecoverBloom();
@@ -514,6 +541,7 @@ public class WeaponController : MonoBehaviour
         equippedWeapon = weapon;
         equippedWeaponSlot = weaponSlot;
         equippedSlotIndex = weapon != null ? slotIndex : -1;
+        selectedSlotIndex = slotIndex; // 무기가 없어도 "이 슬롯을 보고 있다"는 의도는 그대로 남긴다
         nextFireReadyTime = 0f; // 무기를 바꾸면 발사 쿨다운은 리셋
         currentSpreadDegrees = 0f; // 이전 무기의 블룸은 안 이어받는다
 

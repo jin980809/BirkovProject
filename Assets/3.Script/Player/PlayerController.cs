@@ -233,11 +233,15 @@ public class PlayerController : MonoBehaviour
         get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting; }
     }
 
-    // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI 중에는 불가.
+    // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI / 사격 중에는 불가.
     // 실제 장착(HandleWeaponSelected)과 인벤토리 UI 의 선택 표시(InventoryTestBenchLink)가 같은 조건을 쓰도록 한 곳에 둔다.
     public bool CanSwapWeapon
     {
-        get { return !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting; }
+        get
+        {
+            return !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting &&
+                   (weapon == null || !weapon.IsFiring);
+        }
     }
 
     // 마우스 커서가 가리키는 월드 좌표

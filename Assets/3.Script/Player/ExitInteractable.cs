@@ -43,7 +43,14 @@ public class ExitInteractable : MonoBehaviour, IInteractable
 
     public void OnInteractComplete(GameObject interactor)
     {
-        HidePrompt();
+        // promptInstance 는 이 오브젝트가 아니라 씬을 넘어 유지되는 프롬프트 부모(PromptParent) 밑에 있어서,
+        // 씬 전환으로 이 오브젝트(anchor)가 사라져도 같이 없어지지 않고 마지막 상태(근접 아이콘 켜짐)로
+        // 화면에 남는다. HidePrompt() 는 F 패널만 끄므로, 아예 통째로 지워서 근접 아이콘까지 정리한다.
+        if (promptInstance != null)
+        {
+            Destroy(promptInstance);
+        }
+
         GameSession.Instance.LoadScene(targetSceneName);
     }
 

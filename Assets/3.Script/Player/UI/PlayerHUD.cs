@@ -80,7 +80,7 @@ public class PlayerHUD : MonoBehaviour, ISceneRebindable
     private int lastHealthShown = -1;
     private int lastMaxHealthShown = -1;
     private readonly int[] lastAmmoShown = { -1, -1 };
-    private readonly int[] lastMagazineShown = { -1, -1 };
+    private readonly int[] lastReserveShown = { -1, -1 };
 
     private void Awake()
     {
@@ -204,17 +204,18 @@ public class PlayerHUD : MonoBehaviour, ISceneRebindable
         UpdateSlotAmmo(1, slot2AmmoText, slot2AmmoRoot);
     }
 
-    // 지금 손에 든(선택된) 무기 슬롯의 장탄수만 보여주고, 나머지 슬롯은 오브젝트를 끈다.
-    // 선택된 슬롯이 비어 있으면(손에 든 무기 없음) 둘 다 꺼진다. 재장전 중에도 현재 값을 그대로 보여준다.
+    // 내구도(UpdateSlotDurability)와 달리, 지금 실제로 손에 들고 있는(HasWeaponEquipped) 슬롯의
+    // "현재 장전량 / 가방에 보유한 탄환수"만 보여준다. 집어넣은(Holster) 상태거나 그 슬롯이 아니면 꺼진다.
+    // 재장전 중에도 현재 값을 그대로 보여준다.
     // 이 스크립트는 끄는 오브젝트와 다른 곳(Canvas)에 있으므로 꺼진 뒤에도 계속 돌면서 다시 켤 수 있다.
     private void UpdateSlotAmmo(int slotIndex, Text ammoText, GameObject root)
     {
         if (ammoText != null)
         {
             int ammo = 0;
-            int magazine = 0;
-            bool isSelected = weapon != null && weapon.EquippedSlotIndex == slotIndex;
-            bool visible = isSelected && weapon.TryGetSlotAmmo(slotIndex, out ammo, out magazine);
+            int reserve = 0;
+            bool isHeldSlot = weapon != null && weapon.HasWeaponEquipped && weapon.EquippedSlotIndex == slotIndex;
+            bool visible = isHeldSlot && weapon.TryGetSlotAmmo(slotIndex, out ammo, out reserve);
 
             GameObject toggleTarget = root;
             if (toggleTarget == null)
@@ -227,11 +228,11 @@ public class PlayerHUD : MonoBehaviour, ISceneRebindable
                 toggleTarget.SetActive(visible);
             }
 
-            if (visible && (ammo != lastAmmoShown[slotIndex] || magazine != lastMagazineShown[slotIndex]))
+            if (visible && (ammo != lastAmmoShown[slotIndex] || reserve != lastReserveShown[slotIndex]))
             {
-                ammoText.text = ammo + " / " + magazine;
+                ammoText.text = ammo + " / " + reserve;
                 lastAmmoShown[slotIndex] = ammo;
-                lastMagazineShown[slotIndex] = magazine;
+                lastReserveShown[slotIndex] = reserve;
             }
         }
     }
