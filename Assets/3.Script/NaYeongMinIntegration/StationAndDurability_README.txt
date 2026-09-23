@@ -381,3 +381,25 @@ Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
   ItemData.csv 의 방어구 maxDurability·durabilityCostPerHit 열은 값이 확정되지 않아 사용하지 않는다.
 - 검증: EditMode 153/153 통과. 콘솔 에러·경고 0. Play 에서 벤치 IsReady, 슬롯 162개,
   패널 전부 존재, 수리대 열기 정상.
+
+[방어구 아이콘 교체 - 2026-09-23]
+- 헬멧·조끼 아이콘을 실제 3D 모델로 렌더링한 이미지로 바꿨다. 예전에는 3등급 모두 방독면/배낭 아이콘 하나를 같이 썼다.
+- 원본 모델은 팀원 ArmorVisual 이 쓰는 매핑과 같다. Assets/2.Model/Prefabs/Helmet Armor/ (_Enemy 폴더 아님)
+    13001 구형 헬멧   <- 1LvHelmet   -> ICon/Armor/helmet-lv1.png
+    13002 튼튼 헬멧   <- 2LvHelmet   -> ICon/Armor/helmet-lv2.png
+    13003 최고급 헬멧 <- 3LvHelmet   -> ICon/Armor/helmet-lv3.png
+    12001 구형 조끼   <- 1LvArmor    -> ICon/Armor/vest-lv1.png
+    12002 튼튼 조끼   <- 2LvArmor    -> ICon/Armor/vest-lv2.png
+    12003 최고급 조끼 <- 3LvArmor    -> ICon/Armor/vest-lv3.png
+  경로: Assets/4.Sprite/ICONs/ICon/Armor/. 256x256, 배경 투명, 정면 왼쪽 위 3/4 시점. Sprite(Single) 임포트.
+  원본 프리팹은 읽기만 했고 수정하지 않았다.
+- 적용한 곳: ItemData.csv 의 iconKey 6행, Test.unity 벤치의 icons 바인딩 6건.
+  InventoryTestBench.prefab 에셋의 icons 에는 방어구 항목이 원래 없어 바꿀 것이 없었다.
+- 아이콘 우선순위: 벤치 인스펙터 icons 바인딩 > CSV iconKey(에디터에서만).
+  그래서 icons 바인딩에 옛 아이콘이 박혀 있는 씬은 CSV 를 바꿔도 옛 아이콘이 나온다.
+- 아직 옛 아이콘(방독면/배낭) 바인딩이 남아 있는 씬
+    NaYeongMin.unity           내 개인 씬. 최신화 보류 지시로 손대지 않음.
+    LobbyScene / BattleScene / BattleSceneBoxTest   팀원 씬. 수정 금지라 손대지 않음.
+  해당 씬의 InventoryTestBench > Icons 목록에서 itemId 12001~12003, 13001~13003 의 Sprite 칸에
+  위 png 6개를 끌어다 놓으면 된다.
+- 검증: EditMode 165/165 통과. Play(Test.unity): 가방 6칸과 장비 머리/몸통 칸에 새 아이콘 표시 확인.
