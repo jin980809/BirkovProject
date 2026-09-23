@@ -2,10 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// 맞았을 때 모델 둘레에 하얗게 빛나는 아웃라인이 팍 튀었다가 빠르게 사라지는 이펙트. 플레이어든 적이든
-// 이 컴포넌트만 붙이면 된다 (다른 스크립트를 고칠 필요 없음).
+// 모델 둘레에 하얗게 빛나는 아웃라인을 그리는 이펙트. 두 가지 모드로 쓴다.
+//  1) 피격 플래시: Play() 를 부르면 팍 튀었다가 빠르게 사라진다.
+//  2) 유지 표시: SetHeld(true/false) 로 켜고 끈다 - 켜져 있는 동안 두께/밝기가 그대로 유지된다
+//     (예: CoverObject 가 플레이어 근접을 감지하는 동안 켜 둔다).
+// 플레이어든 적이든 엄폐물이든 이 컴포넌트만 붙이면 된다 (다른 스크립트를 고칠 필요 없음).
 //
-// 언제 재생되나:
+// 피격 플래시는 언제 재생되나:
 //  - 같은 오브젝트에 PlayerVitals 가 있으면, 그 공격 피해(PlayerVitals.Damaged)를 받을 때마다 저절로 재생된다.
 //    허기로 인한 지속 피해에는 안 나온다.
 //  - 플레이어의 총알(Projectile)이 이 오브젝트(또는 그 콜라이더)에 맞으면 저절로 재생된다.
@@ -40,6 +43,7 @@ public class HitOutlineEffect : MonoBehaviour
     private PlayerVitals vitals;
     private Material material;
     private float elapsed = -1f; // 음수 = 재생 중이 아님
+    private bool held; // true 인 동안은 elapsed 감쇠와 상관없이 계속 최대 밝기로 그린다
 
     private readonly List<SkinnedMeshRenderer> skinnedRenderers = new List<SkinnedMeshRenderer>();
     private readonly List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
@@ -72,6 +76,7 @@ public class HitOutlineEffect : MonoBehaviour
 
         // 풀에 반납됐다가 다시 켜질 때 이전 이펙트가 남아 번쩍이지 않게 한다
         elapsed = -1f;
+        held = false;
     }
 
     private void OnDestroy()
@@ -115,22 +120,63 @@ public class HitOutlineEffect : MonoBehaviour
         Play();
     }
 
+    // 계속 켜 두거나 끈다 (예: CoverObject 가 플레이어 감지 트리거에 들어오고 나갈 때). 이미 같은
+    // 상태면 아무 일도 하지 않는다. 켤 때는 Play() 처럼 재질과 대상 모델 목록을 준비한다.
+    public void SetHeld(bool value)
+    {
+        if (held == value)
+        {
+            return;
+        }
+
+        held = value;
+
+        if (held)
+        {
+            if (outlineMaterial == null || !isActiveAndEnabled)
+            {
+                held = false;
+                return;
+            }
+
+            if (material == null)
+            {
+                material = new Material(outlineMaterial);
+            }
+
+            CollectRenderers();
+        }
+    }
+
     // 애니메이션이 이번 프레임의 포즈를 다 만든 뒤에 그려야 아웃라인이 몸과 어긋나지 않는다
     private void LateUpdate()
     {
-        if (elapsed < 0f || material == null)
+        if (material == null)
         {
             return;
         }
 
-        elapsed += Time.deltaTime;
-        if (duration <= 0f || elapsed >= duration)
+        float strength;
+
+        if (held)
         {
-            elapsed = -1f;
+            strength = 1f;
+        }
+        else if (elapsed >= 0f)
+        {
+            elapsed += Time.deltaTime;
+            if (duration <= 0f || elapsed >= duration)
+            {
+                elapsed = -1f;
+                return;
+            }
+
+            strength = Mathf.Pow(1f - elapsed / duration, Mathf.Max(0.01f, decayPower));
+        }
+        else
+        {
             return;
         }
-
-        float strength = Mathf.Pow(1f - elapsed / duration, Mathf.Max(0.01f, decayPower));
 
         Color drawColor = color * (intensity * strength);
         drawColor.a = 1f;
