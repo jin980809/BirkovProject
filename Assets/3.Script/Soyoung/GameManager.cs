@@ -55,6 +55,7 @@ public class GameManager : MonoBehaviour
     }
     public void GameExit()
     {
+        Debug.Log("게임 종료");
         Application.Quit();
     }
 

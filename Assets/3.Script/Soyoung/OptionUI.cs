@@ -45,7 +45,7 @@ public class OptionUI : MonoBehaviour
     private void ClosePopup()
     {
         PlayerPrefs.Save();
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
     public void OpenPanel()
