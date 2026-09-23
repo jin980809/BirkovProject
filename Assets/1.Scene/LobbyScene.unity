@@ -3476,7 +3476,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4788b87562de83f47a835cdb72646539, type: 2}
+  - {fileID: 2100000, guid: a2673ca99883dad4190b1e1b7389ad64, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5788,9 +5788,8 @@ MonoBehaviour:
   playerDeathGrid: {fileID: 0}
   seedExtendedTestStock: 1
   armorDurability:
-    maxDurability: 100
-    damagePerHit: 2
-    repairCost: 3
+    fallbackMaxDurability: 100
+    fallbackDamagePerHit: 1
 --- !u!114 &1000849023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67889,7 +67888,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4788b87562de83f47a835cdb72646539, type: 2}
+  - {fileID: 2100000, guid: a2673ca99883dad4190b1e1b7389ad64, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
