@@ -67,6 +67,10 @@ public class PlayerVision : MonoBehaviour
     {
         public Collider collider;
         public Renderer[] renderers;
+        // 체력바 등 UI(Renderer 가 아니라 Canvas/CanvasRenderer 로 그려짐)는 위 배열에 안 잡힌다.
+        // Canvas 자체를 끄면 그 밑의 물음표/느낌표 표시(HpEffect 와 무관하게 같은 Canvas에 형제로 붙어있음)까지
+        // 같이 꺼지므로, HpEffect(KTS 파일, 공개 API 만 참조)가 붙은 오브젝트의 자식들만 꺼준다.
+        public GameObject[] hpEffectChildren;
         public bool visible;
     }
 
@@ -210,6 +214,18 @@ public class PlayerVision : MonoBehaviour
         Hideable h = new Hideable();
         h.collider = target;
         h.renderers = target.GetComponentsInChildren<Renderer>(true);
+
+        HpEffect hpEffect = target.GetComponentInChildren<HpEffect>(true);
+        if (hpEffect != null)
+        {
+            Transform hpTransform = hpEffect.transform;
+            h.hpEffectChildren = new GameObject[hpTransform.childCount];
+            for (int i = 0; i < hpTransform.childCount; i++)
+            {
+                h.hpEffectChildren[i] = hpTransform.GetChild(i).gameObject;
+            }
+        }
+
         h.visible = true;
         SetHideableVisible(h, false); // 기본은 숨김
         hideables.Add(h);
@@ -243,6 +259,22 @@ public class PlayerVision : MonoBehaviour
             if (h.renderers[i] != null)
             {
                 h.renderers[i].forceRenderingOff = !value;
+            }
+        }
+
+        // 체력바 등 Canvas 로 그려지는 UI 는 Renderer 가 아니라서 위 루프에 안 걸린다 - 따로 꺼준다.
+        // Canvas 자체가 아니라 HpEffect 의 자식들만 끄는 이유: 같은 Canvas에 물음표/느낌표 표시가
+        // 형제로 같이 있어서, Canvas를 통째로 끄면 그것들까지 같이 꺼진다.
+        // HpEffect 가 붙은 오브젝트(부모) 자체는 끄지 않고 자식만 꺼서, HpEffect 의 스크립트/코루틴은
+        // 계속 살아있게 한다 - 다시 보일 때 애니메이션이 처음부터 안 튀고 진행 중이던 상태 그대로 이어진다.
+        if (h.hpEffectChildren != null)
+        {
+            for (int i = 0; i < h.hpEffectChildren.Length; i++)
+            {
+                if (h.hpEffectChildren[i] != null)
+                {
+                    h.hpEffectChildren[i].SetActive(value);
+                }
             }
         }
     }
