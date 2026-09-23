@@ -5,6 +5,7 @@ using UnityEngine;
 //
 // 플레이어가 붙어있는 동안에는 플레이어가 쏘는 총알이 이 엄폐물을 무시하고 통과한다
 // (엄폐물 너머의 적을 쏠 수 있게). "붙어있다"는 트리거 콜라이더로 자동 감지한다.
+// 같은 동안 attachOutline(HitOutlineEffect)이 있으면 아웃라인을 켜서 "지금 이 엄폐물에 붙어있다"고 표시한다.
 //
 // 에디터 설정: 콜라이더 2개가 필요하고, 계층 구조는 이렇게 둔다.
 //  1) 부모(이 스크립트가 붙은 오브젝트): 플레이어 근접 감지용 콜라이더 (Is Trigger 체크,
@@ -22,6 +23,10 @@ public class CoverObject : MonoBehaviour, IDamageable
     [SerializeField] private float maxHealth = 100f;
     [Tooltip("실제로 총알/이동을 막는 콜라이더 (Is Trigger 체크 안 함, 보통 자식 오브젝트). 데미지 판정 기준으로도 쓰인다")]
     [SerializeField] private Collider blockingCollider;
+    [Tooltip("플레이어가 감지 트리거에 붙어있는 동안 켜 둘 아웃라인. 비우면 같은 오브젝트에서 찾고, 없으면 표시하지 않는다")]
+    [SerializeField] private HitOutlineEffect attachOutline;
+    [Tooltip("부서질 때 재생할 이펙트 오브젝트 (하위 자식). 비우면 이펙트 없이 그냥 꺼진다")]
+    [SerializeField] private GameObject breakEffect;
 
     // Projectile 이 "이 콜라이더가 진짜 맞는 판정 대상인지"를 가릴 때 쓴다 - 감지용 트리거는
     // blockingCollider 가 아니므로 이걸로 구분해서 항상 투명하게 통과시킨다 (붙었는지 여부와 무관하게).
@@ -44,6 +49,11 @@ public class CoverObject : MonoBehaviour, IDamageable
         if (blockingCollider == null)
         {
             blockingCollider = FindBlockingCollider();
+        }
+
+        if (attachOutline == null)
+        {
+            attachOutline = GetComponent<HitOutlineEffect>();
         }
     }
 
@@ -79,7 +89,45 @@ public class CoverObject : MonoBehaviour, IDamageable
 
         if (health <= 0f)
         {
+            PlayBreakEffect();
             gameObject.SetActive(false); // Destroy 하지 않는다
+        }
+    }
+
+    // breakEffect 는 이 오브젝트의 자식이라, 위에서 SetActive(false) 로 끄면 자식도 같이 꺼져서
+    // 파티클이 끝까지 재생되지 못한다. 그래서 재생 직전에 부모에서 떼어내 살려 두고, 다 끝나면
+    // (또는 일정 시간 뒤) 알아서 파괴되게 한다.
+    private void PlayBreakEffect()
+    {
+        if (breakEffect == null)
+        {
+            return;
+        }
+
+        breakEffect.transform.SetParent(null, true); // 월드 위치/회전 유지
+        breakEffect.SetActive(true);
+
+        ParticleSystem[] particles = breakEffect.GetComponentsInChildren<ParticleSystem>(true);
+        float maxLifetime = 0f;
+
+        for (int i = 0; i < particles.Length; i++)
+        {
+            ParticleSystem particle = particles[i];
+            particle.Clear(true);
+            particle.Play(true);
+
+            ParticleSystem.MainModule main = particle.main;
+            float lifetime = main.duration + main.startLifetime.constantMax;
+            if (lifetime > maxLifetime)
+            {
+                maxLifetime = lifetime;
+            }
+        }
+
+        // CFX_AutoDestructShuriken 등 자체 정리 스크립트가 없으면 여기서 대신 정리한다
+        if (breakEffect.GetComponentInChildren<CFX_AutoDestructShuriken>() == null)
+        {
+            Destroy(breakEffect, maxLifetime > 0f ? maxLifetime : 3f);
         }
     }
 
@@ -91,6 +139,11 @@ public class CoverObject : MonoBehaviour, IDamageable
             if (attachedPlayer != null)
             {
                 attachedPlayer.AttachCover(allColliders);
+
+                if (attachOutline != null)
+                {
+                    attachOutline.SetHeld(true);
+                }
             }
         }
     }
@@ -105,6 +158,11 @@ public class CoverObject : MonoBehaviour, IDamageable
 
     private void RemoveFromAttached()
     {
+        if (attachOutline != null)
+        {
+            attachOutline.SetHeld(false);
+        }
+
         if (allColliders == null || attachedPlayer == null)
         {
             return;

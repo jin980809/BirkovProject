@@ -523,6 +523,7 @@ MonoBehaviour:
   pointObject: {fileID: 0}
   damageDelay: 0.15
   damageDuration: 0.4
+  hitWhite: {fileID: 0}
 --- !u!224 &39116887 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2777496615193957279, guid: fb3266838863a1f4fa4f195c0ace8675, type: 3}
@@ -1761,11 +1762,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   enemyData: {fileID: 11400000, guid: efdd4ed22fcdfe34697917c2fb9cb842, type: 2}
+  enemyBulletPool: {fileID: 0}
+  enemyArmor: {fileID: 0}
   maxHealth: 0
   currentHealth: 0
-  hitParticle: {fileID: 0}
-  dieParticle: {fileID: 0}
   hpEffect: {fileID: 0}
+  hitParticle: {fileID: 0}
 --- !u!114 &125126743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13110,8 +13112,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBulletPool
   bulletPrefab: {fileID: 8400544427079156264, guid: 8c44756f1fd14244da7b10e7108e812e, type: 3}
-  particlePrefab: {fileID: 1395894354935488569, guid: 2517fecbd4e77a8429cdbb6a3439e88e, type: 3}
-  poolSize: 30
+  bulletPoolSize: 30
+  ricocheParticlePrefab: {fileID: 0}
+  ricocheParticlePoolSize: 30
+  dieParticlePrefab: {fileID: 0}
+  dieParticlePoolSize: 5
 --- !u!4 &381216587
 Transform:
   m_ObjectHideFlags: 0
@@ -26571,8 +26576,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBulletPool
   bulletPrefab: {fileID: 1930680145227118987, guid: 4799f6bb1fe9cb149ac0ba4d447b26bd, type: 3}
-  particlePrefab: {fileID: 0}
-  poolSize: 30
+  bulletPoolSize: 30
+  ricocheParticlePrefab: {fileID: 0}
+  ricocheParticlePoolSize: 30
+  dieParticlePrefab: {fileID: 0}
+  dieParticlePoolSize: 5
 --- !u!1 &919452716
 GameObject:
   m_ObjectHideFlags: 0
@@ -54261,6 +54269,7 @@ MonoBehaviour:
   input: {fileID: 0}
   player: {fileID: 0}
   durabilityBridge: {fileID: 0}
+  armorDurabilityBridge: {fileID: 0}
 --- !u!114 &1321432804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55139,6 +55148,7 @@ MonoBehaviour:
   input: {fileID: 1327114925}
   player: {fileID: 1327114924}
   durabilityBridge: {fileID: 0}
+  armorDurabilityBridge: {fileID: 0}
 --- !u!114 &1327114917
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57025,11 +57035,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   enemyData: {fileID: 11400000, guid: efdd4ed22fcdfe34697917c2fb9cb842, type: 2}
+  enemyBulletPool: {fileID: 0}
+  enemyArmor: {fileID: 0}
   maxHealth: 0
   currentHealth: 0
-  hitParticle: {fileID: 1912618706}
-  dieParticle: {fileID: 808866024}
   hpEffect: {fileID: 36736780}
+  hitParticle: {fileID: 1912618706}
 --- !u!114 &1467346899
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -98014,7 +98025,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[8].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 7a63bde18f621c14a8e97e6e42380500, type: 3}
+      objectReference: {fileID: 21300000, guid: 9ab9a280a7cd6a54198840b03bcd5e66, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[9].itemId
       value: 13002
@@ -98022,7 +98033,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[9].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 7a63bde18f621c14a8e97e6e42380500, type: 3}
+      objectReference: {fileID: 21300000, guid: e35fda03b8df2f44f9608d2d124bfad5, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: ui.craftButtons.Array.size
       value: 4
@@ -98038,7 +98049,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[10].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 7a63bde18f621c14a8e97e6e42380500, type: 3}
+      objectReference: {fileID: 21300000, guid: 6df4e53361f95d443b2c46675c4e5c58, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[11].itemId
       value: 12001
@@ -98046,7 +98057,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[11].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 241df97a372aa0f47895f04844efde4b, type: 3}
+      objectReference: {fileID: 21300000, guid: 7a33b35d5d4d48947ba7b5bef9032779, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[12].itemId
       value: 12002
@@ -98054,7 +98065,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[12].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 241df97a372aa0f47895f04844efde4b, type: 3}
+      objectReference: {fileID: 21300000, guid: 0d6291d58ee83ee4484697876f55590b, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[13].itemId
       value: 12003
@@ -98062,7 +98073,7 @@ PrefabInstance:
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[13].sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 241df97a372aa0f47895f04844efde4b, type: 3}
+      objectReference: {fileID: 21300000, guid: b65769d518bcf4f4aaf5a6a2a706143a, type: 3}
     - target: {fileID: 9092054705148949479, guid: 32cdfe06f306945498db339a8a66a394, type: 3}
       propertyPath: icons.Array.data[14].itemId
       value: 20001

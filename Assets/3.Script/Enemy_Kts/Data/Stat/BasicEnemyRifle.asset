@@ -10,19 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 91817b9e9b91d854b94f6d5540c2ab52, type: 3}
-  m_Name: Basic
+  m_Name: BasicEnemyRifle
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  maxHealth: 30
-  damage: 0
-  moveSpeed: 3
+  maxHealth: 50
+  moveSpeed: 2
   angleSpeed: 720
-  rayDistance: 10
+  rayDistance: 20
   viewAngle: 180
-  minDistance: 5
+  minDistance: 2
+  moveDistance: 7
   rayCount: 25
   detectInterval: 0.1
   decrease: 2
   walkPoints: 30
   runPoints: 40
   shotPoints: 50
+  delayTime: 2
   patrolWaitingTime: 10
+  oneHelmet: 25
+  twoHelmet: 50
+  threeHelmet: 75
+  oneArmor: 25
+  twoArmor: 50
+  threeArmor: 75
