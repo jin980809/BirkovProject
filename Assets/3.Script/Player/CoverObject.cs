@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // 엄폐물: 체력이 있고 데미지를 받으면 깎인다(모든 총알 - 플레이어 자신 것 포함). 0이 되면
-// 꺼진다(SetActive(false)) - Destroy 하지 않는다.
+// 부서진다 - 오브젝트 자체는 SetActive(false) 하지 않고, breakEffect 를 제외한 하위 오브젝트와
+// 콜라이더만 꺼서 더 이상 막지도/감지되지도/보이지도 않게 한다 (Destroy 하지 않는다).
 //
 // 플레이어가 붙어있는 동안에는 플레이어가 쏘는 총알이 이 엄폐물을 무시하고 통과한다
 // (엄폐물 너머의 적을 쏠 수 있게). "붙어있다"는 트리거 콜라이더로 자동 감지한다.
@@ -89,14 +90,44 @@ public class CoverObject : MonoBehaviour, IDamageable
 
         if (health <= 0f)
         {
-            PlayBreakEffect();
-            gameObject.SetActive(false); // Destroy 하지 않는다
+            Break();
         }
     }
 
-    // breakEffect 는 이 오브젝트의 자식이라, 위에서 SetActive(false) 로 끄면 자식도 같이 꺼져서
-    // 파티클이 끝까지 재생되지 못한다. 그래서 재생 직전에 부모에서 떼어내 살려 두고, 다 끝나면
-    // (또는 일정 시간 뒤) 알아서 파괴되게 한다.
+    // 부서지면 오브젝트 자체는 끄지 않고, breakEffect 를 제외한 하위 오브젝트와 콜라이더만 꺼서
+    // 더 이상 막지도/감지되지도/보이지도 않게 한다. 부모(이 오브젝트)가 계속 켜져 있으므로
+    // breakEffect 는 부모에서 떼어낼 필요 없이 자식으로 둔 채로 끝까지 재생된다.
+    private void Break()
+    {
+        RemoveFromAttached(); // 콜라이더를 끄기 전에 먼저 명시적으로 떼어낸다 (OnTriggerExit 에 기대지 않는다)
+
+        Transform breakEffectTransform = breakEffect != null ? breakEffect.transform : null;
+
+        for (int i = 0; i < allColliders.Length; i++)
+        {
+            Collider collider = allColliders[i];
+            if (breakEffectTransform != null && collider.transform.IsChildOf(breakEffectTransform))
+            {
+                continue;
+            }
+
+            collider.enabled = false;
+        }
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (child == breakEffectTransform)
+            {
+                continue;
+            }
+
+            child.gameObject.SetActive(false);
+        }
+
+        PlayBreakEffect();
+    }
+
     private void PlayBreakEffect()
     {
         if (breakEffect == null)
@@ -104,7 +135,6 @@ public class CoverObject : MonoBehaviour, IDamageable
             return;
         }
 
-        breakEffect.transform.SetParent(null, true); // 월드 위치/회전 유지
         breakEffect.SetActive(true);
 
         ParticleSystem[] particles = breakEffect.GetComponentsInChildren<ParticleSystem>(true);

@@ -11,8 +11,11 @@ using UnityEngine;
 // NaYeongMin 파일은 건드리지 않고 공개 API(PlayerInventoryService)만 쓴다.
 public class DebugInventorySeeder : MonoBehaviour
 {
-    [Tooltip("스택이 안 되는 아이템(무기/장비/특수)을 창고에 몇 개씩 넣을지")]
+    [Tooltip("내구도가 없는, 스택 안 되는 아이템을 창고에 몇 개씩 넣을지 (내구도 있는 장비는 DurabilitySeedPercents 개수로 고정)")]
     [SerializeField] private int nonStackableCopies = 3;
+
+    [Tooltip("지푸라기(화폐)를 보유 수치로 얼마나 넣어줄지")]
+    [SerializeField] private int currencySeedAmount = 99999;
 
     [SerializeField] private ItemDatabase itemDatabase;
     [SerializeField] private InventoryTestBench inventoryBench;
@@ -65,9 +68,14 @@ public class DebugInventorySeeder : MonoBehaviour
         enabled = false;
     }
 
+    // 내구도가 있는 장비(무기/방어구)는 종류별로 항상 이 개수만큼, 각각 이 순서의 퍼센트로 차등해서 넣는다.
+    private static readonly int[] DurabilitySeedPercents = { 100, 50, 10 };
+
     // 창고에 모든 아이템을 최대치로 채운다. 스택이 되는 아이템은 한 스택을 꽉 채우고,
-    // 스택이 안 되는 아이템은 nonStackableCopies 개씩 넣는다.
-    // 지푸라기(화폐)는 창고에 들어가지 않고, 특수 아이템(24002~24004)은 창고 제외 규칙이라 건너뛴다.
+    // 내구도가 있는 장비는 DurabilitySeedPercents 개수만큼 내구도를 차등해서 넣고,
+    // 그 외 스택이 안 되는 아이템은 nonStackableCopies 개씩 넣는다.
+    // 지푸라기(화폐)는 창고 칸을 쓰지 않고 보유 수치(currency)에 바로 currencySeedAmount 만큼 더해주고,
+    // 특수 아이템(24002~24004)은 창고 제외 규칙이라 건너뛴다.
     private void Seed()
     {
         GridContainerData warehouse = inventoryBench.WarehouseData;
@@ -77,11 +85,24 @@ public class DebugInventorySeeder : MonoBehaviour
         }
 
         InventoryService inventoryService = new InventoryService(itemDatabase.Catalog);
+        PlayerInventoryService playerInventoryService = new PlayerInventoryService(itemDatabase.Catalog);
 
         foreach (ItemData item in ItemCsvLoader.Parse(inventoryBench.itemCsv.text))
         {
-            if (item.itemType == ItemType.Currency || item.itemType == ItemType.Special)
+            if (item.itemType == ItemType.Currency)
             {
+                playerInventoryService.AddToInventory(inventoryBench.PlayerData, item.itemId, currencySeedAmount);
+                continue;
+            }
+
+            if (item.itemType == ItemType.Special)
+            {
+                continue;
+            }
+
+            if (item.maxDurability > 0)
+            {
+                SeedDurabilityCopies(inventoryService, warehouse, item);
                 continue;
             }
 
@@ -91,6 +112,45 @@ public class DebugInventorySeeder : MonoBehaviour
                 Debug.LogWarning("DebugInventorySeeder: 창고 공간 부족으로 다 넣지 못했습니다. itemId=" + item.itemId, this);
             }
         }
+    }
+
+    // 한 칸씩(amount 1) 넣으면서, 방금 그 칸의 durabilityDamage 를 원하는 퍼센트에 맞게 직접 지정한다.
+    // 어느 칸에 들어갔는지는 AddItem 이 "첫 번째 빈 칸"을 채운다는 규칙을 그대로 이용해서, 호출 직전에
+    // 미리 알아낸 인덱스로 특정한다 (그 사이에 다른 코드가 끼어들 일이 없으므로 항상 맞는다).
+    private void SeedDurabilityCopies(InventoryService inventoryService, GridContainerData warehouse, ItemData item)
+    {
+        foreach (int percent in DurabilitySeedPercents)
+        {
+            int slotIndex = FindFirstEmptySlotIndex(warehouse);
+            InventoryMoveResult result = inventoryService.AddItem(warehouse, item.itemId, 1);
+
+            if (result.Result != InventoryResult.Success)
+            {
+                Debug.LogWarning("DebugInventorySeeder: 창고 공간 부족으로 다 넣지 못했습니다. itemId=" + item.itemId, this);
+                continue;
+            }
+
+            if (slotIndex < 0 || slotIndex >= warehouse.slots.Count)
+            {
+                continue;
+            }
+
+            int remaining = Mathf.RoundToInt(item.maxDurability * (percent / 100f));
+            warehouse.slots[slotIndex].durabilityDamage = Mathf.Clamp(item.maxDurability - remaining, 0, item.maxDurability);
+        }
+    }
+
+    private int FindFirstEmptySlotIndex(GridContainerData warehouse)
+    {
+        for (int i = 0; i < warehouse.slots.Count; i++)
+        {
+            if (warehouse.slots[i].IsEmpty())
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private int GetSeedAmount(ItemData item)
