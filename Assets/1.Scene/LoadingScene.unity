@@ -11041,7 +11041,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &478619083
 Transform:
   m_ObjectHideFlags: 0
@@ -11618,6 +11618,7 @@ GameObject:
   - component: {fileID: 742210582}
   - component: {fileID: 742210584}
   - component: {fileID: 742210583}
+  - component: {fileID: 742210585}
   m_Layer: 0
   m_Name: Beak10Polyart
   m_TagString: Untagged
@@ -11695,7 +11696,29 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 742210581}
-  m_Mesh: {fileID: -8194326197187206637, guid: 2f79efde6301f264dbd14c9097015a8c, type: 3}
+  m_Mesh: {fileID: -8194326197187206637, guid: 5bd6c1b711b518f40933e6ead5c161d8, type: 3}
+--- !u!64 &742210585
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742210581}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -8194326197187206637, guid: 5bd6c1b711b518f40933e6ead5c161d8, type: 3}
 --- !u!1 &777465547
 GameObject:
   m_ObjectHideFlags: 0
@@ -26736,7 +26759,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1180593037
 Transform:
   m_ObjectHideFlags: 0
@@ -26777,7 +26800,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f0cc5b442aece3944942ecd2afa4277f, type: 2}
+  - {fileID: 2100000, guid: 8c3e85375b99e77478f865b77bc7e372, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
