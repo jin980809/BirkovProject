@@ -3858,6 +3858,7 @@ GameObject:
   - component: {fileID: 58567869}
   - component: {fileID: 58567871}
   - component: {fileID: 58567870}
+  - component: {fileID: 58567872}
   m_Layer: 0
   m_Name: Cover (19)
   m_TagString: Untagged
@@ -3874,7 +3875,7 @@ Transform:
   m_GameObject: {fileID: 58567868}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.32097805, z: -0, w: 0.94708663}
-  m_LocalPosition: {x: 166.42, y: 0, z: 90.17}
+  m_LocalPosition: {x: 185.04999, y: 0, z: -15.889999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3895,6 +3896,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1506860234}
+  attachOutline: {fileID: 58567872}
+  breakEffect: {fileID: 0}
 --- !u!65 &58567871
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3916,6 +3919,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &58567872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 58567868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1001 &61052765
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7437,6 +7459,7 @@ GameObject:
   - component: {fileID: 106877137}
   - component: {fileID: 106877139}
   - component: {fileID: 106877138}
+  - component: {fileID: 106877140}
   m_Layer: 0
   m_Name: Cover
   m_TagString: Untagged
@@ -7453,7 +7476,7 @@ Transform:
   m_GameObject: {fileID: 106877136}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.53, y: 0, z: -30.91}
+  m_LocalPosition: {x: 26.16, y: 0, z: -136.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7474,6 +7497,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 717358980}
+  attachOutline: {fileID: 106877140}
+  breakEffect: {fileID: 0}
 --- !u!65 &106877139
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7495,6 +7520,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &106877140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 106877136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!4 &107539186 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: bfdf48b9dd5d15146aaf2e0d6f1a3799, type: 3}
@@ -9123,6 +9167,7 @@ GameObject:
   - component: {fileID: 141152790}
   - component: {fileID: 141152792}
   - component: {fileID: 141152791}
+  - component: {fileID: 141152793}
   m_Layer: 0
   m_Name: Cover (7)
   m_TagString: Untagged
@@ -9139,7 +9184,7 @@ Transform:
   m_GameObject: {fileID: 141152789}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.8821479, z: -0, w: 0.47097254}
-  m_LocalPosition: {x: -3.02, y: 0, z: 83.46}
+  m_LocalPosition: {x: 15.609999, y: 0, z: -22.599998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9160,6 +9205,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 968393072}
+  attachOutline: {fileID: 141152793}
+  breakEffect: {fileID: 0}
 --- !u!65 &141152792
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9181,6 +9228,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &141152793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141152789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &141776469
 GameObject:
   m_ObjectHideFlags: 0
@@ -10661,6 +10727,7 @@ GameObject:
   - component: {fileID: 158684970}
   - component: {fileID: 158684972}
   - component: {fileID: 158684971}
+  - component: {fileID: 158684973}
   m_Layer: 0
   m_Name: Cover (18)
   m_TagString: Untagged
@@ -10677,7 +10744,7 @@ Transform:
   m_GameObject: {fileID: 158684969}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7292157, z: -0, w: 0.6842839}
-  m_LocalPosition: {x: 140.4, y: 0, z: 101.3}
+  m_LocalPosition: {x: 159.03, y: 0, z: -4.7599945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10698,6 +10765,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1608949813}
+  attachOutline: {fileID: 158684973}
+  breakEffect: {fileID: 0}
 --- !u!65 &158684972
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10719,6 +10788,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &158684973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158684969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &159125301
 GameObject:
   m_ObjectHideFlags: 0
@@ -19696,14 +19784,13 @@ Transform:
   m_GameObject: {fileID: 293805616}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 18.72496, y: 0, z: -106.05627}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 106877137}
   - {fileID: 514615979}
   - {fileID: 461402504}
-  - {fileID: 532583924}
   - {fileID: 629271503}
   - {fileID: 1740615380}
   - {fileID: 1557033099}
@@ -31267,6 +31354,7 @@ GameObject:
   - component: {fileID: 461402504}
   - component: {fileID: 461402506}
   - component: {fileID: 461402505}
+  - component: {fileID: 461402507}
   m_Layer: 0
   m_Name: Cover (2)
   m_TagString: Untagged
@@ -31283,7 +31371,7 @@ Transform:
   m_GameObject: {fileID: 461402503}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.71585715, z: -0, w: 0.69824684}
-  m_LocalPosition: {x: 11.33, y: 0, z: 9.27}
+  m_LocalPosition: {x: 29.96, y: 0, z: -96.78999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -31304,6 +31392,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 838149102}
+  attachOutline: {fileID: 461402507}
+  breakEffect: {fileID: 0}
 --- !u!65 &461402506
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -31325,6 +31415,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &461402507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 461402503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1001 &461441641
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32987,6 +33096,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &488417867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34677,6 +34787,7 @@ GameObject:
   - component: {fileID: 514615979}
   - component: {fileID: 514615981}
   - component: {fileID: 514615980}
+  - component: {fileID: 514615982}
   m_Layer: 0
   m_Name: Cover (1)
   m_TagString: Untagged
@@ -34693,7 +34804,7 @@ Transform:
   m_GameObject: {fileID: 514615978}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.57503456, z: -0, w: 0.8181292}
-  m_LocalPosition: {x: 16.2, y: 0, z: -25.68}
+  m_LocalPosition: {x: 34.83, y: 0, z: -131.73999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -34714,6 +34825,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1976985840}
+  attachOutline: {fileID: 514615982}
+  breakEffect: {fileID: 0}
 --- !u!65 &514615981
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -34735,6 +34848,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &514615982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 514615978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1001 &514849071
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -35627,6 +35759,7 @@ GameObject:
   - component: {fileID: 532583924}
   - component: {fileID: 532583926}
   - component: {fileID: 532583925}
+  - component: {fileID: 532583927}
   m_Layer: 0
   m_Name: Cover (3)
   m_TagString: Untagged
@@ -35642,13 +35775,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 532583923}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.85552746, z: -0, w: 0.5177575}
-  m_LocalPosition: {x: 4.67, y: 0, z: 23.26}
+  m_LocalRotation: {x: -0, y: -0.8019593, z: -0, w: 0.59737873}
+  m_LocalPosition: {x: -34.431854, y: 0, z: 39.473377}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 91060924}
-  m_Father: {fileID: 293805617}
+  m_Father: {fileID: 1557033099}
   m_LocalEulerAnglesHint: {x: 0, y: 117.636, z: 0}
 --- !u!114 &532583925
 MonoBehaviour:
@@ -35664,6 +35797,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 91060925}
+  attachOutline: {fileID: 532583927}
+  breakEffect: {fileID: 0}
 --- !u!65 &532583926
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -35685,6 +35820,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &532583927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532583923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &533843411
 GameObject:
   m_ObjectHideFlags: 0
@@ -39425,6 +39579,7 @@ GameObject:
   - component: {fileID: 600724348}
   - component: {fileID: 600724350}
   - component: {fileID: 600724349}
+  - component: {fileID: 600724351}
   m_Layer: 0
   m_Name: Cover (20)
   m_TagString: Untagged
@@ -39441,7 +39596,7 @@ Transform:
   m_GameObject: {fileID: 600724347}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38930178, z: -0, w: 0.92111033}
-  m_LocalPosition: {x: 53.82, y: 0, z: -2.87}
+  m_LocalPosition: {x: 72.45, y: 0, z: -108.93}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -39462,6 +39617,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1727527200}
+  attachOutline: {fileID: 600724351}
+  breakEffect: {fileID: 0}
 --- !u!65 &600724350
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39483,6 +39640,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &600724351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600724347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &600963716
 GameObject:
   m_ObjectHideFlags: 0
@@ -40792,6 +40968,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &622871746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41065,6 +41242,7 @@ GameObject:
   - component: {fileID: 629271503}
   - component: {fileID: 629271505}
   - component: {fileID: 629271504}
+  - component: {fileID: 629271506}
   m_Layer: 0
   m_Name: Cover (4)
   m_TagString: Untagged
@@ -41081,7 +41259,7 @@ Transform:
   m_GameObject: {fileID: 629271502}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.929712, z: -0, w: 0.36828747}
-  m_LocalPosition: {x: 20.08, y: 0, z: 58.38}
+  m_LocalPosition: {x: 38.71, y: 0, z: -47.679996}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -41102,6 +41280,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 174358570}
+  attachOutline: {fileID: 629271506}
+  breakEffect: {fileID: 0}
 --- !u!65 &629271505
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -41123,6 +41303,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &629271506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629271502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &630257998
 GameObject:
   m_ObjectHideFlags: 0
@@ -43425,6 +43624,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &674991539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49302,6 +49502,7 @@ GameObject:
   - component: {fileID: 763856269}
   - component: {fileID: 763856271}
   - component: {fileID: 763856270}
+  - component: {fileID: 763856272}
   m_Layer: 0
   m_Name: Cover (12)
   m_TagString: Untagged
@@ -49318,7 +49519,7 @@ Transform:
   m_GameObject: {fileID: 763856268}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.34728685, z: -0, w: 0.937759}
-  m_LocalPosition: {x: 152.24, y: 0, z: -35.14}
+  m_LocalPosition: {x: 170.87, y: 0, z: -141.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -49339,6 +49540,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 187402999}
+  attachOutline: {fileID: 763856272}
+  breakEffect: {fileID: 0}
 --- !u!65 &763856271
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -49360,6 +49563,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &763856272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 763856268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &766553302
 GameObject:
   m_ObjectHideFlags: 0
@@ -49613,6 +49835,7 @@ GameObject:
   - component: {fileID: 768861393}
   - component: {fileID: 768861395}
   - component: {fileID: 768861394}
+  - component: {fileID: 768861396}
   m_Layer: 0
   m_Name: Cover (15)
   m_TagString: Untagged
@@ -49629,7 +49852,7 @@ Transform:
   m_GameObject: {fileID: 768861392}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.111917414, z: -0, w: 0.9937175}
-  m_LocalPosition: {x: 157.64, y: 0, z: 5.78}
+  m_LocalPosition: {x: 176.26999, y: 0, z: -100.28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -49650,6 +49873,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1078437660}
+  attachOutline: {fileID: 768861396}
+  breakEffect: {fileID: 0}
 --- !u!65 &768861395
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -49671,6 +49896,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &768861396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768861392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &769482562
 GameObject:
   m_ObjectHideFlags: 0
@@ -50519,6 +50763,7 @@ GameObject:
   - component: {fileID: 784594041}
   - component: {fileID: 784594043}
   - component: {fileID: 784594042}
+  - component: {fileID: 784594044}
   m_Layer: 0
   m_Name: Cover (9)
   m_TagString: Untagged
@@ -50535,7 +50780,7 @@ Transform:
   m_GameObject: {fileID: 784594040}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7270328, z: -0, w: 0.6866028}
-  m_LocalPosition: {x: 69.95, y: 0, z: 69.69}
+  m_LocalPosition: {x: 88.579994, y: 0, z: -36.369995}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -50556,6 +50801,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 835333418}
+  attachOutline: {fileID: 784594044}
+  breakEffect: {fileID: 0}
 --- !u!65 &784594043
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -50577,6 +50824,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &784594044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 784594040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1001 &785937093
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -59086,6 +59352,7 @@ GameObject:
   - component: {fileID: 954901089}
   - component: {fileID: 954901091}
   - component: {fileID: 954901090}
+  - component: {fileID: 954901092}
   m_Layer: 0
   m_Name: Cover (17)
   m_TagString: Untagged
@@ -59102,7 +59369,7 @@ Transform:
   m_GameObject: {fileID: 954901088}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7292157, z: -0, w: 0.6842839}
-  m_LocalPosition: {x: 128.07, y: 0, z: 90.17}
+  m_LocalPosition: {x: 146.70001, y: 0, z: -15.889999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -59123,6 +59390,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1444736085}
+  attachOutline: {fileID: 954901092}
+  breakEffect: {fileID: 0}
 --- !u!65 &954901091
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -59144,6 +59413,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &954901092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 954901088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &955592956
 GameObject:
   m_ObjectHideFlags: 0
@@ -60310,6 +60598,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &979218534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -64461,6 +64750,7 @@ GameObject:
   - component: {fileID: 1064256114}
   - component: {fileID: 1064256116}
   - component: {fileID: 1064256115}
+  - component: {fileID: 1064256117}
   m_Layer: 0
   m_Name: Cover (13)
   m_TagString: Untagged
@@ -64477,7 +64767,7 @@ Transform:
   m_GameObject: {fileID: 1064256113}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.13060045, z: -0, w: 0.9914351}
-  m_LocalPosition: {x: 156.79, y: 0, z: -23.41}
+  m_LocalPosition: {x: 175.41998, y: 0, z: -129.47}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -64498,6 +64788,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 229167730}
+  attachOutline: {fileID: 1064256117}
+  breakEffect: {fileID: 0}
 --- !u!65 &1064256116
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -64519,6 +64811,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1064256117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064256113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1065922382
 GameObject:
   m_ObjectHideFlags: 0
@@ -65833,6 +66144,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &1083222536
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -68873,6 +69185,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &1123434638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87330,6 +87643,7 @@ GameObject:
   - component: {fileID: 1438493993}
   - component: {fileID: 1438493995}
   - component: {fileID: 1438493994}
+  - component: {fileID: 1438493996}
   m_Layer: 0
   m_Name: Cover (21)
   m_TagString: Untagged
@@ -87346,7 +87660,7 @@ Transform:
   m_GameObject: {fileID: 1438493992}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38930178, z: -0, w: 0.92111033}
-  m_LocalPosition: {x: 74.96, y: 0, z: -33.71}
+  m_LocalPosition: {x: 93.59, y: 0, z: -139.76999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -87367,6 +87681,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 990908248}
+  attachOutline: {fileID: 1438493996}
+  breakEffect: {fileID: 0}
 --- !u!65 &1438493995
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -87388,6 +87704,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1438493996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438493992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1441357766
 GameObject:
   m_ObjectHideFlags: 0
@@ -90813,6 +91148,7 @@ GameObject:
   - component: {fileID: 1501250565}
   - component: {fileID: 1501250567}
   - component: {fileID: 1501250566}
+  - component: {fileID: 1501250568}
   m_Layer: 0
   m_Name: Cover (8)
   m_TagString: Untagged
@@ -90829,7 +91165,7 @@ Transform:
   m_GameObject: {fileID: 1501250564}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7270328, z: -0, w: 0.6866028}
-  m_LocalPosition: {x: 30.34, y: 0, z: 92.78}
+  m_LocalPosition: {x: 48.97, y: 0, z: -13.279999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -90850,6 +91186,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1494341441}
+  attachOutline: {fileID: 1501250568}
+  breakEffect: {fileID: 0}
 --- !u!65 &1501250567
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -90871,6 +91209,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1501250568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501250564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1001 &1503661564
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -94292,6 +94649,7 @@ GameObject:
   - component: {fileID: 1557033099}
   - component: {fileID: 1557033101}
   - component: {fileID: 1557033100}
+  - component: {fileID: 1557033102}
   m_Layer: 0
   m_Name: Cover (6)
   m_TagString: Untagged
@@ -94308,11 +94666,12 @@ Transform:
   m_GameObject: {fileID: 1557033098}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9262943, z: -0, w: -0.37680086}
-  m_LocalPosition: {x: 7.57, y: 0, z: 75.56}
+  m_LocalPosition: {x: 26.199999, y: 0, z: -30.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1595294729}
+  - {fileID: 532583924}
   m_Father: {fileID: 293805617}
   m_LocalEulerAnglesHint: {x: 0, y: 224.271, z: 0}
 --- !u!114 &1557033100
@@ -94329,6 +94688,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1595294730}
+  attachOutline: {fileID: 1557033102}
+  breakEffect: {fileID: 0}
 --- !u!65 &1557033101
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -94350,6 +94711,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1557033102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1557033098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1558726000
 GameObject:
   m_ObjectHideFlags: 0
@@ -104399,6 +104779,7 @@ MonoBehaviour:
   interactDuration: 0.5
   inventoryBench: {fileID: 0}
   promptPrefab: {fileID: 700595521589572193, guid: 94a1a064304a2c746a44124eb1cf2df7, type: 3}
+  merchantKind: 0
 --- !u!114 &1708451125
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -104446,6 +104827,7 @@ GameObject:
   - component: {fileID: 1709132065}
   - component: {fileID: 1709132067}
   - component: {fileID: 1709132066}
+  - component: {fileID: 1709132068}
   m_Layer: 0
   m_Name: Cover (11)
   m_TagString: Untagged
@@ -104462,7 +104844,7 @@ Transform:
   m_GameObject: {fileID: 1709132064}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38930178, z: -0, w: 0.92111033}
-  m_LocalPosition: {x: 93.1, y: 0, z: 3.92}
+  m_LocalPosition: {x: 111.729996, y: 0, z: -102.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -104483,6 +104865,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1961171415}
+  attachOutline: {fileID: 1709132068}
+  breakEffect: {fileID: 0}
 --- !u!65 &1709132067
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -104504,6 +104888,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1709132068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709132064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1713505430
 GameObject:
   m_ObjectHideFlags: 0
@@ -106467,6 +106870,7 @@ GameObject:
   - component: {fileID: 1740615380}
   - component: {fileID: 1740615382}
   - component: {fileID: 1740615381}
+  - component: {fileID: 1740615383}
   m_Layer: 0
   m_Name: Cover (5)
   m_TagString: Untagged
@@ -106483,7 +106887,7 @@ Transform:
   m_GameObject: {fileID: 1740615379}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.82930744, z: -0, w: 0.5587926}
-  m_LocalPosition: {x: 15.69, y: 0, z: 64.22}
+  m_LocalPosition: {x: 34.32, y: 0, z: -41.839996}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -106504,6 +106908,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 562047374}
+  attachOutline: {fileID: 1740615383}
+  breakEffect: {fileID: 0}
 --- !u!65 &1740615382
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -106525,6 +106931,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1740615383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1740615379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1741997998
 GameObject:
   m_ObjectHideFlags: 0
@@ -110888,9 +111313,8 @@ MonoBehaviour:
   playerDeathGrid: {fileID: 0}
   seedExtendedTestStock: 1
   armorDurability:
-    maxDurability: 100
-    damagePerHit: 2
-    repairCost: 3
+    fallbackMaxDurability: 100
+    fallbackDamagePerHit: 1
 --- !u!114 &1799911016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112590,6 +113014,7 @@ GameObject:
   - component: {fileID: 1832757996}
   - component: {fileID: 1832757998}
   - component: {fileID: 1832757997}
+  - component: {fileID: 1832757999}
   m_Layer: 0
   m_Name: Cover (10)
   m_TagString: Untagged
@@ -112606,7 +113031,7 @@ Transform:
   m_GameObject: {fileID: 1832757995}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.15995757, z: -0, w: 0.98712397}
-  m_LocalPosition: {x: 67.43, y: 0, z: 24.16}
+  m_LocalPosition: {x: 86.06, y: 0, z: -81.899994}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -112627,6 +113052,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1018786702}
+  attachOutline: {fileID: 1832757999}
+  breakEffect: {fileID: 0}
 --- !u!65 &1832757998
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -112648,6 +113075,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1832757999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832757995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1837031716
 GameObject:
   m_ObjectHideFlags: 0
@@ -115022,6 +115468,7 @@ GameObject:
   - component: {fileID: 1881850905}
   - component: {fileID: 1881850907}
   - component: {fileID: 1881850906}
+  - component: {fileID: 1881850908}
   m_Layer: 0
   m_Name: Cover (14)
   m_TagString: Untagged
@@ -115038,7 +115485,7 @@ Transform:
   m_GameObject: {fileID: 1881850904}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.2785016, z: -0, w: 0.96043575}
-  m_LocalPosition: {x: 150.71, y: 0, z: -11.12}
+  m_LocalPosition: {x: 169.34, y: 0, z: -117.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -115059,6 +115506,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1141772248}
+  attachOutline: {fileID: 1881850908}
+  breakEffect: {fileID: 0}
 --- !u!65 &1881850907
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -115080,6 +115529,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1881850908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1881850904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1882104510
 GameObject:
   m_ObjectHideFlags: 0
@@ -115767,6 +116235,7 @@ GameObject:
   - component: {fileID: 1896395549}
   - component: {fileID: 1896395551}
   - component: {fileID: 1896395550}
+  - component: {fileID: 1896395552}
   m_Layer: 0
   m_Name: Cover (16)
   m_TagString: Untagged
@@ -115783,7 +116252,7 @@ Transform:
   m_GameObject: {fileID: 1896395548}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.027565645, z: -0, w: 0.99962}
-  m_LocalPosition: {x: 127.21, y: 0, z: 44.42}
+  m_LocalPosition: {x: 145.84, y: 0, z: -61.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -115804,6 +116273,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CoverObject
   maxHealth: 100
   blockingCollider: {fileID: 1390901880}
+  attachOutline: {fileID: 1896395552}
+  breakEffect: {fileID: 0}
 --- !u!65 &1896395551
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -115825,6 +116296,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7, y: 2, z: 2.5}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1896395552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1896395548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d314befbd85d6d4b89cfe10f01fd4eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitOutlineEffect
+  outlineMaterial: {fileID: 2100000, guid: 8c1e5d3a7b2f4a90b6d8e4c2f1a7b953, type: 2}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  intensity: 1
+  widthPixels: 5
+  duration: 0.25
+  decayPower: 2.5
+  excludedRoots: []
 --- !u!1 &1896463714
 GameObject:
   m_ObjectHideFlags: 0
