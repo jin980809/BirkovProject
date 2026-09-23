@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class EnemyShotData : ScriptableObject
 {
-    [Header("총알 설정")]
+    [Header("데미지")]
     [SerializeField] public float damage = 10f;
 
     [Header("연발")]
