@@ -52,7 +52,13 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Text shopDetail;
         public Button shopBuy;
         public Button shopSell;
-        public Button shopRepair;
+
+        [Header("수리대")]
+        public GameObject repairPanel;
+        public Text repairCurrency;
+        public Image repairDetailIcon;
+        public Text repairDetail;
+        public Button repairButton;
         public Image[] craftRowBackgrounds;
         public Image[] craftRowIcons;
         public Image craftDetailIcon;
@@ -108,6 +114,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public bool useStandaloneKeyboard = true;
         [Tooltip("프리팹 기반 새 UI 로 전환하면 끈다. 끄면 이 벤치는 UI 를 만들지 않는다.")]
         public bool buildLegacyUi = true;
+        [Tooltip("초기화 시 가방·장비·퀵슬롯을 비운다. 창고와 지푸라기는 유지한다.")]
+        public bool startWithEmptyInventory;
+        [Tooltip("DebugInventorySeeder가 초기 지급을 담당. 벤치 자체 가방/창고/화폐 지급을 생략한다.")]
+        public bool useExternalTestSeeder;
 
         [Header("하이어라키 UI")]
         [Tooltip("비워 두면 예전처럼 코드로 UI 를 만든다. 채우면 그 오브젝트를 그대로 쓴다.")]
@@ -264,6 +274,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         public void CloseLoot()
         {
+            playerDeathOpen = false;
+            if (playerDeathPanel != null) playerDeathPanel.SetActive(false);
             serviceAnchor = null;
             if (shopPanel != null) shopPanel.SetActive(false);
             openedDrop = null;
@@ -274,6 +286,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (mapChestPanel != null) mapChestPanel.SetActive(false);
             if (warehousePanel != null) warehousePanel.SetActive(false);
             if (craftPanel != null) craftPanel.SetActive(false);
+            if (ui != null && ui.repairPanel != null) ui.repairPanel.SetActive(false);
             if (ui != null && ui.warehouseSoloScroll != null) ui.warehouseSoloScroll.SetActive(false);
             RebuildInventoryColumn();
             ClearSelection();
@@ -366,7 +379,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
             // 확장 테스트 지급을 쓰는 개인 씬에서는 이 기본 지급이 가방을 미리 채워 버려
             // 제작 결과와 구매 아이템을 넣을 칸이 남지 않는다. 같은 품목이 창고로 들어간다.
-            if (!seedExtendedTestStock)
+            if (!useExternalTestSeeder && !seedExtendedTestStock)
             {
                 foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
                 {
@@ -380,10 +393,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 }
             }
 
-            inventoryService.AddItem(data.warehouseData, 23001, 5);
-            if (seedExtendedTestStock) SeedExtendedTestStock();
+            if (!useExternalTestSeeder) inventoryService.AddItem(data.warehouseData, 23001, 5);
+            if (!useExternalTestSeeder && seedExtendedTestStock) SeedExtendedTestStock();
+            if (startWithEmptyInventory) playerService.ClearOnDeath(data.inventoryData);
 
-            SetMessage("초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
+            SetMessage(startWithEmptyInventory ? "초기화 완료. 가방·장비·퀵슬롯이 비어 있습니다." : "초기화 완료. 무기와 보호구는 가방에 들어갑니다. 자동 착용되지 않습니다. 지푸라기는 가방을 쓰지 않고 보유 수치로 들어갑니다.");
             Refresh();
         }
 
@@ -518,7 +532,22 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private InventoryMoveResult Transfer(TestContainer from, int fromIndex, TestContainer to, int toIndex)
         {
-            const int all = 99;
+            const int all = int.MaxValue;
+
+            if (to == TestContainer.Bag && (from == TestContainer.Loot || from == TestContainer.Warehouse))
+            {
+                GridContainerData source = GetContainer(from);
+                if (fromIndex >= 0 && fromIndex < source.slots.Count &&
+                    catalog.TryGetItem(source.slots[fromIndex].itemId, out ItemData item) && item.itemType == ItemType.Currency)
+                {
+                    if (from == TestContainer.Warehouse && !warehouseService.IsOpen)
+                        return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 0);
+                    InventoryMoveResult result = playerService.AddToInventory(data.inventoryData, item.itemId, source.slots[fromIndex].amount);
+                    if (result.MovedAmount > 0) inventoryService.RemoveItem(source, fromIndex, result.MovedAmount);
+                    NotifyLootChanged();
+                    return result;
+                }
+            }
 
             if (from == TestContainer.Bag && to == TestContainer.Equipment)
             {
@@ -584,7 +613,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public void ClickSlot(TestSlotView slot)
         {
             HideContextMenu();
-            if (shopPanel != null && shopPanel.activeSelf &&
+            if (IsServicePanelOpen &&
                 (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment))
             {
                 selectedShopEquipment = slot.container == TestContainer.Equipment;
@@ -778,6 +807,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
 
         private void NotifyLootChanged()
         {
+            if (playerDeathOpen && openedContainer != null)
+            {
+                openedContainer.GetComponent<PlayerDeathContainer>()?.NotifyChanged();
+                if (loot.IsEmpty()) SetMessage("분실물을 모두 회수했습니다.");
+                return;
+            }
             if (openedDrop != null)
             {
                 bool empty = loot.IsEmpty();
@@ -856,7 +891,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             warehouseService.Close();
             if (warehousePanel != null) warehousePanel.SetActive(false);
             playerService.ClearOnDeath(data.inventoryData);
-            SetMessage("사망 처리. 가방과 장비와 퀵슬롯이 비었고 창고는 유지됩니다.");
+            SetMessage("사망 처리. 가방과 장비와 퀵슬롯이 비었고 지푸라기와 창고는 유지됩니다.");
             Refresh();
         }
 
@@ -974,6 +1009,14 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
+            // 이전 드래그 경로로 가방에 들어간 재화도 수량을 보존하며 보유값으로 회수한다.
+            foreach (GridSlotData slot in data.inventoryData.inventory.slots)
+            {
+                if (slot.IsEmpty() || !catalog.TryGetItem(slot.itemId, out ItemData item) || item.itemType != ItemType.Currency) continue;
+                InventoryMoveResult result = playerService.AddToInventory(data.inventoryData, slot.itemId, slot.amount);
+                slot.amount -= result.MovedAmount;
+                if (slot.amount == 0) slot.Clear();
+            }
             playerService.SanitizeItemQuickSlots(data.inventoryData);
 
             foreach (TestSlotView view in views)
@@ -1011,25 +1054,26 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 if (found && craftPanel != null && craftPanel.activeSelf &&
                     (itemId == CraftingService.GunpowderItemId || (itemId >= 27001 && itemId <= 27004)))
                     view.background.color = colors.slotCraftMaterial;
-                if (found && item.itemType == ItemType.Weapon &&
+                if (found &&
                     (view.container == TestContainer.Bag || view.container == TestContainer.Equipment || view.container == TestContainer.Warehouse))
-                    view.amount.text = WeaponDurability.Remaining(GetContainer(view.container).slots[view.index]) + "/" + WeaponDurability.Maximum(itemId);
+                {
+                    GridSlotData durableSlot = GetContainer(view.container).slots[view.index];
+                    if (item.itemType == ItemType.Weapon)
+                        view.amount.text = WeaponDurability.Remaining(durableSlot) + "/" + WeaponDurability.Maximum(itemId);
+                    else if (armorDurability.IsArmor(catalog, durableSlot))
+                        view.amount.text = armorDurability.Remaining(catalog, durableSlot) + "/" + armorDurability.Maximum(catalog, durableSlot);
+                }
             }
 
             if (statsText != null)
             {
-                statsText.text = string.Format(
-                    "체력 {0:0}/30    허기 {1:0}/30    수분 {2:0}/30    지푸라기 {5}    선택 무기 {3}번    창고 {4}",
-                    health, hunger, water, selectedWeapon + 1,
-                    warehouseService != null && warehouseService.IsOpen ? "열림" : "닫힘",
-                    data.inventoryData.currency);
-                if (externalStats != null)
-                    statsText.text = externalStats + "    지푸라기 " + data.inventoryData.currency + "    선택 무기 " + (selectedWeapon + 1);
+                statsText.text = ": " + data.inventoryData.currency.ToString("N0");
             }
 
             RefreshCraftPanel();
             RefreshCraftVisuals();
             RefreshShop();
+            RefreshRepair();
             HoverSlot(hovered);
         }
 
@@ -1233,13 +1277,18 @@ namespace Birdkov.NaYeongMin.InventoryTest
             BuildCraftPanel();
 
             // 상태 문구는 좌·우 패널 바로 아래 줄에 붙인다. 빈 가운데 열을 두지 않는다.
-            statsText = MakeLabel(screen, string.Empty, LeftX, HeaderBottom + 648, ColumnWidth, 56, 13);
+            statsText = MakeLabel(equipmentPanel.transform, string.Empty, 356, 58, 96, 80, 14);
+            statsText.alignment = TextAnchor.MiddleCenter;
             status = MakeLabel(screen, string.Empty, RightX, HeaderBottom + 648, ColumnWidth, 56, 13);
             status.alignment = TextAnchor.UpperLeft;
             status.color = new Color(0.95f, 0.83f, 0.45f);
 
             // 하단 중앙: 퀵슬롯
-            GameObject quickPanel = MakePanel("QuickPanel", MiddleX, 780, MiddleWidth, 110, null);
+            GameObject quickPanel = MakePanel("QuickPanel", 0, 780, 428, 110, null);
+            RectTransform quickRect = (RectTransform)quickPanel.transform;
+            quickRect.anchorMin = quickRect.anchorMax = new Vector2(0.5f, 0f);
+            quickRect.pivot = new Vector2(0.5f, 0f);
+            quickRect.anchoredPosition = new Vector2(0, 20);
             MakeLabel(quickPanel.transform, "무기 1 / 2", 16, 6, 150, 18, 12);
             BuildGrid(quickPanel.transform, TestContainer.WeaponQuick, 2, 1, 16, 26, QuickCell);
             MakeLabel(quickPanel.transform, "퀵슬롯 3 / 4 / 5", 200, 6, 190, 18, 12);
@@ -1362,7 +1411,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private void BuildCraftPanel()
         {
             craftPanel = MakePanel("CraftPanel", RightX, HeaderBottom, ColumnWidth, SidePanelHeight, "총알 제작대");
-            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 1박스", 20, 48, ColumnWidth - 40, 26, 14);
+            MakeLabel(craftPanel.transform, "같은 버섯 5 + 화약 5  ->  해당 탄종 20발", 20, 48, ColumnWidth - 40, 26, 14);
 
             IList<int> mushrooms = CraftingService.MushroomItemIds;
             craftLabels = new Text[mushrooms.Count];
@@ -1422,7 +1471,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 case CraftResult.Success:
                     int ammoItemId;
                     CraftingService.TryGetAmmoItemId(mushroomItemId, out ammoItemId);
-                    return "제작 완료. " + DisplayName(ammoItemId) + " 1박스를 가방에 넣었습니다.";
+                    return "제작 완료. " + DisplayName(ammoItemId) + " " + craftingService.CraftedAmount(ammoItemId) + "발을 가방에 넣었습니다.";
                 case CraftResult.NotEnoughMushroom:
                     return DisplayName(mushroomItemId) + "이(가) " + CraftingService.MushroomCost + "개 필요합니다.";
                 case CraftResult.NotEnoughGunpowder:
@@ -1503,15 +1552,16 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             ClearLootCells(lootGridRoot);
             ClearLootCells(mapChestGridRoot);
+            ClearLootCells(playerDeathGrid);
 
             LootContainerSizes.GetSize(loot.sizePreset, out int width, out int height);
-            RectTransform gridRoot = mapChestOpen ? mapChestGridRoot : lootGridRoot;
+            RectTransform gridRoot = playerDeathOpen ? playerDeathGrid : mapChestOpen ? mapChestGridRoot : lootGridRoot;
 
             // 상자 규격 그대로 그리되 가로를 긴 쪽으로 둔다. 2x4 -> 4x2, 3x3 -> 3x3, 3x5 -> 5x3, 4x1 -> 4x1.
             // 패널과 그리드의 위치·크기는 건드리지 않는다. 기획팀이 인스펙터에서 잡은 그대로 둔다.
             // 칸 크기만 그리드 폭에 맞춰 줄인다. 폭을 넓히면 칸도 커지고 LootCell 이 상한이다.
-            int columns = Mathf.Max(width, height);
-            int rows = Mathf.Min(width, height);
+            int columns = playerDeathOpen ? 5 : Mathf.Max(width, height);
+            int rows = playerDeathOpen ? 6 : Mathf.Min(width, height);
             int cell = Mathf.Clamp(Mathf.FloorToInt((gridRoot.rect.width + 4) / columns) - 4, 16, LootCell);
             BuildGrid(gridRoot, TestContainer.Loot, columns, rows, 0, 0, cell, width * height);
         }

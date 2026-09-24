@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ecb5d7033d756c4396668421b074a9c, type: 3}
+  m_Name: 1LvHelmet
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyArmorsData
+  prefab: {fileID: 6946265410918925910, guid: b950fc8fac65307408491a400a628d57, type: 3}
+  defense: 10

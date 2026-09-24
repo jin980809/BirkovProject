@@ -6,11 +6,14 @@ public class EnemyShot : MonoBehaviour
 {
     private Animator ani;
 
+    [Header("°ø°Ý µ¥ÀÌÅÍ")]
     [SerializeField] private EnemyShotData enemyShotData;
+
+    [Header("ÃÑ¾Ë ºÒºû")]
     [SerializeField] private ParticleSystem shotEffect;
 
-    [Header("ÃÑ¾Ë ¼³Á¤")]
-    [SerializeField] private int damage = 10;
+    [Header("ÃÑ¾Ë °ø°Ý·Â")]
+    [SerializeField] private float damage = 10f;
 
     [Header("¿¬¹ß")]
     [SerializeField] private int minBulletsPerShot = 1;
@@ -61,6 +64,7 @@ public class EnemyShot : MonoBehaviour
     private void Awake()
     {
         TryGetComponent(out ani);
+
         //ÃÊ±â Åº¾Ë
         currentMagazine = magazineSize;
     }
@@ -78,6 +82,8 @@ public class EnemyShot : MonoBehaviour
             magazineSize = enemyShotData.magazineSize;
             reloadTime = enemyShotData.reloadTime;
         }
+
+        enemyBulletPool = FindAnyObjectByType<EnemyBulletPool>();
 
         fireIntervalWfs = new WaitForSeconds(fireInterval);
         reloadTimeWfs = new WaitForSeconds(reloadTime);

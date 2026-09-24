@@ -1,8 +1,10 @@
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
 
-// NaYeongMin 의 InventoryWorldContainer(상자/전리품/맵배치상자)를 내 상호작용 시스템으로 여는 어댑터.
-// NaYeongMin 파일은 건드리지 않고 공개 API(InventoryTestBench.OpenStorage/OpenLoot/OpenMapChest)만 쓴다.
+// NaYeongMin 의 InventoryWorldContainer(상자/전리품/맵배치상자/상점/제작/수리/사망 분실물)를
+// 내 상호작용 시스템으로 여는 어댑터.
+// NaYeongMin 파일은 건드리지 않고 공개 API(InventoryTestBench.OpenStorage/OpenLoot/... /OpenPlayerDeath)만 쓴다.
+// 종류(InventoryWorldContainer.kind)가 늘어나면 OnInteractComplete 의 switch 에 그 종류를 추가해야 한다.
 //
 // 주의: NaYeongMin 의 PlayerInventoryBridge 는 씬에 넣지 않는다. 그게 있으면 F키를 자기가 직접
 // 가로채서(범위만 보고, 게이지 없이) 즉시 열어버리기 때문에, 이 어댑터의 게이지/잠금과 동시에
@@ -41,13 +43,36 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
         }
     }
 
+    // Awake 가 아니라 Start 에서 만든다 - InteractionPromptUI.PromptParent 는 그쪽 Awake() 에서
+    // 설정되는데, 스크립트 간 Awake 실행 순서는 보장되지 않는다 (이쪽이 먼저 돌면 PromptParent 가
+    // 아직 null). 모든 Awake 가 끝난 뒤에 도는 Start 라면 항상 준비되어 있다.
+    private void Start()
+    {
+        // 근접 아이콘(ScreenAnchoredUI.proximityIcon)은 F 프롬프트 감지 범위보다 훨씬 먼 거리에서도
+        // 보여야 하므로, 감지될 때(ShowPrompt)까지 기다리지 않고 미리 만들어 둔다.
+        EnsurePromptInstance();
+    }
+
     public bool CanInteract(GameObject interactor)
     {
+        EnsureBench();
         return inventoryBench != null && container != null;
+    }
+
+    // 씬 전환 직후에는 이 씬에 있다가 곧 파괴되는 중복 벤치를 잡았을 수 있다 (PersistentUiRoot 참고).
+    // 참조가 죽었으면 살아남은 벤치로 다시 찾는다.
+    private void EnsureBench()
+    {
+        if (inventoryBench == null)
+        {
+            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
     }
 
     public void OnInteractComplete(GameObject interactor)
     {
+        EnsureBench();
+
         if (inventoryBench == null || container == null)
         {
             return;
@@ -70,6 +95,13 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
             case InventoryWorldKind.Crafting:
                 inventoryBench.OpenCrafting(transform);
                 break;
+            case InventoryWorldKind.Repair:
+                inventoryBench.OpenRepair(transform);
+                break;
+            case InventoryWorldKind.PlayerDeath:
+                // 사망 분실물(묘비). 내용물은 PlayerDeathContainer 가 들고 있고 벤치가 전용 30칸 UI 로 연다.
+                inventoryBench.OpenPlayerDeath(container);
+                break;
         }
     }
 
@@ -77,25 +109,22 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
     {
         EnsurePromptInstance();
 
-        if (promptInstance != null)
+        if (promptAnchoredUI != null)
         {
-            if (promptAnchoredUI != null)
-            {
-                promptAnchoredUI.SnapToAnchor();
-            }
-
-            promptInstance.SetActive(true);
+            promptAnchoredUI.SetPanelActive(true);
         }
     }
 
     public void HidePrompt()
     {
-        if (promptInstance != null)
+        if (promptAnchoredUI != null)
         {
-            promptInstance.SetActive(false);
+            promptAnchoredUI.SetPanelActive(false);
         }
     }
 
+    // 루트(promptInstance)는 항상 켜 둔다 - 근접 아이콘이 계속 갱신되려면 Update() 가 멈추면 안 된다.
+    // F 프롬프트(이름/배경)만 ShowPrompt/HidePrompt 로 따로 켜고 끈다 (SetPanelActive 참고).
     private void EnsurePromptInstance()
     {
         if (promptInstance != null || promptPrefab == null)
@@ -111,8 +140,7 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
         {
             promptAnchoredUI.SetAnchor(transform);
             promptAnchoredUI.SetText(container.displayName);
+            promptAnchoredUI.SetPanelActive(false);
         }
-
-        promptInstance.SetActive(false);
     }
 }

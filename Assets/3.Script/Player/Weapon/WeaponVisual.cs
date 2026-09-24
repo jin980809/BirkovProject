@@ -27,6 +27,7 @@ public class WeaponVisual : MonoBehaviour
 
     private readonly Dictionary<int, GameObject> spawnedModels = new Dictionary<int, GameObject>();
     private readonly Dictionary<int, Transform> firePoints = new Dictionary<int, Transform>(); // 모델에 FirePoint 가 없으면 null
+    private readonly Dictionary<int, WeaponModel> weaponModels = new Dictionary<int, WeaponModel>();
     private int currentShownItemId = -1;
 
     private void Awake()
@@ -71,6 +72,21 @@ public class WeaponVisual : MonoBehaviour
         return point;
     }
 
+    // 해당 무기 모델의 WeaponModel 을 돌려준다 (모델이 없거나 WeaponModel 이 안 붙어 있으면 null).
+    // 머즐플래시/탄피 같은 이펙트를 재생할 때 쓴다. GetFirePoint 와 마찬가지로 아직 스폰 전이면 먼저 스폰한다.
+    public WeaponModel GetWeaponModel(int itemId)
+    {
+        WeaponModel found = null;
+
+        if (itemId >= 0 && weaponSocket != null)
+        {
+            EnsureModel(itemId);
+            weaponModels.TryGetValue(itemId, out found);
+        }
+
+        return found;
+    }
+
     private void ShowOnly(int itemId)
     {
         if (itemId >= 0)
@@ -108,6 +124,11 @@ public class WeaponVisual : MonoBehaviour
                 }
 
                 firePoints[itemId] = point;
+
+                if (model.TryGetComponent(out WeaponModel modelComponent))
+                {
+                    weaponModels[itemId] = modelComponent;
+                }
             }
         }
     }

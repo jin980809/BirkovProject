@@ -18,8 +18,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
         {
             ItemData item = Find(itemId);
             if (item != null && item.maxDurability > 0) return item.maxDurability;
-            switch (itemId) { case 10001: return 100; case 10002: return 120;
-                case 10003: return 180; case 10004: return 160; default: return 0; }
+            switch (itemId) { case 10001: return 500; case 10002: return 600;
+                case 10003: return 900; case 10004: return 800; default: return 0; }
         }
 
         private static int ShotCost(int itemId)

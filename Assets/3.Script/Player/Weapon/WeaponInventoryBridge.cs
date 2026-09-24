@@ -17,7 +17,7 @@ public class WeaponInventoryBridge : MonoBehaviour
     {
         if (itemDatabase == null)
         {
-            Debug.LogError("WeaponInventoryBridge: ItemDatabase 가 필요합니다.", this);
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
         }
 
         // InventoryTestBenchLink.cs 가 준비되는 대로 SetPlayerInventoryData 로 진짜 데이터를 주입한다.
@@ -30,6 +30,12 @@ public class WeaponInventoryBridge : MonoBehaviour
     // 그래서 여기서 즉시 만들지 않고, 실제로 필요할 때(아래 두 공개 메서드) 딱 한 번만 만든다.
     private void EnsureServices()
     {
+        // 씬이 바뀌면 이전 씬의 ItemDatabase 가 파괴되므로, 참조가 죽었으면 지금 씬 것으로 다시 찾는다
+        if (itemDatabase == null)
+        {
+            itemDatabase = FindAnyObjectByType<ItemDatabase>();
+        }
+
         if (playerInventoryService != null || itemDatabase == null || itemDatabase.Catalog == null)
         {
             return;
@@ -73,6 +79,8 @@ public class WeaponInventoryBridge : MonoBehaviour
 
     // 가방에 흩어진 같은 탄약 itemId 재고를 소모 없이 합산만 한다 - 재장전 게이지를 시작하기 전에
     // 실제로 탄약이 있는지 미리 확인하기 위함 (없으면 게이지를 아예 시작하지 않는다).
+    // HUD 의 보유 탄환수 표시(WeaponController.TryGetSlotAmmo)에도 그대로 쓴다 - 1개 = 1발 규칙이라
+    // ConsumeAmmo 가 실제로 소모하는 수량과 정확히 같다.
     public int PeekAmmoCount(int ammoItemId)
     {
         if (playerData == null)

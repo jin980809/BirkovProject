@@ -13,7 +13,8 @@ GameObject:
   - component: {fileID: 1698584676935128290}
   - component: {fileID: 14641682115342624}
   - component: {fileID: 5105262021442687039}
-  m_Layer: 0
+  - component: {fileID: 8328510705291448101}
+  m_Layer: 10
   m_Name: MapChestInteraction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,3 +128,19 @@ MonoBehaviour:
   kind: 2
   displayName: "\uB9F5 \uC0C1\uC790"
   dropSettings: {fileID: 11400000, guid: 9d048a5a05fc3614c930b44671993790, type: 2}
+--- !u!114 &8328510705291448101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9119027544629841297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7c23f9e82efe44fbfefe9e06d0b585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldContainerInteractable
+  interactDuration: 1.5
+  inventoryBench: {fileID: 0}
+  promptPrefab: {fileID: 0}
+  merchantKind: 0

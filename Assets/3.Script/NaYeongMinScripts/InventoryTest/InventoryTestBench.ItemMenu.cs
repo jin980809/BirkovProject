@@ -74,7 +74,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             TestContainer target;
             if (warehousePanel != null && warehousePanel.activeSelf && warehouseService != null && warehouseService.IsOpen)
                 target = TestContainer.Warehouse;
-            else if ((lootPanel != null && lootPanel.activeSelf) || (mapChestPanel != null && mapChestPanel.activeSelf))
+            else if (playerDeathOpen || (lootPanel != null && lootPanel.activeSelf) || (mapChestPanel != null && mapChestPanel.activeSelf))
                 target = TestContainer.Loot;
             else { SetMessage("보낼 창고나 상자가 열려 있지 않습니다."); return; }
 
@@ -152,7 +152,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                     text += "\n내구도 " + WeaponDurability.Remaining(container.slots[slot.index]) + " / " + WeaponDurability.Maximum(item.itemId);
             }
             if (item.healthRecovery != 0 || item.hungerRecovery != 0 || item.waterRecovery != 0)
-                text += "\n효과  체력 " + item.healthRecovery + "  허기 " + item.hungerRecovery + "  수분 " + item.waterRecovery;
+                text += "\n효과" + RecoveryText("체력", item.healthRecovery) + RecoveryText("허기", item.hungerRecovery) +
+                    RecoveryText("수분", item.waterRecovery);
             if (item.price > 0) text += "\n가격 " + item.price + "G";
             return text;
         }
@@ -239,6 +240,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (slot.container == TestContainer.Loot) NotifyLootChanged();
             CloseItemDetail();
             Refresh();
+        }
+
+        private static string RecoveryText(string label, float amount)
+        {
+            return amount > 0 ? "  " + label + " +" + Mathf.RoundToInt(PlayerInventoryService.RecoveryPercent(amount)) + "%" : string.Empty;
         }
     }
 }

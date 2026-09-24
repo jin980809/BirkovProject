@@ -22,6 +22,13 @@ public class PlayerInteraction : MonoBehaviour
 
     private readonly Collider[] buffer = new Collider[16];
 
+    // 상호작용이 끝난 직후 프롬프트를 다시 띄우지 않고 기다리는 프레임 수. 상호작용이 상자 UI 를 열면 플레이어 잠금이
+    // 그 다음 프레임(PlayerInventoryToggle 의 감지)에 걸리는데, 그 사이 한두 프레임에 프롬프트가 다시 깜빡이는 걸 막는다.
+    private const int PromptBlockFramesAfterComplete = 3;
+
+    private PlayerController player;
+    private int promptBlockFramesLeft;
+
     public bool HasTarget
     {
         get { return currentTarget != null; }
@@ -43,6 +50,11 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        TryGetComponent(out player);
+    }
+
     private void OnDisable()
     {
         HidePromptIfShown();
@@ -53,6 +65,18 @@ public class PlayerInteraction : MonoBehaviour
         if (IsInteracting)
         {
             UpdateInteractTimer();
+        }
+        else if (promptBlockFramesLeft > 0 || (player != null && player.IsControlLocked))
+        {
+            // 상호작용을 끝낸 직후이거나, 그로 열린 상자/인벤토리 UI 가 떠 있는 동안에는 프롬프트를 띄우지 않는다.
+            // UI 를 닫아 잠금이 풀리면 다음 프레임부터 FindTarget 이 다시 돌면서 프롬프트가 다시 뜬다.
+            HidePromptIfShown();
+            currentTarget = null;
+
+            if (promptBlockFramesLeft > 0)
+            {
+                promptBlockFramesLeft--;
+            }
         }
         else
         {
@@ -75,6 +99,7 @@ public class PlayerInteraction : MonoBehaviour
         if (target.InteractDuration <= 0f)
         {
             currentTarget = null;
+            promptBlockFramesLeft = PromptBlockFramesAfterComplete;
             target.OnInteractComplete(gameObject);
             return;
         }
@@ -178,6 +203,7 @@ public class PlayerInteraction : MonoBehaviour
         IsInteracting = false;
         interactTimer = 0f;
         currentTarget = null;
+        promptBlockFramesLeft = PromptBlockFramesAfterComplete;
 
         target.OnInteractComplete(gameObject);
     }

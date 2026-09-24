@@ -13,7 +13,7 @@ using UnityEngine.InputSystem;
 //
 // 이 오브젝트는 Screen Space - Overlay 캔버스 밑에 있어야 한다
 // (root.position 을 스크린 좌표로 바로 대입하기 때문)
-public class CrosshairUI : MonoBehaviour
+public class CrosshairUI : MonoBehaviour, ISceneRebindable
 {
     [Header("연결")]
     [SerializeField] private WeaponController weapon;
@@ -48,15 +48,22 @@ public class CrosshairUI : MonoBehaviour
     {
         root = GetComponent<RectTransform>();
 
-        if (weapon == null)
-        {
-            weapon = FindAnyObjectByType<WeaponController>();
-        }
+        RebindSceneReferences();
 
         currentRadius = baseRadius;
         Cursor.visible = false;
 
         SetZoomVisual(false);
+    }
+
+    // 씬이 바뀌면 무기를 든 플레이어가 새로 생기므로 다시 찾는다 (PersistentUiRoot 가 호출)
+    public void RebindSceneReferences()
+    {
+        weapon = FindAnyObjectByType<WeaponController>();
+
+        // 사망 패널이나 인벤토리 때문에 꺼진 채로 씬을 넘어왔을 수 있다. 새 씬에서는 항상 켠 상태로 시작한다.
+        // (그 씬에서 바로 인벤토리를 열면 PlayerInventoryToggle 이 다시 꺼준다)
+        SetCrosshairActive(true);
     }
 
     private void Update()

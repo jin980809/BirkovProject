@@ -6,6 +6,6 @@ public class DebugDamageable : MonoBehaviour, IDamageable
 {
     public void TakeDamage(float amount)
     {
-        Debug.Log(gameObject.name + " 이(가) " + amount + " 대미지를 입었습니다.", this);
+        //Debug.Log(gameObject.name + " 이(가) " + amount + " 대미지를 입었습니다.", this);
     }
 }

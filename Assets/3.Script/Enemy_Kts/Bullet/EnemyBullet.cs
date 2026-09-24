@@ -10,7 +10,7 @@ public class EnemyBullet : MonoBehaviour
     private EnemyBulletPool enemyBulletPool;
 
     public Vector3 direction { get; private set; }
-    private int damage;
+    private float damage;
 
     private float lifeTimer;
 
@@ -19,7 +19,7 @@ public class EnemyBullet : MonoBehaviour
         enemyBulletPool = pool;
     }
 
-    public void Fire(Vector3 direction, int damage)
+    public void Fire(Vector3 direction, float damage)
     {
         this.direction = direction.normalized;
         this.damage = damage;

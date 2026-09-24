@@ -25,15 +25,28 @@ public class PlayerInventoryToggle : MonoBehaviour
     {
         player = GetComponent<PlayerController>();
         TryGetComponent(out input);
+    }
 
-        if (inventoryBench == null)
+    // 벤치/크로스헤어는 Awake 가 아니라 Start 에서 찾는다.
+    // 씬 전환으로 들어온 경우 이 씬에 있던 중복 UI 캔버스는 PersistentUiRoot 가 Awake 에서 바로 비활성화하고
+    // 지운다. Start 는 그 뒤라서, 여기서 찾으면 항상 살아남은 쪽이 잡힌다 (Awake 에서 찾으면 곧 파괴될
+    // 중복을 잡아 참조가 죽는다). 크로스헤어는 꺼져 있을 수 있어 비활성도 포함해서 찾는다.
+    private void Start()
+    {
+        if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
             inventoryBench = FindAnyObjectByType<InventoryTestBench>();
         }
 
-        if (crosshair == null)
+        if (crosshair == null || !crosshair.transform.root.gameObject.activeInHierarchy)
         {
-            crosshair = FindAnyObjectByType<CrosshairUI>();
+            crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include);
+        }
+
+        if (inventoryBench == null)
+        {
+            Debug.LogWarning("PlayerInventoryToggle: 씬에서 InventoryTestBench 를 찾지 못했습니다. " +
+                             "인벤토리 토글/시작 시 자동 닫기가 동작하지 않습니다.", this);
         }
     }
 
@@ -61,7 +74,9 @@ public class PlayerInventoryToggle : MonoBehaviour
 
     private void Update()
     {
-        if (!didInitialFixup)
+        // 벤치가 준비(CSV 로드 + UI 바인딩)를 마친 뒤에 딱 한 번 처리한다. 첫 Update 에 무조건 하면,
+        // 벤치 준비가 늦어져 아직 안 열린 상태일 때 닫기를 건너뛰고 그 뒤로 영영 안 닫히는 문제가 생긴다.
+        if (!didInitialFixup && inventoryBench != null && inventoryBench.IsReady)
         {
             didInitialFixup = true;
             RunInitialFixup();
@@ -78,7 +93,6 @@ public class PlayerInventoryToggle : MonoBehaviour
                 crosshair.SetCrosshairActive(!isOpen); // 열리면 크로스헤어 끄고 OS 커서 보이게
             }
         }
-
         wasOpen = isOpen;
     }
 
@@ -109,19 +123,18 @@ public class PlayerInventoryToggle : MonoBehaviour
         }
 
         // InventoryTestBench.Start() 가 편의상 끝에 OpenInventory() 를 무조건 호출해서 게임
-        // 시작하자마자 인벤토리가 열려 보인다. 모든 오브젝트의 Start() 는 이 첫 Update() 호출
-        // 전에 이미 다 끝나 있으므로, 여기서 강제로 닫으면 화면에 보이기 전에(첫 프레임 렌더 전에)
-        // 닫혀서 깜빡임 없이 처리된다. (QuickPanel 은 이미 밖으로 옮겨서 이 닫기의 영향을 안 받는다.)
-        if (inventoryBench.IsOpen)
-        {
-            inventoryBench.CloseCurrent();
-        }
+        // 시작하자마자 인벤토리가 열려 보인다. 벤치 준비가 끝난 뒤(Update 의 IsReady 확인) 여기서 닫는다.
+        // IsOpen 을 확인하지 않고 무조건 닫는다 - IsOpen 은 벤치 내부 screen 참조가 채워져야 true 라서,
+        // 씬에 저장된 UI(Root)가 켜져 있는데 IsOpen 만 false 인 상태에서는 닫기를 건너뛰게 된다.
+        // CloseCurrent() 는 screen 이 없으면 알아서 아무것도 하지 않는다.
+        // (QuickPanel 은 이미 밖으로 옮겨서 이 닫기의 영향을 안 받는다.)
+        inventoryBench.CloseCurrent();
     }
 
     private void HandleToggle()
     {
         // 아이템 사용/재장전 중에는 인벤토리를 열 수 없다 (다 쓰거나 ESC 로 취소한 뒤에)
-        if (inventoryBench != null && (player == null || (!player.IsUsingItem && !player.IsReloading)))
+        if (inventoryBench != null && (player == null || (!player.IsUsingItem && !player.IsReloading && !player.IsDead)))
         {
             inventoryBench.ToggleInventory(); // 잠금/크로스헤어 전환은 Update() 폴링이 알아서 처리한다
         }

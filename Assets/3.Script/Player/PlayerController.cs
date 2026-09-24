@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 플레이어 이동 / 회전 / 구르기 처리
@@ -64,9 +65,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float autoFireAnimSpeed = 1f;
 
     private const string SingleShotClipName = "ShootSingleshotOneWeapon";
-    private static readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
-    private static readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
-    private static readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
+    private readonly int FireSingleStateHash = Animator.StringToHash("FireSingle");
+    private readonly int FireAutoStateHash = Animator.StringToHash("FireAuto");
+    private readonly int FireSpeedHash = Animator.StringToHash("FireSpeed");
+    private readonly int DodgeTriggerHash = Animator.StringToHash("Dodge");
 
     private int fireLayerIndex = -1; // 상체 전용 발사 포즈 레이어 인덱스 (Awake 에서 이름으로 찾음, 없으면 -1)
     private float singleShotClipLength = 1f;
@@ -79,6 +81,7 @@ public class PlayerController : MonoBehaviour
     private WeaponController weapon; // 선택 - 있으면 발사/재장전/무기교체를 위임
     private PlayerInteraction interaction; // 선택 - 있으면 상호작용 중 이동/회전/사격을 막음
     private ItemUseController itemUse; // 선택 - 있으면 아이템 사용 중 달리기/구르기/사격/상호작용만 막음 (이동/회전/시야는 그대로)
+    private PlayerExtraction extraction; // 선택 - 있으면 귀환(B) 게이지가 도는 동안 사격/구르기/상호작용/무기교체를 막음
 
     // 회전 상태
     private Vector3 facingDirection = Vector3.forward;
@@ -95,6 +98,36 @@ public class PlayerController : MonoBehaviour
     // 마지막 LateUpdate 에서 쓴 조준 레이 (TryGetAimPointAtHeight 가 총구 높이로 다시 교차시킬 때 쓴다)
     private Ray aimRay;
     private bool hasAimRay;
+
+    // 달리기 중 방향 전환 틈(이동 입력이 잠깐 0 이 되는 구간)을 메우는 시간. 이 시간 안에는 계속 달리는 중으로 본다.
+    private const float SprintInputGraceSeconds = 0.15f;
+    private float lastMoveInputTime = -999f;
+
+    // 지금 이 플레이어가 붙어있는 엄폐물들의 콜라이더 모음 (막는 것 + 감지용 트리거 전부, CoverObject 가 채운다).
+    // WeaponController 가 발사할 때 이걸 읽어서 그 총알만 이 콜라이더들을 무시하게 만든다.
+    private readonly HashSet<Collider> attachedCoverColliders = new HashSet<Collider>();
+
+    public IReadOnlyCollection<Collider> AttachedCoverColliders
+    {
+        get { return attachedCoverColliders; }
+    }
+
+    // CoverObject.OnTriggerEnter/Exit 가 붙고 떨어질 때 부른다
+    public void AttachCover(Collider[] colliders)
+    {
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            attachedCoverColliders.Add(colliders[i]);
+        }
+    }
+
+    public void DetachCover(Collider[] colliders)
+    {
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            attachedCoverColliders.Remove(colliders[i]);
+        }
+    }
 
     // 구르기 상태
     private bool isDodging;
@@ -113,7 +146,12 @@ public class PlayerController : MonoBehaviour
     {
         get
         {
-            bool wantSprint = input.SprintHeld && input.MoveInput.sqrMagnitude > 0.01f;
+            // 이동 입력이 "방금 전까지" 있었으면 달리는 중으로 본다.
+            // 달리면서 방향을 바꿀 때(W 를 떼고 A 를 누르는 사이) 이동 입력이 한두 프레임 0 이 되는데,
+            // 그 순간만 달리기가 풀리면 발사 버튼을 누르고 있던 경우 그 틈에 총이 한 발 나가버린다.
+            // (회전 모드도 같이 튀어서 몸이 마우스 쪽으로 홱 돌아간다.)
+            bool movingRecently = input.MoveInput.sqrMagnitude > 0.01f || Time.time - lastMoveInputTime <= SprintInputGraceSeconds;
+            bool wantSprint = input.SprintHeld && movingRecently;
             return wantSprint && !IsUsingItem && !IsReloading && (vitals == null || vitals.CanSprint);
         }
     }
@@ -130,6 +168,12 @@ public class PlayerController : MonoBehaviour
     public bool IsUsingItem
     {
         get { return itemUse != null && itemUse.IsUsing; }
+    }
+
+    // 귀환(B) 게이지가 도는 중인지. 제자리에서만 가능하므로 이동 입력이 들어오면 PlayerExtraction 이 알아서 취소한다.
+    public bool IsExtracting
+    {
+        get { return extraction != null && extraction.IsExtracting; }
     }
 
     // 재장전 중인지 (그 시스템이 없으면 항상 false). IsUsingItem 과 완전히 동일한 규칙 -
@@ -149,7 +193,13 @@ public class PlayerController : MonoBehaviour
     // 이동/회전/사격이 전부 막혀야 하는 상태 (상호작용 중이거나, 외부 UI 가 잠갔거나)
     public bool IsControlLocked
     {
-        get { return IsInteracting || movementLocked; }
+        get { return IsInteracting || movementLocked || IsDead; }
+    }
+
+    // 죽었는지. 죽으면 IsControlLocked 가 켜져서 사격/구르기/상호작용/무기교체/아이템 사용 등이 전부 막힌다.
+    public bool IsDead
+    {
+        get { return vitals != null && vitals.IsDead; }
     }
 
     // movementLocked 가 실제로 바뀌는 순간(상자/인벤토리 UI 열기/닫기)에만 발생한다.
@@ -180,14 +230,18 @@ public class PlayerController : MonoBehaviour
     // 달리는 중 / 구르는 중 / 상호작용 중 / 외부 UI 로 잠긴 중에는 사격 불가 (무기 시스템에서 이 값을 확인)
     public bool CanFire
     {
-        get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading; }
+        get { return !IsSprinting && !isDodging && !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting; }
     }
 
-    // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI 중에는 불가.
+    // 무기 교체(1/2 키) 가능 여부. 재장전 / 상호작용 게이지 / 퀵슬롯 아이템 사용 / 상자·인벤토리 UI / 사격 중에는 불가.
     // 실제 장착(HandleWeaponSelected)과 인벤토리 UI 의 선택 표시(InventoryTestBenchLink)가 같은 조건을 쓰도록 한 곳에 둔다.
     public bool CanSwapWeapon
     {
-        get { return !IsControlLocked && !IsUsingItem && !IsReloading; }
+        get
+        {
+            return !IsControlLocked && !IsUsingItem && !IsReloading && !IsExtracting &&
+                   (weapon == null || !weapon.IsFiring);
+        }
     }
 
     // 마우스 커서가 가리키는 월드 좌표
@@ -240,6 +294,7 @@ public class PlayerController : MonoBehaviour
         TryGetComponent(out weapon);
         TryGetComponent(out interaction);
         TryGetComponent(out itemUse);
+        TryGetComponent(out extraction);
 
         facingDirection = transform.forward;
         aimWorldPoint = transform.position + transform.forward;
@@ -299,6 +354,12 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // 달리는 중 방향 전환에서 이동 입력이 잠깐 0 이 되는 것을 걸러내기 위해 마지막 입력 시각을 기록한다 (IsSprinting 참고)
+        if (input.MoveInput.sqrMagnitude > 0.01f)
+        {
+            lastMoveInputTime = Time.time;
+        }
+
         // 트랜스폼/Rigidbody 는 FixedUpdate 에서만 건드린다.
         UpdateAnimator();
 
@@ -375,7 +436,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleDodge()
     {
-        if (isDodging || Time.time < dodgeReadyTime || IsControlLocked || IsUsingItem || IsReloading)
+        if (isDodging || Time.time < dodgeReadyTime || IsControlLocked || IsUsingItem || IsReloading || IsExtracting)
         {
             return; // 상자/인벤토리 UI, 상호작용, 아이템 사용, 재장전 중에는 구르기로 스테미나만 낭비되는 것 방지
         }
@@ -389,11 +450,27 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(input.MoveInput.x, 0f, input.MoveInput.y);
         dodgeDirection = move.sqrMagnitude > 0.01f ? move.normalized : facingDirection;
 
+        // 구르기 클립은 "몸 정면으로 구르는" 하나짜리라서, 누른 키 방향으로 몸을 즉시 돌려 세운다.
+        // (평소엔 마우스를 보고 있어서 그대로 두면 옆/뒤로 구를 때 몸이 커서 쪽을 향한 채 미끄러진다.
+        //  회전 속도 제한(rotationSpeed)으로 서서히 돌면 구르는 동안 방향이 맞지 않으므로 여기서는 스냅한다)
+        // 구르는 동안엔 UpdateFacing 이 멈춰 있어서 이 방향이 유지되고, 끝나면 다시 마우스 쪽으로 돌아온다.
+        facingDirection = dodgeDirection;
+        Quaternion rollRotation = Quaternion.LookRotation(dodgeDirection, Vector3.up);
+        rb.rotation = rollRotation;
+        transform.rotation = rollRotation;
+
         isDodging = true;
         dodgeEndTime = Time.time + dodgeDuration;
         dodgeReadyTime = Time.time + dodgeCooldown;
 
-        // TODO: 구르기 애니메이션, 무적 프레임
+        // 구르기 시작 순간에만 한 번 쏜다. Animator 에서 Any State → Roll(조건: Dodge 트리거)로 연결하고,
+        // Roll → Idle 은 Has Exit Time 으로 클립이 끝나면 돌아오게 한다.
+        if (animator != null)
+        {
+            animator.SetTrigger(DodgeTriggerHash);
+        }
+
+        // TODO: 무적 프레임
     }
 
     private void UpdateDodge()
@@ -577,6 +654,14 @@ public class PlayerController : MonoBehaviour
         bool autoFiring = weapon.IsAutoFiring;
         float weight = 0f;
 
+        if (isDodging)
+        {
+            // 구르는 동안엔 상체(오른팔) 발사 포즈가 구르기 클립을 덮어쓰지 않게 끈다
+            wasAutoFiring = false;
+            animator.SetLayerWeight(fireLayerIndex, 0f);
+            return;
+        }
+
         if (autoFiring)
         {
             if (!wasAutoFiring)
@@ -679,7 +764,7 @@ public class PlayerController : MonoBehaviour
         return found;
     }
 
-    private static bool RaycastHorizontalPlane(Ray ray, float worldY, out Vector3 point)
+    private bool RaycastHorizontalPlane(Ray ray, float worldY, out Vector3 point)
     {
         point = Vector3.zero;
         bool found = false;
@@ -737,7 +822,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteract()
     {
-        if (isDodging || interaction == null || IsControlLocked || IsUsingItem || IsReloading)
+        if (isDodging || interaction == null || IsControlLocked || IsUsingItem || IsReloading || IsExtracting)
         {
             return; // 구르는 중/이미 잠긴 중(상자 등)/아이템 사용/재장전 중에는 상호작용 시작 불가
         }
@@ -762,7 +847,7 @@ public class PlayerController : MonoBehaviour
     {
         if (weapon != null && CanSwapWeapon)
         {
-            weapon.EquipSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
+            weapon.SelectSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
         }
     }
 

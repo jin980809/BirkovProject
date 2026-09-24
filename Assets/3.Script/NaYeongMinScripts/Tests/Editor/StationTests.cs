@@ -24,10 +24,9 @@ namespace Birdkov.NaYeongMin.Tests
             inventory.AddItem(warehouse, 25001, 5);
             var service = new CraftingService(catalog);
             Assert.AreEqual(CraftResult.Success, service.Craft(player, mushroom, warehouse));
-            Assert.AreEqual(1, service.Count(player.inventory, ammo));
+            Assert.AreEqual(20, service.Count(player.inventory, ammo));   // 탄약 1개 = 1발
             Assert.AreEqual(0, service.Count(warehouse, mushroom));
             Assert.AreEqual(0, service.Count(warehouse, 25001));
-            Assert.AreEqual(20, new PlayerInventoryService(catalog).GetAmmoRounds(player, ammo));
         }
 
         [Test] public void Craft_FullBagRestoresBothAndMetadata()
@@ -41,7 +40,7 @@ namespace Birdkov.NaYeongMin.Tests
             Assert.AreEqual(beforeBag, JsonUtility.ToJson(player)); Assert.AreEqual(beforeWarehouse, JsonUtility.ToJson(warehouse));
         }
 
-        [TestCase(10001, 100, 2)] [TestCase(10002, 120, 3)] [TestCase(10003, 180, 3)] [TestCase(10004, 160, 8)]
+        [TestCase(10001, 500, 2)] [TestCase(10002, 600, 3)] [TestCase(10003, 900, 3)] [TestCase(10004, 800, 8)]
         public void Durability_PerShotAndRepair(int itemId, int max, int cost)
         {
             var player = new PlayerInventoryData { currency = 2 };
@@ -76,6 +75,39 @@ namespace Birdkov.NaYeongMin.Tests
             string before = JsonUtility.ToJson(player); Assert.IsFalse(shop.Buy(player, 10002));
             Assert.AreEqual(before, JsonUtility.ToJson(player));
             player.currency = 0; Assert.IsFalse(shop.Buy(player, 10001));
+        }
+
+        [TestCase(10001, MerchantKind.Weapons)]
+        [TestCase(11001, MerchantKind.Weapons)]
+        [TestCase(12001, MerchantKind.Weapons)]
+        [TestCase(13001, MerchantKind.Weapons)]
+        [TestCase(21001, MerchantKind.General)]
+        [TestCase(22001, MerchantKind.General)]
+        [TestCase(23001, MerchantKind.General)]
+        [TestCase(25001, MerchantKind.General)]
+        [TestCase(26001, MerchantKind.General)]
+        public void Merchant_OnlyTradesAssignedCategory(int itemId, MerchantKind kind)
+        {
+            var player = new PlayerInventoryData { currency = 100 };
+            var allowed = new ShopService(catalog, kind);
+            var denied = new ShopService(catalog, kind == MerchantKind.Weapons ? MerchantKind.General : MerchantKind.Weapons);
+            string before = JsonUtility.ToJson(player);
+            Assert.IsFalse(denied.Buy(player, itemId)); Assert.AreEqual(before, JsonUtility.ToJson(player));
+            Assert.IsTrue(allowed.Buy(player, itemId));
+            before = JsonUtility.ToJson(player);
+            Assert.IsFalse(denied.Sell(player, 0)); Assert.AreEqual(before, JsonUtility.ToJson(player));
+            Assert.IsTrue(allowed.Sell(player, 0)); Assert.AreEqual(100, player.currency);
+        }
+
+        [Test] public void Merchant_CatalogPartitionExcludesNonTradeItems()
+        {
+            foreach (var item in ItemCsvLoader.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/DataTeble/NaYeongMinCsvData/ItemData.csv").text))
+            {
+                bool weapons = ShopService.Accepts(item, MerchantKind.Weapons);
+                bool general = ShopService.Accepts(item, MerchantKind.General);
+                Assert.IsFalse(weapons && general, item.displayName);
+                Assert.AreEqual(ShopService.IsTradable(item), weapons || general, item.displayName);
+            }
         }
     }
 }

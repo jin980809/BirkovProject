@@ -168,7 +168,7 @@ namespace Birdkov.NaYeongMin.Tests
         public void SetUp()
         {
             item = new ItemData { itemId = 21001, itemType = ItemType.Consumable,
-                healthRecovery = 20, hungerRecovery = 40, waterRecovery = 90, stackable = true, maxStack = 5 };
+                healthRecovery = 6, hungerRecovery = 12, waterRecovery = 27, stackable = true, maxStack = 5 };   // 최대 30 기준 절대량
             service = new PlayerInventoryService(new ItemCatalog(new[] { item }));
             player = new PlayerInventoryData();
             service.AddToInventory(player, item.itemId, 2);
@@ -225,7 +225,7 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [TestCase(-1f)]
-        [TestCase(101f)]
+        [TestCase(31f)]
         [TestCase(float.NaN)]
         [TestCase(float.PositiveInfinity)]
         public void Use_InvalidRecoveryDoesNotApply(float amount)
@@ -269,8 +269,8 @@ namespace Birdkov.NaYeongMin.Tests
                 new ItemData { itemId = 27001, itemType = ItemType.Material, displayName = "빨간 버섯", stackable = true, maxStack = 5 },
                 new ItemData { itemId = 27002, itemType = ItemType.Material, displayName = "파란 버섯", stackable = true, maxStack = 5 },
                 new ItemData { itemId = 25001, itemType = ItemType.Material, displayName = "화약", stackable = true, maxStack = 5 },
-                new ItemData { itemId = 11001, itemType = ItemType.Ammo, displayName = "기관권총 총알", magazineSize = 20 },
-                new ItemData { itemId = 11002, itemType = ItemType.Ammo, displayName = "샷건 총알", magazineSize = 20 },
+                new ItemData { itemId = 11001, itemType = ItemType.Ammo, displayName = "기관권총 총알", magazineSize = 20, stackable = true, maxStack = 160 },
+                new ItemData { itemId = 11002, itemType = ItemType.Ammo, displayName = "샷건 총알", magazineSize = 20, stackable = true, maxStack = 100 },
                 new ItemData { itemId = 21001, itemType = ItemType.Consumable, displayName = "회복약", stackable = true, maxStack = 5 }
             };
 
@@ -298,7 +298,7 @@ namespace Birdkov.NaYeongMin.Tests
             Give(CraftingService.GunpowderItemId, 5);
 
             Assert.AreEqual(CraftResult.Success, craftingService.Craft(player, mushroomItemId));
-            Assert.AreEqual(1, Count(expectedAmmoItemId));
+            Assert.AreEqual(20, Count(expectedAmmoItemId));   // 탄약 1개 = 1발, 제작 1회 = 20발
             Assert.AreEqual(0, Count(mushroomItemId));
             Assert.AreEqual(0, Count(CraftingService.GunpowderItemId));
         }
@@ -357,7 +357,7 @@ namespace Birdkov.NaYeongMin.Tests
 
             Assert.IsFalse(player.inventory.slots.Exists(slot => slot.IsEmpty()));
             Assert.AreEqual(CraftResult.Success, craftingService.Craft(player, 27001));
-            Assert.AreEqual(1, Count(11001));
+            Assert.AreEqual(20, Count(11001));
         }
 
         // 재료가 여러 칸에 흩어져 있어도 합산해 소모한다.

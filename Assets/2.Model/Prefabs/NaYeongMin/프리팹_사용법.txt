@@ -1,0 +1,201 @@
+﻿나영민 프리팹 사용법 / 인수인계 - 2026-09-22
+====================================================================
+코드를 몰라도 이 문서만 보고 상자·상점·제작대·수리대·창고를 맵에 놓을 수 있다.
+프리팹 위치: Assets/2.Model/Prefabs/NaYeongMin/
+
+
+1. 프리팹 목록
+--------------------------------------------------------------------
+[맵에 직접 놓는 것]
+  StorageInteraction.prefab        허브 창고. 열면 창고 칸이 나온다. 전리품 없음.
+  LootInteraction.prefab           전리품 상자(8칸). 안에 랜덤 아이템이 든다.
+  MapChestInteraction.prefab       맵 배치 상자. 규격이 큰 상자.
+  Chest.prefab                     일반 상자. dropSettings = Chest_Normal.
+  RandomChest_Food_Test.prefab     식량 상자 예시. dropSettings = Chest_Food.
+  RandomChest_Ammo_Test.prefab     탄약 상자 예시. dropSettings = Chest_Ammo.
+  TemporaryShopNPC.prefab          까마귀 상점. 거래 창이 열린다.
+  TemporaryCraftingStation.prefab  총알 제작대.
+  PlayerDeath/PlayerDeath_Test.prefab  사망 분실물(묘비) 테스트용. 30칸.
+  RandomEnemyDeath_Test.prefab     적 사망 드랍 테스트용.
+
+[씬에 하나만 두는 것 - 이미 들어가 있음]
+  InventoryTestBench.prefab        인벤토리 본체. 씬에 1개만.
+  Ui/InventoryUI.prefab            인벤토리 화면 전체. 벤치 밑의 Root 가 이것.
+  LootRuntime.prefab               드랍 테이블/아이템 DB/드랍 풀. 씬에 1개만.
+  LootPickupTest.prefab            드랍 줍기 테스트용.
+
+[코드가 자동으로 꺼내 쓰는 것 - 맵에 직접 놓지 않는다]
+  LootDropObject.prefab            적이 죽으면 생기는 노란 오브제.
+  LootDropPool.prefab              그 오브제를 미리 만들어 두는 풀. 테스트 코드도 이 경로를 쓴다.
+  PlayerDeath/PlayerDeathObject.prefab  플레이어 사망 시 생기는 묘비.
+  PlayerDeath/PlayerDeathPanel.prefab   사망 분실물 30칸 UI.
+
+
+2. 맵에 새 상자 놓기 (가장 흔한 작업)
+--------------------------------------------------------------------
+(1) 프로젝트 창에서 원하는 프리팹을 하이어라키(씬)로 드래그한다.
+    - 그냥 상자면 Chest.prefab
+    - 식량/탄약처럼 내용물을 정해 놓은 상자면 RandomChest_*.prefab
+(2) 위치만 옮기면 끝난다. 그대로 F 로 열린다.
+(3) 내용물을 바꾸고 싶으면 인스펙터에서 아래 둘만 만진다.
+
+    Inventory World Container
+      Kind          상자 종류. 아래 3번 표 참고.
+      Display Name  가까이 갔을 때 화면에 뜨는 이름.
+      Drop Settings 무엇이 얼마나 나오는지. 아래 4번 참고.
+
+    World Container Interactable
+      Interact Duration  F 를 몇 초 눌러야 열리는지. 기본 1.5.
+      Inventory Bench    비워 둬도 된다. 씬에서 알아서 찾는다.
+      Prompt Prefab      머리 위 아이콘. 다른 상자에서 복사해 오면 된다.
+
+주의
+  - 오브젝트 레이어가 반드시 Interaction (10번) 이어야 F 로 열린다.
+    프리팹에 이미 그렇게 되어 있으니 새로 만들 때만 확인한다.
+  - Collider 가 있어야 한다. 프리팹에는 BoxCollider 가 들어 있다.
+  - 상자 하나당 내용물은 처음 열 때 딱 한 번 추첨된다. 닫았다 다시 열어도
+    아이템이 새로 생기지 않는다. 가져간 것은 가져간 것이다.
+
+
+3. Kind 값별 동작
+--------------------------------------------------------------------
+  Storage      허브 창고. 창고 칸이 화면 오른쪽에 열린다. 전리품 없음.
+  Loot         전리품 상자. 8칸.
+  MapChest     맵 배치 상자. 상자 규격대로 칸 수가 정해진다.
+  Shop         상점. 거래 창이 열린다. Drop Settings 는 안 쓴다.
+  Crafting     제작대. 제조 창이 열린다. Drop Settings 는 안 쓴다.
+  Repair       수리대. 수리 창이 열린다. Drop Settings 는 안 쓴다.
+  PlayerDeath  사망 분실물. PlayerDeathContainer 가 같이 붙어 있어야 한다.
+
+Shop / Crafting / Repair 는 TemporaryShopNPC / TemporaryCraftingStation 프리팹을
+쓰는 것이 더 간단하다. 그 프리팹들은 Service Station Interactable 을 쓴다.
+  Inventory Bench  비워 둬도 자동으로 찾는다.
+  Crafting         체크하면 제작대, 해제하면 상점.
+  Prompt           머리 위 글자. 자식 InteractionLabel 이 자동으로 잡힌다.
+  Player / Player Input  비워 둬도 자동으로 찾는다.
+
+
+4. 상자 내용물 바꾸기 (Drop Settings)
+--------------------------------------------------------------------
+위치: Assets/DataTeble/NaYeongMinDropSettings/
+  Chest_Normal   일반
+  Chest_Food     식량
+  Chest_Ammo     탄약
+  Chest_Med      회복약
+  Chest_Weapon   무기
+  Chest_Armor    방어구
+  Test_Loot_SelectedItems        전리품 테스트용
+  Test_MapChest_SelectedItems    맵상자 테스트용
+
+기존 것 쓰기
+  상자의 Drop Settings 칸에 위 에셋 중 하나를 끌어다 놓는다.
+
+새로 만들기
+  (1) 위 폴더에서 기존 에셋 하나를 Ctrl+D 로 복제하고 이름을 바꾼다.
+  (2) 인스펙터에서 나올 아이템과 확률·개수를 고친다.
+  (3) 상자의 Drop Settings 에 그 에셋을 끌어다 놓는다.
+  아이템 번호는 Assets/DataTeble/NaYeongMinCsvData/ItemData.csv 를 본다.
+
+
+5. 상자가 아닌 오브젝트(기둥·통·자판기 등)를 상자로 만들기
+--------------------------------------------------------------------
+원하는 모델을 상자처럼 열리게 하는 방법.
+
+  (1) 그 오브젝트를 씬에 놓는다.
+  (2) 레이어를 Interaction 으로 바꾼다. (자식까지 바꿀지 물으면 예)
+  (3) Collider 가 없으면 Box Collider 를 추가한다.
+  (4) Add Component 로 Inventory World Container 를 붙인다.
+      -> World Container Interactable 이 자동으로 같이 붙는다.
+  (5) Kind 를 정하고 Display Name 을 적는다.
+  (6) Drop Settings 에 원하는 에셋을 넣는다. (Shop/Crafting/Repair 는 비워 둔다)
+  (7) Prompt Prefab 에 기존 상자의 것과 같은 프리팹을 넣는다. 비워 두면
+      머리 위 아이콘만 안 뜨고 여는 것은 된다.
+
+같은 모양을 여러 개 쓸 거면 그 오브젝트를 프리팹으로 만들어 두면 된다.
+하이어라키에서 Assets/2.Model/Prefabs/NaYeongMin/ 폴더로 끌어다 놓으면 된다.
+
+
+6. 프리팹 고치는 법
+--------------------------------------------------------------------
+한 개만 다르게 하고 싶을 때
+  씬에서 그 오브젝트만 고친다. 고친 항목은 인스펙터에서 굵게 표시된다.
+  다른 곳에 놓인 같은 프리팹은 영향을 받지 않는다.
+
+전부 똑같이 바꾸고 싶을 때
+  씬에서 고친 뒤 인스펙터 맨 위 Overrides -> Apply All 을 누른다.
+  또는 프로젝트 창에서 프리팹을 더블클릭해 프리팹 모드에서 고친다.
+  이쪽이 안전하다. 그 프리팹을 쓰는 모든 곳이 같이 바뀐다.
+
+되돌리고 싶을 때
+  Overrides -> Revert All. 씬에서 고친 것이 전부 프리팹 원본 상태로 돌아간다.
+  주의: 되돌리면 그 오브젝트에 손으로 연결해 둔 참조도 같이 날아간다.
+
+
+7. 인벤토리 화면(Ui/InventoryUI.prefab) 고치기
+--------------------------------------------------------------------
+화면 배치는 전부 이 프리팹 안에 있다. 코드를 고칠 필요가 없다.
+프리팹을 더블클릭해서 프리팹 모드로 들어가 고친다.
+
+  TitleBar / HintText      제목과 안내 문구
+  InventoryScroll          왼쪽 세로 목록 (장비 / 가방 / 창고)
+    EquipmentPanel         장비 4칸 + 지푸라기 아이콘/수치
+    BagPanel               가방 25칸
+  QuickPanel               하단 퀵슬롯. 무기 2칸 + 아이템 3칸
+  LootPanel / MapChestPanel        전리품 / 맵상자
+  ShopPanel / CraftPanel / RepairPanel   상점 / 제조 / 수리
+  WarehouseSoloScroll      창고만 열었을 때 오른쪽에 뜨는 자리
+  ItemDetailPanel          아이템 좌클릭 상세창
+  ContextMenu              우클릭 사용/버리기
+  PlayerDeathPanel         사망 분실물 30칸
+
+지푸라기 표시
+  InventoryScroll/Content/EquipmentPanel 안의
+  StrawCurrencyIcon (아이콘) 과 StatsText (숫자) 를 옮기면 위치가 바뀐다.
+
+주의 1
+  QuickPanel 은 게임이 시작되면 코드가 캔버스 바로 아래로 옮긴다.
+  인벤토리 창을 닫아도 퀵슬롯이 보이게 하려는 것이다.
+  그러니 프리팹 안에서는 QuickPanel 이 반드시 Root 바로 밑에 있어야 한다.
+  이름도 QuickPanel 그대로 둬야 한다.
+
+주의 2
+  칸(슬롯)을 지우거나 이름을 바꾸면 벤치의 연결이 끊긴다.
+  칸을 늘리려면 기존 칸을 복제해서 쓰고, 인스펙터의 Inventory Test Bench >
+  Ui 목록에 있는 배열에도 같이 추가한다.
+
+주의 3
+  이 프리팹은 NaYeongMin.unity 와 Test.unity 두 씬이 같이 쓴다.
+  여기를 고치면 두 씬이 함께 바뀐다.
+
+
+8. 이번에 정리한 내용
+--------------------------------------------------------------------
+- 리베이스 과정에서 프리팹 연결이 끊겨 있던 내 오브젝트를 전부 다시 프리팹으로 묶었다.
+  새로 만든 것: Chest, LootPickupTest, RandomChest_Food_Test, RandomChest_Ammo_Test,
+               RandomEnemyDeath_Test, PlayerDeath/PlayerDeath_Test
+  갱신한 것:   Ui/InventoryUI, TemporaryShopNPC, TemporaryCraftingStation
+- 팀원 오브젝트(Player, Enemy, EnemyPool, 카메라, Ground, EventSystem,
+  KTS_Imported, PreviousActors_Backup, Crosshair, Interaction)는 건드리지 않았다.
+- 아무데서도 쓰지 않아 지운 프리팹
+    EnemyDrop_Empty.prefab        빈 오브젝트였다. 참조 0건.
+    EnemyLootSpawnRelay.prefab    이 프리팹에서만 쓰이던 옛 중계용. 참조 0건.
+  EnemyLootSpawnRelay.cs 스크립트는 남겨 두었다. 지금은 쓰이는 곳이 없다.
+- LootDropPool.prefab 은 씬에서 참조하지 않지만 지우면 안 된다.
+  테스트 코드가 파일 경로로 직접 불러온다.
+  (DropTests.cs 의 LootDropPoolTests)
+
+
+9. 막힐 때
+--------------------------------------------------------------------
+F 를 눌러도 안 열린다
+  -> 레이어가 Interaction 인지, Collider 가 있는지 본다.
+  -> 씬에 PlayerInventoryBridge 가 들어가 있으면 안 된다. 같이 쓸 수 없다.
+
+상자를 열었는데 안이 비었다
+  -> Drop Settings 가 비어 있는지 본다. Storage 는 원래 전리품이 없다.
+
+머리 위 이름이 안 뜬다
+  -> Prompt Prefab 이 비었는지 본다. 여는 것 자체는 된다.
+
+아이콘이 안 나온다
+  -> ItemData.csv 의 iconKey 경로를 확인한다.

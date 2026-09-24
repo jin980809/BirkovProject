@@ -11,7 +11,7 @@ using UnityEngine.UI;
 //  - 체력 잔상 이미지: Slider_red 의 Fill 과 같은 크기/위치로 Fill 보다 "뒤"(하이어라키 위쪽)에 Image 를 하나 두고,
 //    Image Type = Filled, Fill Method = Horizontal, Fill Origin = Left 로 설정한 뒤 healthTrailImage 에 연결한다.
 //    잔상 색은 이미지 색 그대로 쓴다 (밝은 흰색/노랑 추천).
-public class PlayerHUD : MonoBehaviour
+public class PlayerHUD : MonoBehaviour, ISceneRebindable
 {
     [Header("연결 (비우면 씬에서 찾음)")]
     [SerializeField] private PlayerVitals vitals;
@@ -52,8 +52,25 @@ public class PlayerHUD : MonoBehaviour
     [Tooltip("2번 슬롯을 선택하지 않았을 때 끌 오브젝트 (아이콘+텍스트 묶음 등). 비우면 텍스트 오브젝트를 끈다")]
     [SerializeField] private GameObject slot2AmmoRoot;
 
+    [Header("무기 내구도 (퀵슬롯별)")]
+    [Tooltip("1번 무기 슬롯 내구도 슬라이더. 장탄수와 달리 손에 들었는지와 상관없이 그 슬롯에 무기가 꽂혀만 있으면 켜진다")]
+    [SerializeField] private Slider slot1DurabilitySlider;
+    [Tooltip("1번 슬롯이 비어 있거나 내구도가 없는 아이템일 때 끌 오브젝트. 비우면 슬라이더 오브젝트를 끈다")]
+    [SerializeField] private GameObject slot1DurabilityRoot;
+    [Tooltip("2번 무기 슬롯 내구도 슬라이더")]
+    [SerializeField] private Slider slot2DurabilitySlider;
+    [Tooltip("2번 슬롯이 비어 있거나 내구도가 없는 아이템일 때 끌 오브젝트. 비우면 슬라이더 오브젝트를 끈다")]
+    [SerializeField] private GameObject slot2DurabilityRoot;
+    [Tooltip("내구도가 이 비율 이하로 떨어지면 슬라이더 채움 색을 경고 색으로 바꾼다")]
+    [SerializeField, Range(0f, 1f)] private float durabilityWarningThreshold = 0.3f;
+
     private Color hungerOriginalColor;
     private Color waterOriginalColor;
+
+    private Image slot1DurabilityFillImage;
+    private Image slot2DurabilityFillImage;
+    private Color slot1DurabilityOriginalColor;
+    private Color slot2DurabilityOriginalColor;
 
     private float healthTrailValue = 1f; // 0~1, 잔상 이미지 fillAmount
     private float lastHealthNormalized = 1f;
@@ -63,23 +80,17 @@ public class PlayerHUD : MonoBehaviour
     private int lastHealthShown = -1;
     private int lastMaxHealthShown = -1;
     private readonly int[] lastAmmoShown = { -1, -1 };
-    private readonly int[] lastMagazineShown = { -1, -1 };
+    private readonly int[] lastReserveShown = { -1, -1 };
 
     private void Awake()
     {
-        if (vitals == null)
-        {
-            vitals = FindAnyObjectByType<PlayerVitals>();
-        }
-
-        if (weapon == null)
-        {
-            weapon = FindAnyObjectByType<WeaponController>();
-        }
+        RebindSceneReferences();
 
         MakeDisplayOnly(healthSlider);
         MakeDisplayOnly(hungerSlider);
         MakeDisplayOnly(waterSlider);
+        MakeDisplayOnly(slot1DurabilitySlider);
+        MakeDisplayOnly(slot2DurabilitySlider);
 
         if (hungerWarningImage != null)
         {
@@ -90,6 +101,32 @@ public class PlayerHUD : MonoBehaviour
         {
             waterOriginalColor = waterWarningImage.color;
         }
+
+        CaptureFillColor(slot1DurabilitySlider, out slot1DurabilityFillImage, out slot1DurabilityOriginalColor);
+        CaptureFillColor(slot2DurabilitySlider, out slot2DurabilityFillImage, out slot2DurabilityOriginalColor);
+    }
+
+    // 슬라이더의 Fill 이미지와 원래 색을 미리 기억해 둔다 - 경고 색으로 바꿨다가 되돌릴 때 쓴다
+    private void CaptureFillColor(Slider slider, out Image fillImage, out Color originalColor)
+    {
+        fillImage = null;
+        originalColor = Color.white;
+
+        if (slider != null && slider.fillRect != null)
+        {
+            fillImage = slider.fillRect.GetComponent<Image>();
+            if (fillImage != null)
+            {
+                originalColor = fillImage.color;
+            }
+        }
+    }
+
+    // 씬이 바뀌면 플레이어가 새로 생기므로 다시 찾는다 (이 UI 가 씬을 넘어서 유지될 때 - PersistentUiRoot)
+    public void RebindSceneReferences()
+    {
+        vitals = FindAnyObjectByType<PlayerVitals>();
+        weapon = FindAnyObjectByType<WeaponController>();
     }
 
     private void Start()
@@ -113,6 +150,7 @@ public class PlayerHUD : MonoBehaviour
         }
 
         UpdateAmmo();
+        UpdateDurability();
     }
 
     private void UpdateHealth()
@@ -166,17 +204,18 @@ public class PlayerHUD : MonoBehaviour
         UpdateSlotAmmo(1, slot2AmmoText, slot2AmmoRoot);
     }
 
-    // 지금 손에 든(선택된) 무기 슬롯의 장탄수만 보여주고, 나머지 슬롯은 오브젝트를 끈다.
-    // 선택된 슬롯이 비어 있으면(손에 든 무기 없음) 둘 다 꺼진다. 재장전 중에도 현재 값을 그대로 보여준다.
+    // 내구도(UpdateSlotDurability)와 달리, 지금 실제로 손에 들고 있는(HasWeaponEquipped) 슬롯의
+    // "현재 장전량 / 가방에 보유한 탄환수"만 보여준다. 집어넣은(Holster) 상태거나 그 슬롯이 아니면 꺼진다.
+    // 재장전 중에도 현재 값을 그대로 보여준다.
     // 이 스크립트는 끄는 오브젝트와 다른 곳(Canvas)에 있으므로 꺼진 뒤에도 계속 돌면서 다시 켤 수 있다.
     private void UpdateSlotAmmo(int slotIndex, Text ammoText, GameObject root)
     {
         if (ammoText != null)
         {
             int ammo = 0;
-            int magazine = 0;
-            bool isSelected = weapon != null && weapon.EquippedSlotIndex == slotIndex;
-            bool visible = isSelected && weapon.TryGetSlotAmmo(slotIndex, out ammo, out magazine);
+            int reserve = 0;
+            bool isHeldSlot = weapon != null && weapon.HasWeaponEquipped && weapon.EquippedSlotIndex == slotIndex;
+            bool visible = isHeldSlot && weapon.TryGetSlotAmmo(slotIndex, out ammo, out reserve);
 
             GameObject toggleTarget = root;
             if (toggleTarget == null)
@@ -189,16 +228,57 @@ public class PlayerHUD : MonoBehaviour
                 toggleTarget.SetActive(visible);
             }
 
-            if (visible && (ammo != lastAmmoShown[slotIndex] || magazine != lastMagazineShown[slotIndex]))
+            if (visible && (ammo != lastAmmoShown[slotIndex] || reserve != lastReserveShown[slotIndex]))
             {
-                ammoText.text = ammo + " / " + magazine;
+                ammoText.text = ammo + " / " + reserve;
                 lastAmmoShown[slotIndex] = ammo;
-                lastMagazineShown[slotIndex] = magazine;
+                lastReserveShown[slotIndex] = reserve;
             }
         }
     }
 
-    private static void UpdateBar(Slider slider, float current, float max)
+    private void UpdateDurability()
+    {
+        UpdateSlotDurability(0, slot1DurabilitySlider, slot1DurabilityRoot, slot1DurabilityFillImage, slot1DurabilityOriginalColor);
+        UpdateSlotDurability(1, slot2DurabilitySlider, slot2DurabilityRoot, slot2DurabilityFillImage, slot2DurabilityOriginalColor);
+    }
+
+    // 장탄수(UpdateSlotAmmo)와 달리 손에 든 슬롯인지는 보지 않는다 - 그 퀵슬롯에 내구도 있는 무기가
+    // 꽂혀 있기만 하면 켜지고, 비어 있으면 꺼진다.
+    private void UpdateSlotDurability(int slotIndex, Slider slider, GameObject root, Image fillImage, Color originalColor)
+    {
+        if (slider == null)
+        {
+            return;
+        }
+
+        int remaining = 0;
+        int maximum = 0;
+        bool visible = weapon != null && weapon.TryGetSlotDurability(slotIndex, out remaining, out maximum);
+
+        GameObject toggleTarget = root != null ? root : slider.gameObject;
+        if (toggleTarget.activeSelf != visible)
+        {
+            toggleTarget.SetActive(visible);
+        }
+
+        if (!visible)
+        {
+            return;
+        }
+
+        slider.minValue = 0f;
+        slider.maxValue = maximum;
+        slider.value = remaining;
+
+        if (fillImage != null)
+        {
+            float normalized = maximum > 0 ? (float)remaining / maximum : 0f;
+            fillImage.color = normalized <= durabilityWarningThreshold ? warningColor : originalColor;
+        }
+    }
+
+    private void UpdateBar(Slider slider, float current, float max)
     {
         if (slider != null)
         {
@@ -223,7 +303,7 @@ public class PlayerHUD : MonoBehaviour
         }
     }
 
-    private static void MakeDisplayOnly(Slider slider)
+    private void MakeDisplayOnly(Slider slider)
     {
         if (slider != null)
         {

@@ -48,6 +48,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                     return new InventoryMoveResult(InventoryResult.InvalidAmount, 0, amount);
                 }
 
+                if (playerData.currency > int.MaxValue - amount)
+                    return new InventoryMoveResult(InventoryResult.DestinationFull, 0, amount);
                 playerData.currency += amount;
                 return new InventoryMoveResult(InventoryResult.Success, amount, 0);
             }
@@ -298,7 +300,8 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return InventoryResult.DestinationRejected;
             }
 
-            if (!target.TryApplyRecovery(item.healthRecovery, item.hungerRecovery, item.waterRecovery))
+            if (!target.TryApplyRecovery(RecoveryPercent(item.healthRecovery), RecoveryPercent(item.hungerRecovery),
+                    RecoveryPercent(item.waterRecovery)))
             {
                 return InventoryResult.DestinationRejected;
             }
@@ -308,9 +311,18 @@ namespace Birdkov.NaYeongMin.InventorySystem
             return result.Result;
         }
 
+        // CSV 회복량은 기획 최대치 30 기준 절대량이다(6/12/27 = 20/40/90%).
+        // IRecoveryTarget 은 % 를 받으므로 여기서 한 번만 환산한다.
+        public const float RecoveryDesignMax = 30f;
+
+        public static float RecoveryPercent(float amount)
+        {
+            return amount * 100f / RecoveryDesignMax;
+        }
+
         private static bool IsValidRecovery(float amount)
         {
-            return amount >= 0 && amount <= 100 && !float.IsNaN(amount) && !float.IsInfinity(amount);
+            return amount >= 0 && amount <= RecoveryDesignMax && !float.IsNaN(amount) && !float.IsInfinity(amount);
         }
 
         // 탄약 1박스에 든 발 수. CSV 의 magazineSize 를 박스 용량으로 읽는다. 기획서 9.2 : 1박스 = 20발.
@@ -418,7 +430,11 @@ namespace Birdkov.NaYeongMin.InventorySystem
 
         public void ClearOnDeath(PlayerInventoryData playerData)
         {
-            playerData?.ClearAll();
+            if (playerData == null) return;
+            playerData.inventory.Clear();
+            playerData.equipmentSlots.Clear();
+            playerData.ClearItemQuickSlots();
+            // 지푸라기는 사망해도 유지. 전체 초기화(ClearAll)와 분리한다.
         }
 
         public static bool IsQuickUsable(ItemData item)

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using Birdkov.NaYeongMin.InventorySystem;
 using UnityEngine;
 
@@ -89,12 +90,18 @@ namespace Birdkov.NaYeongMin.Rng
             Vector3 position,
             Quaternion rotation,
             DropSourceType sourceType,
-            LootContainerSize sizePreset = LootContainerSize.Box2x4)
+            LootContainerSize sizePreset = LootContainerSize.Box2x4,
+            IList<int> guaranteedItemIds = null)
         {
             LootContainerData loot = Roll(sourceType, sizePreset);
             if (loot == null)
             {
                 return null;
+            }
+
+            if (guaranteedItemIds != null && guaranteedItemIds.Count > 0)
+            {
+                loot = PutFirst(loot, guaranteedItemIds, sizePreset);
             }
 
             LootDropObject instance = lootDropPool.Rent(position, rotation, loot);
@@ -104,6 +111,32 @@ namespace Birdkov.NaYeongMin.Rng
             }
 
             return instance;
+        }
+
+        // 보장 아이템(적이 입고 있던 방어구 등)을 앞칸에 1개씩 넣고 추첨 결과를 뒤에 잇는다.
+        // 칸을 넘는 추첨분은 기존 규칙대로 버린다. 보장 아이템은 버려지지 않는다.
+        private static LootContainerData PutFirst(LootContainerData rolled, IList<int> itemIds, LootContainerSize sizePreset)
+        {
+            LootContainerData result = new LootContainerData(sizePreset);
+            int index = 0;
+            foreach (int itemId in itemIds)
+            {
+                if (index >= result.SlotCount) break;
+                result.loot.slots[index].itemId = itemId;
+                result.loot.slots[index].amount = 1;
+                index++;
+            }
+
+            foreach (GridSlotData slot in rolled.loot.slots)
+            {
+                if (index >= result.SlotCount) break;
+                if (slot.IsEmpty()) continue;
+                result.loot.slots[index].itemId = slot.itemId;
+                result.loot.slots[index].amount = slot.amount;
+                index++;
+            }
+
+            return result;
         }
     }
 }
