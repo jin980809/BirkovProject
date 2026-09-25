@@ -5,17 +5,15 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {    
+    [Header("이 스크립트 안에 BGM 바꿀 수 있음")]
     //여기는 가이드 팝업용
     public Button openGuide;
     public GameObject guidePopup;
-    public Image displayImg;  //튜토팝업에 나올 이미지
-    public Text displayText;  //튜토팝업에 나올 문구
-    public Button nextImg;    //튜토팝업용 버튼
-    public Text nextButtonText;   //튜토팝업용 텍스트
-    public Sprite[] guideImg;
-    [TextArea] public string[] guideTexts;
-    public string nextLabel = "다음";
-    public string lastLabel = "확인";
+    public GameObject[] slides;
+    public Button nextButton;
+    public Text nextButtonText;
+    public string nextLabel = "계 속";
+    public string lastLabel = "확 인";
 
     private int currentIndex = 0;
 
@@ -25,18 +23,24 @@ public class GameManager : MonoBehaviour
         {
             guidePopup.SetActive(false);
         }
-        if (nextImg != null)
+        if (nextButton != null)
         {
-            nextImg.gameObject.SetActive(false);
+            nextButton.gameObject.SetActive(false);
         }
         if (openGuide != null)
         {
             openGuide.onClick.AddListener(OnStartGuideClicked);
         }
-        if (nextImg != null)
+        if (nextButton != null)
         {
-            nextImg.onClick.AddListener(OnNextClicked);
+            nextButton.onClick.AddListener(OnNextClicked);
         }
+        for (int i = 0; i < slides.Length; i++)
+        {
+            slides[i].SetActive(false);
+            EnsureCanvasGroup(slides[i]);
+        }
+        AudioManager.instance.PlayBGM("Main");    //여기에서 브금명 바꾸기
     }
 
     //ESC 일시정지용
@@ -62,42 +66,46 @@ public class GameManager : MonoBehaviour
     public void GameExit()
     {
         Debug.Log("게임 종료");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
         Application.Quit();
+#endif
     }
 
 
     //여기 아래는 가이드 팝업 부분
     private void OnStartGuideClicked()
     {
-        if (guidePopup == null || guideImg.Length == 0)
+        if (guidePopup == null || slides.Length == 0)
         {
             return;
         }
         currentIndex = 0;
-        UpdateDisplay();
+        slides[currentIndex].SetActive(true);
+        GetCanvasGroup(slides[currentIndex]).alpha = 1f;
+        UpdateNextLabel();
         guidePopup.SetActive(true);
         StartCoroutine(ShowButton());
     }
 
     private IEnumerator ShowButton()
     {
-        nextImg.gameObject.SetActive(false);
+        nextButton.gameObject.SetActive(false);
         yield return new WaitForSecondsRealtime(0.8f);
-        nextImg.gameObject.SetActive(true);
-        nextImg.gameObject.SetActive(true);
+        nextButton.gameObject.SetActive(true);
     }
 
     private void OnNextClicked()
     {
-        currentIndex++;
-        if (currentIndex >= guideImg.Length)
+        int nextIndex = currentIndex + 1;
+        if (nextIndex >= slides.Length)
         {
             guidePopup.SetActive(false);
-            nextImg.gameObject.SetActive(false);
+            nextButton.gameObject.SetActive(false);
             return;
         }
-        UpdateDisplay();
-        StartCoroutine(ShowButton());   //다음 이미지 넘어갈 때 버튼이 시간차로 안 뜨게 하고 싶다면 이 부분 삭제 가능!
+        StartCoroutine(FadetoSlide(nextIndex));
     }
 
     //페이드 전환 구현하기
@@ -105,46 +113,48 @@ public class GameManager : MonoBehaviour
     public float fadeTime = 0.25f;
     private Coroutine fadeCo;
 
-    private void UpdateDisplay()
+    private IEnumerator FadetoSlide(int newIndex)
     {
-        if (fadeCo != null)
-        {
-            StopCoroutine(fadeCo);
-        }
-        fadeCo = StartCoroutine(FadetoNew());
+        CanvasGroup current = GetCanvasGroup(slides[currentIndex]);
+        yield return StartCoroutine(FadeCanvas(current,1f,0f));
+        slides[currentIndex].SetActive(false);
+
+        currentIndex = newIndex;
+        slides[currentIndex].SetActive(true);
+
+        CanvasGroup next = GetCanvasGroup(slides[currentIndex]);
+        next.alpha = 0f;
+        yield return StartCoroutine(FadeCanvas(next, 0f, 1f));
+
+        UpdateNextLabel();
+        StartCoroutine(ShowButton());
     }
-
-    private IEnumerator FadetoNew()
-    {
-        yield return StartCoroutine(FadeImg(displayImg,1f,0f));
-        displayImg.sprite = guideImg[currentIndex];
-
-        if (displayText != null && guideTexts != null && currentIndex < guideTexts.Length)
-        {
-            displayText.text = guideTexts[currentIndex];
-        }
-
-        if (nextButtonText != null)
-        {
-            bool isLast = currentIndex == guideImg.Length - 1;
-            nextButtonText.text = isLast ? lastLabel : nextLabel;
-        }
-        yield return StartCoroutine(FadeImg(displayImg, 0f, 1f));
-    }
-    private IEnumerator FadeImg(Image img, float from, float to)
+    private IEnumerator FadeCanvas(CanvasGroup cg, float from, float to)
     {
         float elapsed = 0f;
-        Color c = img.color;
-
         while (elapsed < fadeTime)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / fadeTime);
-            c.a = Mathf.Lerp(from, to, t);
-            img.color = c;
+            cg.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / fadeTime));
             yield return null;
         }
-        c.a = to;
-        img.color = c;
+        cg.alpha = to;
     }
+
+    private void UpdateNextLabel()
+    {
+        bool isLast = currentIndex == slides.Length - 1;
+        nextButtonText.text = isLast ? lastLabel : nextLabel;
+    }
+    private CanvasGroup GetCanvasGroup(GameObject slide) => slide.GetComponent<CanvasGroup>();
+
+    private void EnsureCanvasGroup(GameObject slide)
+    {
+        if (slide.GetComponent<CanvasGroup>() == null)
+        {
+            slide.AddComponent<CanvasGroup>();
+        }
+    }
+
+
 }

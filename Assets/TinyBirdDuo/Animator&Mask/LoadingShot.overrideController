@@ -7,7 +7,7 @@ AnimatorOverrideController:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: LoadingShot
-  m_Controller: {fileID: 9100000, guid: b7c70c968fdf7c34db64bd6eaaafd0d4, type: 2}
+  m_Controller: {fileID: 9100000, guid: a6de7cfde0705fd45889bb07c1d7bdaa, type: 2}
   m_Clips:
   - m_OriginalClip: {fileID: 1827226128182048838, guid: db381d186ca4b884a90658d8779abe53, type: 3}
     m_OverrideClip: {fileID: 1827226128182048838, guid: 606da05745966174f91ebba29a3cc527, type: 3}

@@ -19,8 +19,8 @@ public class OptionUI : MonoBehaviour
         sfxSlider.minValue = 0f;
         sfxSlider.maxValue = 1f;
 
-        bgmSlider.value = PlayerPrefs.GetFloat("º¼·ýµ¥ÀÌÅÍ", 1.0f);
-        sfxSlider.value = PlayerPrefs.GetFloat("º¼·ýµ¥ÀÌÅÍ", 1.0f);
+        bgmSlider.value = PlayerPrefs.GetFloat("BGMVolume", 1.0f);
+        sfxSlider.value = PlayerPrefs.GetFloat("SFXVolume", 1.0f);
 
         bgmSlider.onValueChanged.AddListener(OnBgmSliderChanged);
         sfxSlider.onValueChanged.AddListener(OnSfxSliderChanged);
@@ -32,7 +32,7 @@ public class OptionUI : MonoBehaviour
         {
             AudioManager.instance.SetBGMVolume(value);
         }
-        PlayerPrefs.SetFloat("ÀúÀåµÈ º¼·ý µ¥ÀÌÅÍ",value);
+        PlayerPrefs.SetFloat("BGMVolume",value);
     }
     private void OnSfxSliderChanged(float value)
     {
@@ -40,7 +40,7 @@ public class OptionUI : MonoBehaviour
         {
             AudioManager.instance.SetSFXVolume(value);
         }
-        PlayerPrefs.SetFloat("ÀúÀåµÈ º¼·ý µ¥ÀÌÅÍ", value);
+        PlayerPrefs.SetFloat("SFXVolume", value);
     }
     private void ClosePopup()
     {
