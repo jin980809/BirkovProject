@@ -489,3 +489,20 @@ Collider 나 레이어가 빠지면 Awake 에서 경고 로그가 뜬다.
 - NaYeongMin.unity: 예전 씬 전용 Root(PlayerDeathPanel 중복 포함) 삭제 -> 프리팹 Root 사용. 벤치 컴포넌트 오버라이드 되돌림(= Test.unity 와 같은 설정).
 - 제외: 팀원 Crosshair / Interaction 오브젝트는 씬에만 둠. 씬 오브젝트 참조(lootRuntime, player 등)는 프리팹에 넣을 수 없어 씬 오버라이드 유지(없으면 자동 탐색).
 - 검증: EditMode 186/186. Play(Test/NaYeongMin 둘 다, 코드 호출): IsReady, Root 1개, 슬롯 162, 사망패널 1개, 인벤/창고/제작대 열기·닫기 오류 0. 손조작 검증 아님.
+
+[씬 통합 대비 점검 / 프리팹화 - 2026-09-25]
+- PlayerDeathSpawner.prefab 새로 만듦(PlayerDeath 폴더). 팀원 Player.prefab 에 PlayerDeathSpawner 가 없어서, 통합 씬에서
+  Player 를 프리팹으로 쓰면 사망 분실물·아이템 손실이 빠진다. 단독 오브젝트로 놓을 수 있게 코드 수정:
+  Awake 에서 playerVitals/inventoryBench 자동 탐색, 생성 위치와 WeaponController 는 playerVitals 쪽 기준.
+  Test/NaYeongMin 씬은 Player 의 컴포넌트를 빼고 이 프리팹으로 교체.
+- EnemyPool: 두 씬의 씬 전용 EnemyPool 을 EnemyPool.prefab 인스턴스로 교체. NaYeongMin 쪽은 이펙트 참조가 비어 있었음.
+  NaYeongMin 의 EnemyPool 밑에 있던 테스트 큐브(Object)는 루트로 옮겨 유지.
+- NaYeongMin.unity 정리: Storage/Loot/MapChest 에 WorldContainerInteractable 이 2개씩 붙어 있던 것 1개로(씬 추가분 제거).
+  MapChestInteraction 의 kind 가 PlayerDeath 로 덮여 있던 것 되돌림(MapChest). LootPickupTest 를 프리팹 인스턴스로 교체.
+- 적 사망 드랍 복구: 팀원이 09-23 EnemyController 사망 처리를 Destroy -> SetActive(false) 로 바꿔(ae397727)
+  EnemyDeathWatcher.OnDestroy 가 안 불려 모든 씬에서 드랍이 끊겨 있었다. 팀원 코드는 그대로 두고 EnemyDeathWatcher 에 OnDisable 추가.
+  사망으로 보는 조건: Start 이후 + 자기 자신이 꺼짐(activeSelf false). 출현 확률로 Awake 에서 꺼진 적, 스포너가 부모 영역을 끈 경우,
+  씬 언로드/플레이 종료는 무시. Destroy 경로도 유지(중복은 deathHandled 로 막힘).
+- 검증: EditMode 186/186. Play(코드 호출): Test 적 3종 사살 -> 드랍 3개. 부모 영역 끄기 -> 드랍 없음. Start 전 끄기 -> 드랍 없음.
+  플레이어 사망 -> 분실물 1개(중복 없음), 소지품 19 -> 0. NaYeongMin 도 동일, 인벤/창고 열기 정상. Battleground 활성 적 2 사살 -> 드랍 2
+  (Pistol 은 팀원 출현 확률로 안 나옴). 오류 0. 손조작 검증 아님.

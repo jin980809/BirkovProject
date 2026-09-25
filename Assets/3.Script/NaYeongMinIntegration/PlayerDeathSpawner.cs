@@ -16,6 +16,13 @@ namespace Birdkov.NaYeongMin.Integration
         public event Action<PlayerDeathContainer> Spawned;
         private bool handledDeath;
 
+        // 비워 두면 씬에서 찾는다. 플레이어에 붙이지 않고 단독 프리팹으로 둬도 된다.
+        private void Awake()
+        {
+            if (playerVitals == null) playerVitals = FindAnyObjectByType<PlayerVitals>();
+            if (inventoryBench == null) inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+        }
+
         private void OnEnable() { if (playerVitals != null) playerVitals.Died += HandleDeath; }
         private void OnDisable() { if (playerVitals != null) playerVitals.Died -= HandleDeath; }
         private void Update() { if (playerVitals != null && !playerVitals.IsDead) handledDeath = false; }
@@ -38,7 +45,7 @@ namespace Birdkov.NaYeongMin.Integration
             var player = inventoryBench.PlayerData;
             var items = new List<GridSlotData>(player.inventory.slots);
             items.AddRange(player.equipmentSlots.slots);
-            if (SpawnFromItems(transform.position, items) == null)
+            if (SpawnFromItems(playerVitals.transform.position, items) == null)
             {
                 Debug.LogError("사망 오브젝트 생성 실패. 아이템은 삭제하지 않았습니다.", this);
                 return;
@@ -46,7 +53,7 @@ namespace Birdkov.NaYeongMin.Integration
             handledDeath = true;
             inventoryBench.KillPlayer();
             inventoryBench.CloseCurrent();
-            var weapon = GetComponent<WeaponController>();
+            var weapon = playerVitals.GetComponent<WeaponController>();
             if (weapon != null) weapon.RefreshEquippedWeapon();
         }
     }
