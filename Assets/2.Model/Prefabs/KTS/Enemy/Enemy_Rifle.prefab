@@ -17257,6 +17257,8 @@ MonoBehaviour:
   walkPoints: 0
   runPoints: 0
   shotPoints: 0
+  forceBattleDistance: 3
+  playerTarget: {fileID: 0}
 --- !u!114 &4893538849246930118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17276,6 +17278,7 @@ MonoBehaviour:
   currentHealth: 0
   hpEffect: {fileID: 5186375882191502727}
   hitParticle: {fileID: 1068290843197659672}
+  probability: 7
 --- !u!114 &3665875575660552084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17303,6 +17306,10 @@ MonoBehaviour:
   reloadImage: {fileID: 5755223342440414887}
   firePoint: {fileID: 1319349515370459370}
   enemyBulletPool: {fileID: 0}
+  targetMask:
+    serializedVersion: 2
+    m_Bits: 384
+  closeHitRadius: 0.2
 --- !u!114 &6906910954251833346
 MonoBehaviour:
   m_ObjectHideFlags: 0

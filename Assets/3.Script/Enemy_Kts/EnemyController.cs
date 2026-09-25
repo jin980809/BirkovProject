@@ -37,6 +37,7 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     private void Awake()
     {
+        probability = enemyData.probability;
         int a = UnityEngine.Random.Range(1, 11);
         if (a < probability)
         {

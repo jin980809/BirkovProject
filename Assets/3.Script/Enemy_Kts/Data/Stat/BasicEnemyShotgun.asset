@@ -14,19 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 40
   moveSpeed: 3
-  angleSpeed: 720
+  angleSpeed: 1000
   rayDistance: 20
   viewAngle: 90
   minDistance: 2
   moveDistance: 7
-  rayCount: 15
-  detectInterval: 0.5
+  rayCount: 20
+  detectInterval: 0.2
   decrease: 2
   walkPoints: 30
   runPoints: 40
   shotPoints: 50
   delayTime: 2
   patrolWaitingTime: 10
+  probability: 10
   oneHelmet: 25
   twoHelmet: 50
   threeHelmet: 75

@@ -46,6 +46,11 @@ public class EnemyDetect : MonoBehaviour, IHearing
     [SerializeField] private float runPoints;
     [SerializeField] private float shotPoints;
 
+    [Header("근접 강제 발견")]
+    [SerializeField] private float forceBattleDistance = 3f;
+    [SerializeField] private Transform playerTarget;
+
+
     //시야용 변수들
     int count;              //Ray 개수
     float startAngle;       //첫 각도
@@ -72,6 +77,22 @@ public class EnemyDetect : MonoBehaviour, IHearing
 
         enemyState = EnemyState.Patrol;
         rayDistance = Mathf.Max(0f, rayDistance);
+
+        if (playerTarget == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
+            if (playerObject != null)
+            {
+                playerTarget = playerObject.transform;
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"{gameObject.name} : Player 태그를 가진 오브젝트를 찾지 못했습니다."
+                );
+            }
+        }
     }
 
     private void Start()
@@ -87,8 +108,20 @@ public class EnemyDetect : MonoBehaviour, IHearing
         {
             currentDetection -= decrease * Time.deltaTime;
         }
+
+        if (playerTarget != null)
+        {
+            float distanceToPlayer =
+                Vector3.Distance(transform.position, playerTarget.position);
+
+            if (distanceToPlayer <= forceBattleDistance)
+            {
+                ForceDetectPlayer();
+            }
+        }
+
         //적 상태 변환
-        if (currentDetection > 60f && !(visibleTargets == null))
+        if (currentDetection > 60f && visibleTargets != null)
         {
             enemyState = EnemyState.Battle;
         }
@@ -126,11 +159,50 @@ public class EnemyDetect : MonoBehaviour, IHearing
         }
 
         visibleTargetsV3 = source;
+
+        float distanceFromNoise = Vector3.Distance(transform.position, source);
+
+        if (distanceFromNoise <= forceBattleDistance)
+        {
+            ForceDetectPlayer();
+        }
     }
 
-    //-------------------------적 시야 메서드 -----------------------------
+    // 플레이어 강제 발견
+    private void ForceDetectPlayer()
+    {
+        // Player Transform이 없으면 Battle 대상이 없으므로
+        // 상태만 바꾸지 않는다.
+        if (playerTarget == null)
+        {
+            return;
+        }
 
-    //죽었을때 조건 초가해야함---------------------------------------------<-----------------------------------------
+
+        // 플레이어를 실제 발견한 것으로 처리
+        visibleTargets = playerTarget;
+
+        // 마지막으로 확인한 플레이어 위치
+        visibleTargetsV3 = playerTarget.position;
+
+        // 감지도 최대치
+        currentDetection = 100f;
+
+        // 최초 발견 처리
+        if (!firstCheck)
+        {
+            firstCheck = true;
+        }
+
+        // 탐색 종료
+        searchCheck = true;
+
+        // 전투 상태
+        enemyState = EnemyState.Battle;
+    }
+
+
+    //-------------------------적 시야 메서드 -----------------------------
     //실행문
     private IEnumerator FindTargetsWithDelay()
     {
@@ -301,6 +373,12 @@ public class EnemyDetect : MonoBehaviour, IHearing
         Gizmos.color = Color.yellow;
 
         Gizmos.DrawWireSphere(transform.position, rayDistance);
+
+        // 강제 발견 거리 표시
+        
+        Gizmos.color = Color.red;
+
+        Gizmos.DrawWireSphere(transform.position, forceBattleDistance);
 
         if (count == 1)
         {

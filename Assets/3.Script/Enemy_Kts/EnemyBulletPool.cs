@@ -134,6 +134,16 @@ public class EnemyBulletPool : MonoBehaviour
         ricocheParticlePool.Enqueue(particle);
     }
 
+    public void PlayRicochetParticle(Vector3 position, Vector3 direction)
+    {
+        GameObject particle = GetRicocheParticle();
+
+        particle.transform.position = position;
+        particle.transform.rotation = Quaternion.LookRotation(-direction);
+
+        particle.SetActive(true);
+    }
+
     //----------------------------------------»ç¸Á °ü·Ã---------------------------------------------
 
     public GameObject GetDieParticle(Transform transform)
