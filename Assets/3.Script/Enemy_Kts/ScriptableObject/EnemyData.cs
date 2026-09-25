@@ -37,6 +37,9 @@ public class EnemyData : ScriptableObject
     [Header("¼øÂû Äð")]
     public float patrolWaitingTime = 10;
 
+    [Header("½ºÆù È®·ü")]
+    public int probability = 10;
+
     [Header("Çï¸ä È®·ü(0~99)")]
     public int oneHelmet = 25;
     public int twoHelmet = 50;

@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,9 +25,30 @@ public class EnemyController : MonoBehaviour, IDamageable
     [Header("ÀÌÆåÆ®")]
     [SerializeField] private ParticleSystem hitParticle;
 
+    [Header("ÃâÇö È®·ü(1~10)")]
+    [SerializeField] private int probability;
+
     private GameObject dieParticle;
 
+    private int rnd;
+
     public event Action Damaged;
+
+
+    private void Awake()
+    {
+        probability = enemyData.probability;
+        int a = UnityEngine.Random.Range(1, 11);
+        if (a < probability)
+        {
+            gameObject.SetActive(true);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+
+    }
 
     private void Start()
     {
@@ -51,7 +73,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (currentHealth < 0)
         {
             dieParticle = enemyBulletPool.GetDieParticle(transform);
-            Destroy(gameObject);
+            gameObject.SetActive(false);
         }
     }
 }

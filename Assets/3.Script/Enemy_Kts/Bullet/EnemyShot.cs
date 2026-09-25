@@ -45,6 +45,10 @@ public class EnemyShot : MonoBehaviour
     [Header("총알 풀")]
     [SerializeField] private EnemyBulletPool enemyBulletPool;
 
+    [Header("근접 공격 판정")]
+    [SerializeField] private LayerMask targetMask;
+    [SerializeField] private float closeHitRadius = 0.2f;
+
     //private int fireCount;
     //private int bulletCount;
     float randomY;
@@ -142,6 +146,11 @@ public class EnemyShot : MonoBehaviour
 
     private void Fire()
     {
+        if (CheckCloseTarget())
+        {
+            return;
+        }
+
         bullet = enemyBulletPool.GetBullet();
 
         if (bullet == null)
@@ -190,5 +199,71 @@ public class EnemyShot : MonoBehaviour
         isReloading = false;
 
         reloadImage.SetActive(false);
+    }
+
+    private bool CheckCloseTarget()
+    {
+        Collider[] colliders = Physics.OverlapCapsule(
+            transform.position,
+            firePoint.position,
+            closeHitRadius,
+            targetMask,
+            QueryTriggerInteraction.Collide);
+
+        foreach (Collider collider in colliders)
+        {
+            IDamageable target = collider.GetComponent<IDamageable>();
+
+            if (target == null)
+            {
+                target = collider.GetComponentInParent<IDamageable>();
+            }
+
+            if (target == null)
+            {
+                continue;
+            }
+
+            // ★ 변경
+            // 플레이어에게 데미지를 준다.
+            target.TakeDamage(damage);
+
+
+            // ★ 변경
+            // 총구의 발사 이펙트는 기존처럼 총구에서 발생한다.
+            if (shotEffect != null)
+            {
+                shotEffect.Play();
+            }
+
+
+            // ★ 추가
+            // 도탄 이펙트가 총구가 아니라
+            // 실제로 플레이어와 접촉한 표면에서 나오도록 한다.
+            Vector3 hitPosition = collider.ClosestPoint(firePoint.position);
+
+
+            // ★ 추가
+            // 도탄 이펙트의 방향.
+            // 플레이어 표면에서 총구 쪽을 바라보도록 한다.
+            Vector3 hitDirection =
+                (firePoint.position - hitPosition).normalized;
+
+
+            // ★ 변경
+            // firePoint.position이 아니라
+            // 플레이어의 실제 Collider 위치를 전달한다.
+            if (enemyBulletPool != null)
+            {
+                enemyBulletPool.PlayRicochetParticle(
+                    hitPosition,
+                    hitDirection);
+            }
+
+
+            return true;
+        }
+
+        return false;
     }
 }
