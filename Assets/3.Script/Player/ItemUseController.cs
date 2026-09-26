@@ -48,7 +48,7 @@ public class ItemUseController : MonoBehaviour
 
         if (inventoryBench == null)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
 
         if (weaponController == null)
@@ -121,7 +121,7 @@ public class ItemUseController : MonoBehaviour
     {
         if (inventoryBench == null)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
     }
 

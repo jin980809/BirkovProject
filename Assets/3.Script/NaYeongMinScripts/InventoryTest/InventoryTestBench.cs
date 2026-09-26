@@ -839,7 +839,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
             else
             {
-                loot = new DropRoller(new SystemRandomSource()).Roll(dropEntries, DropSourceType.Box, preset);
+                loot = new DropRoller(new SystemRandomSource(), catalog).Roll(dropEntries, DropSourceType.Box, preset);
                 SetMessage(preset + " 상자를 굴렸습니다. 빈 상자도 정상 결과입니다.");
             }
 
@@ -1158,7 +1158,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1600, 900);
+            scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
             if (GetComponent<GraphicRaycaster>() == null)
@@ -1459,6 +1459,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             CraftResult result = craftingService.Craft(data.inventoryData, mushroomItemId, data.warehouseData);
+            if (result == CraftResult.Success) NotifyServiceSucceeded();
             SetMessage(CraftMessage(result, mushroomItemId));
             Refresh();
             return result;

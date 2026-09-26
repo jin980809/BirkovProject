@@ -1,3 +1,4 @@
+using System.Collections;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
 
@@ -16,6 +17,9 @@ public class PlayerDeathHandler : MonoBehaviour
     [SerializeField] private InventoryTestBench inventoryBench;
     [Tooltip("사망 패널. 비우면 씬에서 찾는다 (꺼져 있어도 찾는다)")]
     [SerializeField] private DeathPanelUI deathPanel;
+
+    // 사망 처리(아이템 비우기 + 묘비 생성)가 끝날 때까지 기다리는 프레임 수
+    private const int SaveDelayFrames = 2;
 
     private PlayerVitals vitals;
     private bool handled;
@@ -54,13 +58,33 @@ public class PlayerDeathHandler : MonoBehaviour
 
         CloseOpenInventory();
         ShowPanel();
+        StartCoroutine(SaveAfterDeath());
+    }
+
+    // 죽은 직후에 바로 저장한다. 안 하면 사망 패널에서 로비로 돌아가지 않고 게임을 끄는 경우
+    // 저장 파일에는 죽기 전 인벤토리가 그대로 남아서, 아이템을 잃지 않은 채 묘비까지 남는다.
+    //
+    // 몇 프레임 기다리는 이유: PlayerVitals.Died 는 여러 스크립트가 같이 구독하고 있고 호출 순서가
+    // 정해져 있지 않다. NaYeongMin 의 PlayerDeathSpawner 가 아이템을 비우고 묘비를 만든 뒤에
+    // 저장해야 하므로, 그 처리가 끝날 시간을 준다.
+    private IEnumerator SaveAfterDeath()
+    {
+        for (int i = 0; i < SaveDelayFrames; i++)
+        {
+            yield return null;
+        }
+
+        if (inventoryBench != null && inventoryBench.IsReady)
+        {
+            inventoryBench.SaveGame();
+        }
     }
 
     private void CloseOpenInventory()
     {
         if (inventoryBench == null)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
 
         if (inventoryBench != null)
@@ -73,7 +97,7 @@ public class PlayerDeathHandler : MonoBehaviour
     {
         if (deathPanel == null)
         {
-            deathPanel = FindAnyObjectByType<DeathPanelUI>(FindObjectsInactive.Include);
+            deathPanel = (PersistentUiRoot.Find<DeathPanelUI>() ?? FindAnyObjectByType<DeathPanelUI>(FindObjectsInactive.Include));
         }
 
         if (deathPanel != null)

@@ -105,6 +105,12 @@ public class StartMenu : MonoBehaviour
     private void StartNewGame()
     {
         DeleteSaveFiles();
+
+        // 저장 파일만 지워서는 부족하다. ESC 메뉴로 시작 화면에 돌아온 경우에는 인벤토리 데이터를 들고 있는
+        // UI 캔버스가 씬을 넘어 그대로 살아 있어서, 지운 파일과 무관하게 이전 아이템이 따라간다.
+        // 그 캔버스를 버려서 로비가 새 데이터로 시작하게 한다.
+        PersistentUiRoot.Discard();
+
         GoToLobby();
     }
 

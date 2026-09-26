@@ -86,6 +86,7 @@ namespace Birdkov.NaYeongMin.Rng
 
             IRandomSource random = randomSource ?? new SystemRandomSource();
             int nextSlot = 0;
+            ArmorSlotLimit armorLimit = new ArmorSlotLimit();
 
             foreach (ContainerDropSettings.DropEntry entry in settings.Entries)
             {
@@ -101,6 +102,12 @@ namespace Birdkov.NaYeongMin.Rng
                 }
 
                 if (random.NextUnit() * 100.0 >= entry.chancePercent)
+                {
+                    continue;
+                }
+
+                // 같은 부위의 방어구가 이미 나왔으면 건너뛴다 (헬멧 2개 방지). 칸도 쓰지 않는다.
+                if (!armorLimit.CanTake(itemCatalog, entry.itemId))
                 {
                     continue;
                 }

@@ -1,160 +1,111 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
+// 전투맵 제한시간. 이 컴포넌트가 있는 씬에서 바로 카운트다운이 시작되고, 시간이 다 되면
+// 플레이어를 조건 없이 사망시킨다 (BattleScene 에만 둔다 - 로비에는 넣지 않는다).
+//
+// 시간 흐름: Time.deltaTime 으로 줄이므로 ESC 일시정지처럼 Time.timeScale 을 0 으로 만드는 동안에는
+// 저절로 멈춘다. 인벤토리/창고를 열어둔 동안에는 timeScale 을 건드리지 않으므로 계속 흐른다.
+//
+// 사망 처리: PlayerVitals.Kill() 을 부른다 - 방어구 감쇄를 거치지 않고 체력을 0 으로 만들며
+// Died 이벤트도 정상적으로 발생하므로, 사망 패널 / 전리품 드랍 / 로비 복귀는 기존 흐름이 그대로 처리한다.
 public class GameManager : MonoBehaviour
-{    
-    [Header("�� ��ũ��Ʈ �ȿ� BGM �ٲ� �� ����")]
-    //����� ���̵� �˾���
-    public Button openGuide;
-    public GameObject guidePopup;
-    public GameObject[] slides;
-    public Button nextButton;
-    public Text nextButtonText;
-    public string nextLabel = "�� ��";
-    public string lastLabel = "Ȯ ��";
+{
+    [Header("제한시간")]
+    [Tooltip("제한시간(분). 다 지나면 플레이어가 즉시 사망한다")]
+    [SerializeField] private float timeLimitMinutes = 12f;
 
-    private int currentIndex = 0;
+    [Tooltip("남은 시간을 mm:ss 로 표시할 텍스트. 비워두면 표시 없이 시간만 잰다")]
+    [SerializeField] private TMP_Text timeLimitText;
 
-    private void Start()
+    [Tooltip("제한시간이 끝났을 때 사망시킬 플레이어. 비워두면 씬에서 자동으로 찾는다")]
+    [SerializeField] private PlayerVitals playerVitals;
+
+    private float remainingTime;
+    private bool timedOut;
+    private int shownSeconds = -1; // 초가 바뀔 때만 문자열을 새로 만들기 위해 기억한다
+
+    public float RemainingTime
     {
-        if (guidePopup != null)
-        {
-            guidePopup.SetActive(false);
-        }
-        if (nextButton != null)
-        {
-            nextButton.gameObject.SetActive(false);
-        }
-        if (openGuide != null)
-        {
-            openGuide.onClick.AddListener(OnStartGuideClicked);
-        }
-        if (nextButton != null)
-        {
-            nextButton.onClick.AddListener(OnNextClicked);
-        }
-        for (int i = 0; i < slides.Length; i++)
-        {
-            slides[i].SetActive(false);
-            EnsureCanvasGroup(slides[i]);
-        }
-        AudioManager.instance.PlayBGM("Main");    //���⿡�� ��ݸ� �ٲٱ�
+        get { return remainingTime; }
     }
 
-    //ESC �Ͻ�������
-    public GameObject MenuPanel;
-    public bool escToggle = true;
+    public bool TimedOut
+    {
+        get { return timedOut; }
+    }
+
+    // Awake 가 아니라 Start 에서 찾는다 - 씬 전환으로 들어온 경우 중복 오브젝트 정리가 Awake 에서
+    // 일어나므로, 그 뒤인 Start 에서 찾으면 살아남은 플레이어가 잡힌다.
+    private void Start()
+    {
+        remainingTime = Mathf.Max(0f, timeLimitMinutes * 60f);
+        EnsurePlayerVitals();
+        UpdateTimeText();
+    }
 
     private void Update()
     {
-        if (escToggle &&  Input.GetKeyDown(KeyCode.Escape))
+        if (!timedOut && !IsPlayerDead())
         {
-            bool isActive = !MenuPanel.activeSelf;
-            MenuPanel.SetActive(isActive);
-            if (isActive)
+            TickTimeLimit();
+        }
+    }
+
+    private void TickTimeLimit()
+    {
+        remainingTime = Mathf.Max(0f, remainingTime - Time.deltaTime);
+        UpdateTimeText();
+
+        if (remainingTime <= 0f)
+        {
+            HandleTimeOut();
+        }
+    }
+
+    private void HandleTimeOut()
+    {
+        timedOut = true;
+        EnsurePlayerVitals();
+
+        if (playerVitals != null)
+        {
+            playerVitals.Kill();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: PlayerVitals 를 찾지 못해 제한시간 사망 처리를 하지 못했습니다.", this);
+        }
+    }
+
+    // 제한시간이 끝나기 전에 죽은 경우에는 더 세지 않는다 (사망 패널이 떠 있는 동안 시간이 흐르지 않게)
+    private bool IsPlayerDead()
+    {
+        return playerVitals != null && playerVitals.IsDead;
+    }
+
+    private void EnsurePlayerVitals()
+    {
+        if (playerVitals == null)
+        {
+            playerVitals = FindAnyObjectByType<PlayerVitals>();
+        }
+    }
+
+    private void UpdateTimeText()
+    {
+        if (timeLimitText != null)
+        {
+            int totalSeconds = Mathf.CeilToInt(remainingTime);
+
+            if (totalSeconds != shownSeconds)
             {
-                Time.timeScale = 0f;
+                shownSeconds = totalSeconds;
+
+                int minutes = totalSeconds / 60;
+                int seconds = totalSeconds % 60;
+                timeLimitText.text = minutes.ToString("00") + ":" + seconds.ToString("00");
             }
-            else 
-            {
-                Time.timeScale = 1f;
-            }
         }
     }
-    public void GameExit()
-    {
-        Debug.Log("���� ����");
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
-    }
-
-
-    //���� �Ʒ��� ���̵� �˾� �κ�
-    private void OnStartGuideClicked()
-    {
-        if (guidePopup == null || slides.Length == 0)
-        {
-            return;
-        }
-        currentIndex = 0;
-        slides[currentIndex].SetActive(true);
-        GetCanvasGroup(slides[currentIndex]).alpha = 1f;
-        UpdateNextLabel();
-        guidePopup.SetActive(true);
-        StartCoroutine(ShowButton());
-    }
-
-    private IEnumerator ShowButton()
-    {
-        nextButton.gameObject.SetActive(false);
-        yield return new WaitForSecondsRealtime(0.8f);
-        nextButton.gameObject.SetActive(true);
-    }
-
-    private void OnNextClicked()
-    {
-        int nextIndex = currentIndex + 1;
-        if (nextIndex >= slides.Length)
-        {
-            guidePopup.SetActive(false);
-            nextButton.gameObject.SetActive(false);
-            return;
-        }
-        StartCoroutine(FadetoSlide(nextIndex));
-    }
-
-    //���̵� ��ȯ �����ϱ�
-    [Header("��ȯȿ��")]
-    public float fadeTime = 0.25f;
-    private Coroutine fadeCo;
-
-    private IEnumerator FadetoSlide(int newIndex)
-    {
-        CanvasGroup current = GetCanvasGroup(slides[currentIndex]);
-        yield return StartCoroutine(FadeCanvas(current,1f,0f));
-        slides[currentIndex].SetActive(false);
-
-        currentIndex = newIndex;
-        slides[currentIndex].SetActive(true);
-
-        CanvasGroup next = GetCanvasGroup(slides[currentIndex]);
-        next.alpha = 0f;
-        yield return StartCoroutine(FadeCanvas(next, 0f, 1f));
-
-        UpdateNextLabel();
-        StartCoroutine(ShowButton());
-    }
-    private IEnumerator FadeCanvas(CanvasGroup cg, float from, float to)
-    {
-        float elapsed = 0f;
-        while (elapsed < fadeTime)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            cg.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / fadeTime));
-            yield return null;
-        }
-        cg.alpha = to;
-    }
-
-    private void UpdateNextLabel()
-    {
-        bool isLast = currentIndex == slides.Length - 1;
-        nextButtonText.text = isLast ? lastLabel : nextLabel;
-    }
-    private CanvasGroup GetCanvasGroup(GameObject slide) => slide.GetComponent<CanvasGroup>();
-
-    private void EnsureCanvasGroup(GameObject slide)
-    {
-        if (slide.GetComponent<CanvasGroup>() == null)
-        {
-            slide.AddComponent<CanvasGroup>();
-        }
-    }
-
-
 }

@@ -51,6 +51,50 @@ namespace Birdkov.NaYeongMin.Rng
         public int maxAmount = 1;
     }
 
+        // ---- ArmorSlotLimit ----
+    // 헬멧·조끼는 한 부위에 한 개까지만 담는다. 드롭은 아이템별 독립 추첨이라 등급이 다른 헬멧이
+    // 동시에 당첨될 수 있는데, 같은 부위가 여러 개 나오는 것은 기획 의도가 아니다.
+    // 담기 직전에 CanTake 로 물어보고, false 면 그 항목은 건너뛴다 (칸도 쓰지 않는다).
+    // 방어구가 아닌 아이템(탄약·소비품·총기)은 제한하지 않는다.
+    public struct ArmorSlotLimit
+    {
+        private bool helmetTaken;
+        private bool armorTaken;
+
+        public bool CanTake(IItemCatalog itemCatalog, int itemId)
+        {
+            if (itemCatalog == null || !itemCatalog.TryGetItem(itemId, out ItemData item) ||
+                item.itemType != ItemType.Equipment)
+            {
+                return true;
+            }
+
+            if (item.equipmentSlotType == EquipmentSlotType.Helmet)
+            {
+                if (helmetTaken)
+                {
+                    return false;
+                }
+
+                helmetTaken = true;
+                return true;
+            }
+
+            if (item.equipmentSlotType == EquipmentSlotType.Armor)
+            {
+                if (armorTaken)
+                {
+                    return false;
+                }
+
+                armorTaken = true;
+                return true;
+            }
+
+            return true;
+        }
+    }
+
         // ---- RandomSource ----
     public interface IRandomSource
     {

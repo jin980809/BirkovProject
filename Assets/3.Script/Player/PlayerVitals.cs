@@ -101,7 +101,13 @@ public class PlayerVitals : MonoBehaviour, IDamageable
 
         if (armorBridge == null)
         {
-            armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
+            // 같은 오브젝트에서 먼저 찾는다 - Player 에 PlayerArmorBridge 가 두 개 붙어 있으면
+            // FindAnyObjectByType 은 어느 쪽을 줄지 알 수 없다. 데이터를 주입하는
+            // InventoryTestBenchLink 와 다른 쪽을 잡으면 방어구 감쇄가 아예 적용되지 않는다.
+            if (!TryGetComponent(out armorBridge))
+            {
+                armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
+            }
         }
     }
 
@@ -153,6 +159,14 @@ public class PlayerVitals : MonoBehaviour, IDamageable
 
         health = Mathf.Min(maxHealth, health + amount);
         RaiseHealthChanged();
+    }
+
+    // 조건 없이 즉시 사망시킨다 (제한시간 종료 등). 방어구 감쇄를 거치지 않고 체력을 0 으로 만들어
+    // Died 이벤트까지 정상적으로 발생시키므로, 사망 패널 / 전리품 드랍 / 로비 복귀가 평소와 똑같이 이어진다.
+    // 이미 죽어 있으면 아무 일도 하지 않는다.
+    public void Kill()
+    {
+        ReduceHealth(health);
     }
 
     public void RestoreHunger(float amount)

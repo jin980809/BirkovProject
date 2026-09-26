@@ -21,6 +21,12 @@ public class PlayerInventoryToggle : MonoBehaviour
     private bool wasOpen;
     private bool didInitialFixup;
 
+    // 인벤토리를 열 때와 닫을 때 나는 소리 - AudioManager 의 SFX Name 과 같아야 한다
+    private const string InventorySfxName = "Inventory";
+
+    // 제작 / 구매 / 수리가 성공했을 때 나는 소리 - AudioManager 의 SFX Name 과 같아야 한다
+    private const string CraftSfxName = "Craft";
+
     private void Awake()
     {
         player = GetComponent<PlayerController>();
@@ -35,12 +41,12 @@ public class PlayerInventoryToggle : MonoBehaviour
     {
         if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
 
         if (crosshair == null || !crosshair.transform.root.gameObject.activeInHierarchy)
         {
-            crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include);
+            crosshair = (PersistentUiRoot.Find<CrosshairUI>() ?? FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include));
         }
 
         if (inventoryBench == null)
@@ -52,6 +58,10 @@ public class PlayerInventoryToggle : MonoBehaviour
 
     private void OnEnable()
     {
+        // 제작/구매/수리 성공은 벤치가 이벤트로 알려준다. 벤치는 별도 어셈블리라 AudioManager 를
+        // 직접 부르지 못하므로 여기서 대신 소리를 낸다.
+        InventoryTestBench.ServiceSucceeded += HandleServiceSucceeded;
+
         if (input == null)
         {
             return;
@@ -63,6 +73,8 @@ public class PlayerInventoryToggle : MonoBehaviour
 
     private void OnDisable()
     {
+        InventoryTestBench.ServiceSucceeded -= HandleServiceSucceeded;
+
         if (input == null)
         {
             return;
@@ -72,28 +84,57 @@ public class PlayerInventoryToggle : MonoBehaviour
         input.CancelPressed -= HandleCancel;
     }
 
+    private void HandleServiceSucceeded()
+    {
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlaySFX(CraftSfxName);
+        }
+    }
+
     private void Update()
     {
         // 벤치가 준비(CSV 로드 + UI 바인딩)를 마친 뒤에 딱 한 번 처리한다. 첫 Update 에 무조건 하면,
         // 벤치 준비가 늦어져 아직 안 열린 상태일 때 닫기를 건너뛰고 그 뒤로 영영 안 닫히는 문제가 생긴다.
-        if (!didInitialFixup && inventoryBench != null && inventoryBench.IsReady)
+        //
+        // 준비가 끝나기 전에는 열림/닫힘 판정도 하지 않는다. 씬에 저장된 인벤토리 화면(Root)이 켜진 상태라
+        // 그동안은 "열려 있다"로 읽히는데, 그대로 처리하면 씬에 들어올 때마다 이동이 잠기고 크로스헤어가
+        // 깜빡이고 인벤토리 소리가 두 번(열림/닫힘) 나버린다.
+        if (!didInitialFixup)
         {
-            didInitialFixup = true;
-            RunInitialFixup();
+            if (inventoryBench != null && inventoryBench.IsReady)
+            {
+                didInitialFixup = true;
+                RunInitialFixup();
+
+                // 정리가 끝난 상태를 기준으로 삼는다 - 이 닫기는 전환으로 처리하지 않는다
+                wasOpen = inventoryBench.IsOpen;
+            }
+
+            return;
         }
 
         // 열리고 닫히는 순간을 여기서 한 번에 감지한다 - 어떤 경로로 열렸든(Tab, 상자 등) 상관없다.
         bool isOpen = inventoryBench != null && inventoryBench.IsOpen;
         if (isOpen != wasOpen)
         {
+            // 상태를 먼저 기록한다 - 아래에서 무슨 일이 생기든 같은 전환을 매 프레임 다시 처리하지 않게.
+            wasOpen = isOpen;
+
             player.SetMovementLocked(isOpen);
 
             if (crosshair != null)
             {
                 crosshair.SetCrosshairActive(!isOpen); // 열리면 크로스헤어 끄고 OS 커서 보이게
             }
+
+            // 소리는 맨 마지막에 낸다. 사운드 쪽에서 문제가 생겨도 위의 잠금/크로스헤어 처리는 이미 끝나 있다.
+            // (열릴 때와 닫힐 때 모두 같은 소리 - Tab 이든 상자든 경로와 상관없이 여기로 온다)
+            if (AudioManager.instance != null)
+            {
+                AudioManager.instance.PlaySFX(InventorySfxName);
+            }
         }
-        wasOpen = isOpen;
     }
 
     // InventoryTestBench 파일은 못 고치니, 걔가 절차적으로 만들어 둔 UI를 게임이 시작된 직후

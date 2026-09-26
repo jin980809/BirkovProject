@@ -50,7 +50,7 @@ public class PlayerDeathPersistence : MonoBehaviour
 
         if (spawner.inventoryBench == null)
         {
-            spawner.inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            spawner.inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
 
         if (spawner.playerVitals == null)

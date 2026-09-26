@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 // 엄폐물: 체력이 있고 데미지를 받으면 깎인다(모든 총알 - 플레이어 자신 것 포함). 0이 되면
 // 부서진다 - 오브젝트 자체는 SetActive(false) 하지 않고, breakEffect 를 제외한 하위 오브젝트와
@@ -88,6 +89,14 @@ public class CoverObject : MonoBehaviour, IDamageable
 
         health = Mathf.Max(0f, health - amount);
 
+        // 맞을 때마다 아웃라인을 번쩍인다. 적 총알은 이 TakeDamage 로만 들어오므로(플레이어 총알처럼
+        // Projectile 이 직접 이펙트를 재생해주지 않는다) 여기서 재생해야 적의 사격도 표시가 난다.
+        // 플레이어가 붙어 있는 동안(SetHeld)은 이미 최대 밝기로 켜져 있어서 겹쳐도 문제없다.
+        if (attachOutline != null)
+        {
+            attachOutline.Play();
+        }
+
         if (health <= 0f)
         {
             Break();
@@ -125,6 +134,7 @@ public class CoverObject : MonoBehaviour, IDamageable
             child.gameObject.SetActive(false);
         }
 
+        DisableNavMeshObstacles();
         PlayBreakEffect();
     }
 
@@ -183,6 +193,19 @@ public class CoverObject : MonoBehaviour, IDamageable
         if (other.CompareTag("Player"))
         {
             RemoveFromAttached();
+        }
+    }
+
+    // 부서지면 NavMesh 구멍(카빙)도 같이 없앤다 - 적이 부서진 엄폐물 자리를 지나갈 수 있어야 한다.
+    // 자식만 끄는 위쪽 처리로는 이 오브젝트(루트)에 붙은 NavMeshObstacle 이 계속 살아 있어서
+    // 부서진 뒤에도 길이 막힌 채로 남는다. 루트/자식 어디에 붙여뒀든 전부 끈다.
+    private void DisableNavMeshObstacles()
+    {
+        NavMeshObstacle[] obstacles = GetComponentsInChildren<NavMeshObstacle>(true);
+
+        for (int i = 0; i < obstacles.Length; i++)
+        {
+            obstacles[i].enabled = false;
         }
     }
 

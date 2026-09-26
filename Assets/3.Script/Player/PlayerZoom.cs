@@ -37,7 +37,7 @@ public class PlayerZoom : MonoBehaviour
         player = GetComponent<PlayerController>();
         TryGetComponent(out input);
         TryGetComponent(out weapon);
-        crosshair = FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include); // 꺼져 있어도 찾는다 (인벤토리/사망 패널로 꺼진 경우)
+        crosshair = (PersistentUiRoot.Find<CrosshairUI>() ?? FindAnyObjectByType<CrosshairUI>(FindObjectsInactive.Include)); // 꺼져 있어도 찾는다 (인벤토리/사망 패널로 꺼진 경우)
 
         if (vcam != null && normalFov <= 0f)
         {

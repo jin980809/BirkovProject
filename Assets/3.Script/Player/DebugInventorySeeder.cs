@@ -35,7 +35,7 @@ public class DebugInventorySeeder : MonoBehaviour
     {
         if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
     }
 

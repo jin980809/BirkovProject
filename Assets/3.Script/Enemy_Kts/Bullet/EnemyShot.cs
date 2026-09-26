@@ -45,6 +45,10 @@ public class EnemyShot : MonoBehaviour
     [Header("총알 풀")]
     [SerializeField] private EnemyBulletPool enemyBulletPool;
 
+    [Header("소리")]
+    [Tooltip("3D 총소리/재장전음. 비우면 같은 오브젝트에서 찾고, 없으면 소리가 나지 않는다")]
+    [SerializeField] private EnemyWeaponSfx weaponSfx;
+
     [Header("근접 공격 판정")]
     [SerializeField] private LayerMask targetMask;
     [SerializeField] private float closeHitRadius = 0.2f;
@@ -88,6 +92,11 @@ public class EnemyShot : MonoBehaviour
         }
 
         enemyBulletPool = FindAnyObjectByType<EnemyBulletPool>();
+
+        if (weaponSfx == null)
+        {
+            TryGetComponent(out weaponSfx);
+        }
 
         fireIntervalWfs = new WaitForSeconds(fireInterval);
         reloadTimeWfs = new WaitForSeconds(reloadTime);
@@ -168,6 +177,10 @@ public class EnemyShot : MonoBehaviour
             spreadDirection = GetSpreadDirection();
             enemyBullet.Fire(spreadDirection, damage);
             shotEffect.Play();
+            if (weaponSfx != null)
+            {
+                weaponSfx.PlayFire();
+            }
             enemyBullet.Initialize(enemyBulletPool);
         }
     }
@@ -188,6 +201,11 @@ public class EnemyShot : MonoBehaviour
         }
 
         isReloading = true;
+
+        if (weaponSfx != null)
+        {
+            weaponSfx.PlayReload();
+        }
 
         reloadImage.SetActive(true);
 
@@ -234,6 +252,10 @@ public class EnemyShot : MonoBehaviour
             if (shotEffect != null)
             {
                 shotEffect.Play();
+                if (weaponSfx != null)
+                {
+                    weaponSfx.PlayFire();
+                }
             }
 
 

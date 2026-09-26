@@ -35,6 +35,15 @@ public class WeaponController : MonoBehaviour
     [Header("탄약 매핑 (나중에 여기서 자유롭게 추가/수정)")]
     [SerializeField] private WeaponAmmoMapping[] ammoMappings = Array.Empty<WeaponAmmoMapping>();
 
+    // 효과음 이름 - AudioManager 의 SFX Name 과 같아야 한다
+    private const string SwapSfxName = "Swap";
+
+    // 무기별 효과음은 "<이 이름>_Fire" / "<이 이름>_Reload" 로 부른다 (ItemData.csv 의 itemId 기준)
+    private const int PistolItemId = 10001;      //기관권총
+    private const int ShotgunItemId = 10002;     //샷건
+    private const int RifleItemId = 10003;       //돌격소총
+    private const int SniperItemId = 10004;      //스나이퍼
+
     [Header("블룸 (연사할수록 퍼지고, 안 쏘면 다시 좁혀짐)")]
     [Tooltip("한 발 쏠 때마다 maxSpread 의 이 비율만큼 현재 퍼짐이 늘어난다")]
     [SerializeField] private float bloomGrowthFraction = 0.25f;
@@ -450,6 +459,7 @@ public class WeaponController : MonoBehaviour
             // 아직 덜 찼고 탄약도 남아있으면 다음 한 발 장전 사이클을 바로 이어간다 (게이지가
             // 끊기지 않고 계속 돈다) - reloadDuration 은 그대로, 타이머만 리셋한다.
             reloadNeeded = 1;
+            PlayWeaponSfx(false);
             return;
         }
 
@@ -498,6 +508,8 @@ public class WeaponController : MonoBehaviour
     // 그 외(다른 슬롯 / 집어넣은 상태에서 누름)에는 그 슬롯의 무기를 꺼내 든다.
     public void SelectSlot(int slotIndex)
     {
+        PlaySfx(SwapSfxName);   //같은 슬롯을 다시 눌러(집어넣기) 도 울린다
+
         if (equippedWeapon != null && equippedSlotIndex == slotIndex && !isHolstered)
         {
             Holster();
@@ -601,6 +613,8 @@ public class WeaponController : MonoBehaviour
         reloadDuration = equippedWeapon.reloadSpeed;
         reloadTimer = 0f;
 
+        PlayWeaponSfx(false);
+
         if (reloadDuration <= 0f)
         {
             // reloadSpeed 가 0 이하면 즉시 완료 (기존과 동일한 동작). 한 발씩 장전 방식이면
@@ -662,6 +676,8 @@ public class WeaponController : MonoBehaviour
         // maxSpread 가 클수록(퍼짐이 큰 무기일수록) 반동도 세진다.
         recoilKickOffset += UnityEngine.Random.insideUnitCircle.normalized * (equippedWeapon.maxSpread * recoilKickPixelsPerSpreadDegree);
 
+        PlayWeaponSfx(true);
+
         if (ShotFired != null)
         {
             ShotFired();
@@ -705,6 +721,60 @@ public class WeaponController : MonoBehaviour
 
         float recover = effectiveMax * bloomRecoverFraction * Time.deltaTime;
         currentSpreadDegrees = Mathf.Max(0f, currentSpreadDegrees - recover);
+    }
+
+    // 지금 장착한 무기의 발사음/재장전음을 ammoMappings 에서 찾아 재생한다.
+    // 그 무기 칸이 없거나 이름이 비어 있으면 아무 소리도 내지 않는다.
+    private void PlayWeaponSfx(bool isFire)
+    {
+        if (equippedWeapon == null)
+        {
+            return;
+        }
+
+        string weaponName = string.Empty;
+
+        if (equippedWeapon.itemId == PistolItemId)
+        {
+            weaponName = "Pistol";
+        }
+        else if (equippedWeapon.itemId == ShotgunItemId)
+        {
+            weaponName = "Shotgun";
+        }
+        else if (equippedWeapon.itemId == RifleItemId)
+        {
+            weaponName = "Rifle";
+        }
+        else if (equippedWeapon.itemId == SniperItemId)
+        {
+            weaponName = "Sniper";
+        }
+        else
+        {
+            return;   //효과음이 정해지지 않은 무기
+        }
+
+        if (isFire)
+        {
+            PlaySfx(weaponName + "_Fire");
+        }
+        else
+        {
+            PlaySfx(weaponName + "_Reload");
+        }
+    }
+
+    // 소리는 AudioManager(씬을 넘어 유지되는 싱글턴)가 이름으로 찾아 재생한다.
+    // 에디터에서 시작 씬을 거치지 않고 바로 Play 하면 매니저가 없을 수 있으므로 조용히 넘어간다.
+    private void PlaySfx(string sfxName)
+    {
+        if (string.IsNullOrEmpty(sfxName) || AudioManager.instance == null)
+        {
+            return;
+        }
+
+        AudioManager.instance.PlaySFX(sfxName);
     }
 
     // 지금 장착 무기의 발사 위치 (무기가 없으면 null). PlayerController 가 총구 옆 거리만큼 몸 회전을 보정할 때 쓴다.

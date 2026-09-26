@@ -26,6 +26,9 @@ public class PlayerInteraction : MonoBehaviour
     // 그 다음 프레임(PlayerInventoryToggle 의 감지)에 걸리는데, 그 사이 한두 프레임에 프롬프트가 다시 깜빡이는 걸 막는다.
     private const int PromptBlockFramesAfterComplete = 3;
 
+    // 상호작용을 완료했을 때 나는 소리 - AudioManager 의 SFX Name 과 같아야 한다
+    private const string InteractionSfxName = "Interaction";
+
     private PlayerController player;
     private int promptBlockFramesLeft;
 
@@ -100,6 +103,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             currentTarget = null;
             promptBlockFramesLeft = PromptBlockFramesAfterComplete;
+            PlaySfx(InteractionSfxName);
             target.OnInteractComplete(gameObject);
             return;
         }
@@ -205,6 +209,19 @@ public class PlayerInteraction : MonoBehaviour
         currentTarget = null;
         promptBlockFramesLeft = PromptBlockFramesAfterComplete;
 
+        PlaySfx(InteractionSfxName);
         target.OnInteractComplete(gameObject);
+    }
+
+    // 소리는 AudioManager(씬을 넘어 유지되는 싱글턴)가 이름으로 찾아 재생한다.
+    // 에디터에서 시작 씬을 거치지 않고 바로 Play 하면 매니저가 없을 수 있으므로 조용히 넘어간다.
+    private void PlaySfx(string sfxName)
+    {
+        if (AudioManager.instance == null)
+        {
+            return;
+        }
+
+        AudioManager.instance.PlaySFX(sfxName);
     }
 }

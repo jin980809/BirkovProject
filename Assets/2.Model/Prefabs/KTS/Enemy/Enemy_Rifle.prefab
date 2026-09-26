@@ -17058,6 +17058,8 @@ GameObject:
   - component: {fileID: 8038782950274905946}
   - component: {fileID: 648343365763594036}
   - component: {fileID: 5961962603978394798}
+  - component: {fileID: 7511395447587480114}
+  - component: {fileID: 3534180140866066300}
   m_Layer: 6
   m_Name: Enemy_Rifle
   m_TagString: Untagged
@@ -17306,6 +17308,7 @@ MonoBehaviour:
   reloadImage: {fileID: 5755223342440414887}
   firePoint: {fileID: 1319349515370459370}
   enemyBulletPool: {fileID: 0}
+  weaponSfx: {fileID: 0}
   targetMask:
     serializedVersion: 2
     m_Bits: 384
@@ -17391,6 +17394,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2d2724f05bd8f46a0846019576b98b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Birdkov.NaYeongMin::Birdkov.NaYeongMin.Rng.EnemyDeathWatcher
+--- !u!114 &7511395447587480114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702741525700540377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b909e941bc8f2544b96bd04470020d9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFootstepSfx
+  clips:
+  - {fileID: 8300000, guid: dd231e0b108764643a7970a1988cdffe, type: 3}
+  - {fileID: 8300000, guid: 31ae2d970c39b974d91657bdd5c4550c, type: 3}
+  source: {fileID: 0}
+  volume: 0.7
+  minDistance: 3
+  maxDistance: 20
+  minInterval: 0.15
+--- !u!114 &3534180140866066300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5702741525700540377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b270818f444eab408ca6f2af290c684, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyWeaponSfx
+  fireClips:
+  - {fileID: 8300000, guid: 412137b8ff5089f488916e4509c9f9af, type: 3}
+  reloadClip: {fileID: 8300000, guid: 398b689b9cb53304999bb2fe4b675cd0, type: 3}
+  soundOrigin: {fileID: 1319349515370459370}
+  source: {fileID: 0}
+  volume: 0.8
+  minDistance: 5
+  maxDistance: 40
 --- !u!1 &5719515301704529039
 GameObject:
   m_ObjectHideFlags: 0

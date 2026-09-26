@@ -101,7 +101,7 @@ public class SaveCoordinator : MonoBehaviour
 
         if (bench == null)
         {
-            bench = FindAnyObjectByType<InventoryTestBench>();
+            bench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
 
         if (bench == null || !bench.IsReady)
@@ -124,6 +124,33 @@ public class SaveCoordinator : MonoBehaviour
             lobbySaveCountdown = -1;
             bench.SaveGame();
         }
+    }
+
+    // 지금 즉시 저장한다 (시작 화면으로 나가기 / 게임 종료). 로비에 있을 때만 저장한다 -
+    // 전투 중 종료로 그 판의 획득물이 저장되면 탈출/사망의 의미가 없어진다.
+    // 첫 불러오기 전이거나 벤치가 준비되지 않았으면 아무것도 하지 않는다 (빈 데이터로 덮어쓰기 방지).
+    public void SaveNow()
+    {
+        if (!InitialLoadDone || SceneManager.GetActiveScene().name != LobbySceneName)
+        {
+            return;
+        }
+
+        if (bench == null)
+        {
+            bench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
+        }
+
+        if (bench != null && bench.IsReady)
+        {
+            bench.SaveGame();
+        }
+    }
+
+    // 게임을 끄는 경우 (빌드에서 창 닫기, 에디터에서 플레이 정지)
+    private void OnApplicationQuit()
+    {
+        SaveNow();
     }
 
     private void PerformInitialLoad()

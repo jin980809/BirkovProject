@@ -14,6 +14,16 @@ namespace Birdkov.NaYeongMin.InventoryTest
         [Header("방어구 내구도 - CSV 가 정본. 아래는 예비값")]
         public ArmorDurability armorDurability = new ArmorDurability();
 
+        // 제작 / 구매 / 수리가 실제로 성공했을 때 알린다.
+        // 이 어셈블리(Birdkov.NaYeongMin.Test)는 Assembly-CSharp 을 참조할 수 없어서 AudioManager 를
+        // 직접 부를 수 없다. 대신 이 이벤트를 바깥(PlayerInventoryToggle)에서 받아 효과음을 낸다.
+        public static event System.Action ServiceSucceeded;
+
+        private void NotifyServiceSucceeded()
+        {
+            if (ServiceSucceeded != null) ServiceSucceeded();
+        }
+
         public void ApplyArmorHit()
         {
             if (!IsReady) return;
@@ -473,6 +483,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             int index = shopPage * Mathf.Max(1, UsesHierarchyShop ? ShopRowCount : 6) + row;
             if (index < 0 || index >= shopItems.Count) return;
             bool success = new ShopService(catalog, merchantKind).Buy(PlayerData, shopItems[index].itemId);
+            if (success) NotifyServiceSucceeded();
             SetMessage(success ? "구매 완료" : "구매 불가: 지푸라기 또는 가방 공간 확인");
             Refresh();
         }
@@ -518,6 +529,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             int spent = 0;
             while (armor ? armorDurability.Repair(catalog, PlayerData, slot) : WeaponDurability.Repair(PlayerData, slot))
                 spent++;
+            if (spent > 0) NotifyServiceSucceeded();
             SetMessage(spent > 0 ? "일괄수리 " + spent + "G 사용" : "수리 불가: 마모된 장비와 지푸라기를 확인하세요.");
             Refresh();
         }
@@ -528,6 +540,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             GridSlotData slot = SelectedSlot();
             bool armor = armorDurability.IsArmor(catalog, slot);
             bool success = armor ? armorDurability.Repair(catalog, PlayerData, slot) : WeaponDurability.Repair(PlayerData, slot);
+            if (success) NotifyServiceSucceeded();
             SetMessage(success ? "1G 수리 완료" : "수리 불가: 마모된 장비와 지푸라기를 확인하세요.");
             Refresh();
         }

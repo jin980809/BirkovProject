@@ -1,3 +1,4 @@
+using Birdkov.NaYeongMin.InventorySystem;
 using Birdkov.NaYeongMin.InventoryTest;
 using UnityEngine;
 
@@ -24,6 +25,10 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
     [Tooltip("감지됐을 때 뜨는 프롬프트 아이콘 프리팹 (ScreenAnchoredUI 가 붙어 있어야 함). DebugInteractable 과 같은 방식")]
     [SerializeField] private GameObject promptPrefab;
 
+    [Header("상점 (InventoryWorldContainer 의 kind 가 Shop 일 때만 쓰인다)")]
+    [Tooltip("Weapons = 무기상점(무기/탄약/수리), General = 잡화상점, All = 전부 취급")]
+    [SerializeField] private MerchantKind merchantKind = MerchantKind.All;
+
     private InventoryWorldContainer container;
     private GameObject promptInstance;
     private ScreenAnchoredUI promptAnchoredUI;
@@ -39,7 +44,7 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
 
         if (inventoryBench == null)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
     }
 
@@ -65,7 +70,7 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
     {
         if (inventoryBench == null)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
         }
     }
 
@@ -90,7 +95,7 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
                 inventoryBench.OpenMapChest(container);
                 break;
             case InventoryWorldKind.Shop:
-                inventoryBench.OpenShop(transform);
+                inventoryBench.OpenShop(transform, merchantKind);
                 break;
             case InventoryWorldKind.Crafting:
                 inventoryBench.OpenCrafting(transform);
@@ -102,6 +107,18 @@ public class WorldContainerInteractable : MonoBehaviour, IInteractable
                 // 사망 분실물(묘비). 내용물은 PlayerDeathContainer 가 들고 있고 벤치가 전용 30칸 UI 로 연다.
                 inventoryBench.OpenPlayerDeath(container);
                 break;
+        }
+    }
+
+    // 씬을 나갈 때(이 오브젝트가 파괴될 때) 프롬프트도 같이 지운다.
+    // 프롬프트 인스턴스는 씬을 넘어 유지되는 부모(InteractionPromptUI.PromptParent) 밑에 있어서,
+    // 정리하지 않으면 앵커만 사라진 채 마지막 상태(근접 아이콘 켜짐)로 다음 씬 화면에 남는다.
+    private void OnDestroy()
+    {
+        if (promptInstance != null)
+        {
+            Destroy(promptInstance);
+            promptInstance = null;
         }
     }
 

@@ -101,6 +101,9 @@ public class PlayerController : MonoBehaviour
 
     // 달리기 중 방향 전환 틈(이동 입력이 잠깐 0 이 되는 구간)을 메우는 시간. 이 시간 안에는 계속 달리는 중으로 본다.
     private const float SprintInputGraceSeconds = 0.15f;
+
+    // 구르기 시작할 때 나는 소리 - AudioManager 의 SFX Name 과 같아야 한다
+    private const string RollSfxName = "Roll";
     private float lastMoveInputTime = -999f;
 
     // 지금 이 플레이어가 붙어있는 엄폐물들의 콜라이더 모음 (막는 것 + 감지용 트리거 전부, CoverObject 가 채운다).
@@ -462,6 +465,8 @@ public class PlayerController : MonoBehaviour
         isDodging = true;
         dodgeEndTime = Time.time + dodgeDuration;
         dodgeReadyTime = Time.time + dodgeCooldown;
+
+        PlaySfx(RollSfxName);
 
         // 구르기 시작 순간에만 한 번 쏜다. Animator 에서 Any State → Roll(조건: Dodge 트리거)로 연결하고,
         // Roll → Idle 은 Has Exit Time 으로 클립이 끝나면 돌아오게 한다.
@@ -849,6 +854,18 @@ public class PlayerController : MonoBehaviour
         {
             weapon.SelectSlot(slotIndex); // 재장전 / 상호작용 / 아이템 사용 / 상자·인벤토리 UI 중에는 무기 교체 금지
         }
+    }
+
+    // 소리는 AudioManager(씬을 넘어 유지되는 싱글턴)가 이름으로 찾아 재생한다.
+    // 에디터에서 시작 씬을 거치지 않고 바로 Play 하면 매니저가 없을 수 있으므로 조용히 넘어간다.
+    private void PlaySfx(string sfxName)
+    {
+        if (AudioManager.instance == null)
+        {
+            return;
+        }
+
+        AudioManager.instance.PlaySFX(sfxName);
     }
 
     private void HandleQuickSlot(int slotIndex)

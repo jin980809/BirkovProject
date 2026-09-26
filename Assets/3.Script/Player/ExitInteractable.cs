@@ -16,6 +16,8 @@ public class ExitInteractable : MonoBehaviour, IInteractable
     [SerializeField] private float interactDuration = 2f;
     [Tooltip("감지됐을 때 뜨는 프롬프트 아이콘 프리팹 (ScreenAnchoredUI 가 붙어 있어야 함)")]
     [SerializeField] private GameObject promptPrefab;
+    [Tooltip("프롬프트에 표시할 이름 (예: 출격, 탈출). 비워두면 프리팹에 적어둔 문구를 그대로 쓴다")]
+    [SerializeField] private string displayName = "출격";
 
     private GameObject promptInstance;
     private ScreenAnchoredUI promptAnchoredUI;
@@ -54,6 +56,18 @@ public class ExitInteractable : MonoBehaviour, IInteractable
         GameSession.Instance.LoadScene(targetSceneName);
     }
 
+    // 씬을 나갈 때(이 오브젝트가 파괴될 때) 프롬프트도 같이 지운다.
+    // 프롬프트 인스턴스는 씬을 넘어 유지되는 부모(InteractionPromptUI.PromptParent) 밑에 있어서,
+    // 정리하지 않으면 앵커만 사라진 채 마지막 상태(근접 아이콘 켜짐)로 다음 씬 화면에 남는다.
+    private void OnDestroy()
+    {
+        if (promptInstance != null)
+        {
+            Destroy(promptInstance);
+            promptInstance = null;
+        }
+    }
+
     public void ShowPrompt()
     {
         EnsurePromptInstance();
@@ -88,6 +102,13 @@ public class ExitInteractable : MonoBehaviour, IInteractable
         if (promptAnchoredUI != null)
         {
             promptAnchoredUI.SetAnchor(transform);
+
+            // 이름표 문구. 비워두면 프리팹에 적어둔 문구를 그대로 남긴다
+            if (!string.IsNullOrEmpty(displayName))
+            {
+                promptAnchoredUI.SetText(displayName);
+            }
+
             promptAnchoredUI.SetPanelActive(false);
         }
     }

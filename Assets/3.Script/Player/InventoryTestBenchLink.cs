@@ -42,7 +42,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     {
         if (inventoryBench == null || !inventoryBench.gameObject.activeInHierarchy)
         {
-            inventoryBench = FindAnyObjectByType<InventoryTestBench>();
+            inventoryBench = (PersistentUiRoot.Find<InventoryTestBench>() ?? FindAnyObjectByType<InventoryTestBench>());
             didLinkWeaponData = false;
         }
 
@@ -62,7 +62,12 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
 
         if (armorBridge == null)
         {
-            armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
+            // 같은 오브젝트에서 먼저 찾는다 - PlayerVitals 도 같은 방식으로 찾으므로,
+            // Player 에 PlayerArmorBridge 가 두 개 붙어 있어도 양쪽이 같은(첫 번째) 것을 쓴다.
+            if (!TryGetComponent(out armorBridge))
+            {
+                armorBridge = FindAnyObjectByType<PlayerArmorBridge>();
+            }
         }
 
         if (weaponController == null)

@@ -82,7 +82,8 @@ namespace Birdkov.NaYeongMin.Rng
                 return null;
             }
 
-            return new DropRoller(randomSource).Roll(dropTableDatabase.Entries, sourceType, sizePreset);
+            // 카탈로그를 같이 넘겨서 헬멧·조끼가 부위당 한 개만 나오게 한다
+            return new DropRoller(randomSource, Catalog).Roll(dropTableDatabase.Entries, sourceType, sizePreset);
         }
 
         // 추첨과 노란 오브제 배치를 한 번에. 풀이 비면 null 을 돌려주므로 호출 측에서 확인한다.
@@ -99,10 +100,9 @@ namespace Birdkov.NaYeongMin.Rng
                 return null;
             }
 
-            if (guaranteedItemIds != null && guaranteedItemIds.Count > 0)
-            {
-                loot = PutFirst(loot, guaranteedItemIds, sizePreset);
-            }
+            // 보장 아이템이 없어도 거쳐 간다. 아이템별 독립 추첨이라 추첨만으로도 등급이 다른 헬멧이
+            // 두 개 당첨될 수 있어서, 부위별 중복을 여기서 함께 정리한다.
+            loot = PutFirst(loot, guaranteedItemIds, sizePreset);
 
             LootDropObject instance = lootDropPool.Rent(position, rotation, loot);
             if (instance == null)
@@ -115,28 +115,65 @@ namespace Birdkov.NaYeongMin.Rng
 
         // 보장 아이템(적이 입고 있던 방어구 등)을 앞칸에 1개씩 넣고 추첨 결과를 뒤에 잇는다.
         // 칸을 넘는 추첨분은 기존 규칙대로 버린다. 보장 아이템은 버려지지 않는다.
-        private static LootContainerData PutFirst(LootContainerData rolled, IList<int> itemIds, LootContainerSize sizePreset)
+        // 헬멧과 조끼는 부위마다 한 개까지만 넣는다. 먼저 놓인 쪽(= 적이 입고 있던 것)이 남고
+        // 같은 부위의 추첨분은 건너뛴다. 총기는 제한하지 않는다.
+        private LootContainerData PutFirst(LootContainerData rolled, IList<int> itemIds, LootContainerSize sizePreset)
         {
             LootContainerData result = new LootContainerData(sizePreset);
             int index = 0;
-            foreach (int itemId in itemIds)
+            bool helmetPlaced = false;
+            bool armorPlaced = false;
+
+            if (itemIds != null)
             {
-                if (index >= result.SlotCount) break;
-                result.loot.slots[index].itemId = itemId;
-                result.loot.slots[index].amount = 1;
-                index++;
+                foreach (int itemId in itemIds)
+                {
+                    if (index >= result.SlotCount) break;
+                    if (IsDuplicateArmor(itemId, ref helmetPlaced, ref armorPlaced)) continue;
+                    result.loot.slots[index].itemId = itemId;
+                    result.loot.slots[index].amount = 1;
+                    index++;
+                }
             }
 
             foreach (GridSlotData slot in rolled.loot.slots)
             {
                 if (index >= result.SlotCount) break;
                 if (slot.IsEmpty()) continue;
+                if (IsDuplicateArmor(slot.itemId, ref helmetPlaced, ref armorPlaced)) continue;
                 result.loot.slots[index].itemId = slot.itemId;
                 result.loot.slots[index].amount = slot.amount;
                 index++;
             }
 
             return result;
+        }
+
+        // 그 부위가 이미 채워져 있으면 true(건너뛴다). 아직 비어 있으면 채운 것으로 기록하고 false.
+        // 방어구가 아닌 아이템은 항상 false 라서 개수 제한을 받지 않는다.
+        private bool IsDuplicateArmor(int itemId, ref bool helmetPlaced, ref bool armorPlaced)
+        {
+            if (Catalog == null || !Catalog.TryGetItem(itemId, out ItemData item) ||
+                item.itemType != ItemType.Equipment)
+            {
+                return false;
+            }
+
+            if (item.equipmentSlotType == EquipmentSlotType.Helmet)
+            {
+                if (helmetPlaced) return true;
+                helmetPlaced = true;
+                return false;
+            }
+
+            if (item.equipmentSlotType == EquipmentSlotType.Armor)
+            {
+                if (armorPlaced) return true;
+                armorPlaced = true;
+                return false;
+            }
+
+            return false;
         }
     }
 }

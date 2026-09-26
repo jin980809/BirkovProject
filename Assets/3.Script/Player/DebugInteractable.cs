@@ -39,6 +39,18 @@ public class DebugInteractable : MonoBehaviour, IInteractable
         }
     }
 
+    // 씬을 나갈 때(이 오브젝트가 파괴될 때) 프롬프트도 같이 지운다.
+    // 프롬프트 인스턴스는 씬을 넘어 유지되는 부모(InteractionPromptUI.PromptParent) 밑에 있어서,
+    // 정리하지 않으면 앵커만 사라진 채 마지막 상태(근접 아이콘 켜짐)로 다음 씬 화면에 남는다.
+    private void OnDestroy()
+    {
+        if (promptInstance != null)
+        {
+            Destroy(promptInstance);
+            promptInstance = null;
+        }
+    }
+
     public void ShowPrompt()
     {
         EnsurePromptInstance();
