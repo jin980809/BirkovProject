@@ -1,12 +1,12 @@
-itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlotType,gridWidth,gridHeight,stackable,maxStack,attackDamage,reloadSpeed,fireRate,magazineSize,projectileSpeed,automatic,pelletCount,maxSpread,range,maxDurability,durabilityCostPerHit,repairAmountPerCurrency,defense,healthRecovery,hungerRecovery,waterRecovery,usageTime
-10001,Weapon,기관권총,20발 연사. 탄속은 히트스캔 처리한다.,2,,,Assets/4.Sprite/ICONs/ICon/gun-SMG.png,,1,1,FALSE,1,3,1.2,9,20,60,TRUE,1,10,15,500,2,100,0,0,0,0,
-10002,Weapon,샷건,8발 단발. 1회 발사에 펠릿 6개가 나간다.,3,,,Assets/4.Sprite/ICONs/ICon/gun-shotgun.png,,1,1,FALSE,1,5,0.7,8,8,60,FALSE,6,15,15,600,3,60,0,0,0,0,
-10003,Weapon,돌격소총,30발 연사.,5,,,Assets/4.Sprite/ICONs/ICon/gun-AR.png,,1,1,FALSE,1,8,2.5,10,30,60,TRUE,1,10,25,900,3,50,0,0,0,0,
-10004,Weapon,스나이퍼,5발 단발.,10,,,Assets/4.Sprite/ICONs/ICon/gun-sniper.png,,1,1,FALSE,1,12,5,5,5,60,FALSE,1,13,50,800,8,40,0,0,0,0,
-11001,Ammo,기관권총 총알,1박스 20발. 사용 시 기관권총 탄약이 20발 늘어난다.,2,,,Assets/4.Sprite/ICONs/ICon/ammo-SMG.png,,1,1,TRUE,160,,,,20,,,,,,,,,0,0,0,0,
-11002,Ammo,샷건 총알,1박스 20발. 사용 시 샷건 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-shotgun.png,,1,1,TRUE,100,,,,20,,,,,,,,,0,0,0,0,
-11003,Ammo,돌격소총 총알,1박스 20발. 사용 시 돌격소총 탄약이 20발 늘어난다.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-AR.png,,1,1,TRUE,200,,,,20,,,,,,,,,0,0,0,0,
-11004,Ammo,스나이퍼 총알,1박스 20발. 사용 시 스나이퍼 탄약이 20발 늘어난다.,5,,,Assets/4.Sprite/ICONs/ICon/ammo-sniper.png,,1,1,TRUE,50,,,,20,,,,,,,,,0,0,0,0,
+﻿itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlotType,gridWidth,gridHeight,stackable,maxStack,attackDamage,reloadSpeed,fireRate,magazineSize,projectileSpeed,automatic,pelletCount,maxSpread,range,maxDurability,durabilityCostPerHit,repairAmountPerCurrency,defense,healthRecovery,hungerRecovery,waterRecovery,usageTime
+10001,Weapon,기관권총,25발 연사. 근거리 속사용. 탄속은 히트스캔 처리한다.,2,,,Assets/4.Sprite/ICONs/ICon/gun-SMG.png,,1,1,FALSE,1,5,1,12,25,80,TRUE,1,14,14,500,2,100,0,0,0,0,
+10002,Weapon,샷건,6발 단발. 1회 발사에 펠릿 6개가 나간다. 한 발씩 장전한다.,4,,,Assets/4.Sprite/ICONs/ICon/gun-shotgun.png,,1,1,FALSE,1,6,0.7,1.2,6,60,FALSE,6,15,10,600,3,60,0,0,0,0,
+10003,Weapon,돌격소총,30발 연사.,5,,,Assets/4.Sprite/ICONs/ICon/gun-AR.png,,1,1,FALSE,1,8,2.5,10,30,50,TRUE,1,10,25,900,3,50,0,0,0,0,
+10004,Weapon,스나이퍼,5발 단발. 한 발로 기본 적을 제압한다.,12,,,Assets/4.Sprite/ICONs/ICon/gun-sniper.png,,1,1,FALSE,1,30,5,0.8,5,160,FALSE,1,20,60,1000,8,40,0,0,0,0,
+11001,Ammo,기관권총 총알,기관권총 전용 탄약.,2,,,Assets/4.Sprite/ICONs/ICon/ammo-SMG.png,,1,1,TRUE,160,,,,20,,,,,,,,,0,0,0,0,
+11002,Ammo,샷건 총알,삿건 전용 탄약.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-shotgun.png,,1,1,TRUE,100,,,,20,,,,,,,,,0,0,0,0,
+11003,Ammo,돌격소총 총알,돌격소총 전용 탄약.,3,,,Assets/4.Sprite/ICONs/ICon/ammo-AR.png,,1,1,TRUE,200,,,,20,,,,,,,,,0,0,0,0,
+11004,Ammo,스나이퍼 총알,스나이퍼 전용 탄약.,5,,,Assets/4.Sprite/ICONs/ICon/ammo-sniper.png,,1,1,TRUE,50,,,,20,,,,,,,,,0,0,0,0,
 13001,Equipment,구형 헬멧,피격 데미지를 1 차감한다.,3,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv1.png,Helmet,1,1,FALSE,1,,,,,,,,,,400,1,80,10,0,0,0,
 13002,Equipment,튼튼 헬멧,피격 데미지를 2 차감한다.,5,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv2.png,Helmet,1,1,FALSE,1,,,,,,,,,,500,1,75,20,0,0,0,
 13003,Equipment,최고급 헬멧,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/ICon/Armor/helmet-lv3.png,Helmet,1,1,FALSE,1,,,,,,,,,,600,1,70,30,0,0,0,
@@ -14,23 +14,23 @@ itemId,itemType,displayName,description,price,weight,rarity,iconKey,equipmentSlo
 12002,Equipment,튼튼 조끼,기획서 표기는 피격 데미지 20% 감소. 감쇄 방식 확정 대기.,5,,,Assets/4.Sprite/ICONs/ICon/Armor/vest-lv2.png,Armor,1,1,FALSE,1,,,,,,,,,,550,1,85,20,0,0,0,
 12003,Equipment,최고급 조끼,기획서 표기는 피격 데미지 30% 감소. 감쇄 방식 확정 대기.,7,,,Assets/4.Sprite/ICONs/ICon/Armor/vest-lv3.png,Armor,1,1,FALSE,1,,,,,,,,,,650,1,80,30,0,0,0,
 20001,Currency,지푸라기,새들의 조직에서 사용하는 화폐. 상점에서 사고팔 수 없다.,,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_wheat_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-21001,Consumable,회복약,최대 체력의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_potion_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,6,0,0,1
+21001,Consumable,회복약,최대 체력의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_potion_LP.png,,1,1,TRUE,10,,,,,,,,,,,,,0,6,0,0,1
 21002,Consumable,회복키트,최대 체력의 40%를 회복한다.,2,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,12,0,0,3
-21003,Consumable,회복 왕꾸러미,최대 체력의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,27,0,0,5
-22001,Consumable,물,최대 수분의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,6,1
+21003,Consumable,회복 왕꾸러미,최대 체력의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Survival/icon_medkit_LP.png,,1,1,TRUE,3,,,,,,,,,,,,,0,27,0,0,5
+22001,Consumable,물,최대 수분의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,6,1
 22002,Consumable,중간 물,최대 수분의 40%를 회복한다.,2,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,12,3
-22003,Consumable,대형 물,최대 수분의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,27,5
-23001,Consumable,밥,최대 허기의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_apple_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,6,0,1
+22003,Consumable,대형 물,최대 수분의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_water-bottle_LP.png,,1,1,TRUE,3,,,,,,,,,,,,,0,0,0,27,5
+23001,Consumable,밥,최대 허기의 20%를 회복한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_apple_LP.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,6,0,1
 23002,Consumable,중간 밥,최대 허기의 40%를 회복한다.,2,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_melon-slice_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,12,0,3
-23003,Consumable,대형 밥,최대 허기의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_pumkin_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,27,0,5
+23003,Consumable,대형 밥,최대 허기의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_pumkin_LP.png,,1,1,TRUE,3,,,,,,,,,,,,,0,0,27,0,5
 24002,Special,알람시계,제한시간을 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_hourglass_LP.png,,1,1,FALSE,1,,,,,,,,,,,,,0,0,0,0,10
 24003,Special,위고비,허기 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_potion-globe_LP.png,,1,1,FALSE,1,,,,,,,,,,,,,0,0,0,0,10
 24004,Special,알로에즙,수분 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_drink-coconut_LP.png,,1,1,FALSE,1,,,,,,,,,,,,,0,0,0,0,10
-25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_cotton_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_stone_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,Assets/4.Sprite/ICONs/ICon/Glass_Shard.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-red.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-27002,Material,파란 버섯,샷건 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-blue.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-27003,Material,노란 버섯,돌격소총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-yellow.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
-27004,Material,검은 버섯,스나이퍼 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-black.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,0,0,
+25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_cotton_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_stone_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,Assets/4.Sprite/ICONs/ICon/Glass_Shard.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-red.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,
+27002,Material,파란 버섯,샷건 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-blue.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,
+27003,Material,노란 버섯,돌격소총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-yellow.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,
+27004,Material,검은 버섯,스나이퍼 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-black.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,

@@ -56,11 +56,26 @@ public class WeaponController : MonoBehaviour
     [Tooltip("조준점이 플레이어에서 이 거리 이상 멀면 마우스 방향(총구 기준)으로 쏜다. 그 사이 구간은 두 방향을 섞는다")]
     [SerializeField] private float aimBlendFarDistance = 2.5f;
 
+    // 무기별 조준점 흔들림. 값이 0 이면 그 항목은 공통 설정을 그대로 쓴다.
+    [Serializable]
+    public struct WeaponRecoil
+    {
+        public int weaponItemId;
+
+        [Tooltip("한 발에 조준점이 튀는 화면 픽셀 거리. 0 이면 maxSpread × 공통 배율")]
+        public float kickPixels;
+
+        [Tooltip("튄 뒤 돌아오는 빠르기. 0 이면 공통값")]
+        public float recoverySharpness;
+    }
+
     [Header("반동 킥 (크로스헤어 + 실제 조준점을 같이 흔든다)")]
     [Tooltip("무기의 maxSpread(도) 1당 한 발에 튀는 화면 픽셀 거리 - 무기마다 maxSpread 가 다르므로 반동 세기가 자동으로 무기에 비례한다")]
     [SerializeField] private float recoilKickPixelsPerSpreadDegree = 2f;
     [Tooltip("튄 뒤 원래 자리로 돌아오는 빠르기 (클수록 빠르게 진정됨)")]
     [SerializeField] private float recoilRecoverySharpness = 10f;
+    [Tooltip("무기별로 조준점 흔들림을 따로 주고 싶을 때만 넣는다. 비워두면 위의 공통 계산(maxSpread 비례)을 쓴다")]
+    [SerializeField] private WeaponRecoil[] weaponRecoils = Array.Empty<WeaponRecoil>();
 
     private Vector2 recoilKickOffset;
 
@@ -88,6 +103,10 @@ public class WeaponController : MonoBehaviour
 
     private ItemData equippedWeapon;
     private int equippedSlotIndex = -1;
+
+    // 씬을 넘어도 마지막에 들고 있던 무기 슬롯을 기억한다 (이 컴포넌트는 씬마다 새로 생기지만
+    // 인벤토리 데이터는 캔버스와 함께 유지되므로, 들고 있던 무기도 그대로 이어져야 한다).
+    private static int lastSelectedSlotIndex;
 
     // 지금 "선택된" 슬롯 (0/1). equippedSlotIndex 와 달리 그 슬롯이 비어 있어도 -1 로 안 돌아간다 -
     // 빈 슬롯을 선택해 둔 채로 나중에 그 슬롯에 무기가 들어오면(드래그 장착 등) Update() 가 자동으로
@@ -403,7 +422,47 @@ public class WeaponController : MonoBehaviour
 
     private void UpdateRecoilKick()
     {
-        recoilKickOffset = Vector2.Lerp(recoilKickOffset, Vector2.zero, 1f - Mathf.Exp(-recoilRecoverySharpness * Time.deltaTime));
+        float sharpness = recoilRecoverySharpness;
+
+        if (TryGetWeaponRecoil(out WeaponRecoil setting) && setting.recoverySharpness > 0f)
+        {
+            sharpness = setting.recoverySharpness;
+        }
+
+        recoilKickOffset = Vector2.Lerp(recoilKickOffset, Vector2.zero, 1f - Mathf.Exp(-sharpness * Time.deltaTime));
+    }
+
+    // 지금 장착한 무기에 따로 지정한 반동 설정을 찾는다 (없으면 false → 공통 설정 사용).
+    private bool TryGetWeaponRecoil(out WeaponRecoil setting)
+    {
+        setting = default;
+
+        if (equippedWeapon == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < weaponRecoils.Length; i++)
+        {
+            if (weaponRecoils[i].weaponItemId == equippedWeapon.itemId)
+            {
+                setting = weaponRecoils[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 한 발에 조준점이 튀는 거리(화면 픽셀). 무기별 지정값이 있으면 그것을, 없으면 maxSpread 비례로 계산한다.
+    private float GetRecoilKickPixels()
+    {
+        if (TryGetWeaponRecoil(out WeaponRecoil setting) && setting.kickPixels > 0f)
+        {
+            return setting.kickPixels;
+        }
+
+        return equippedWeapon.maxSpread * recoilKickPixelsPerSpreadDegree;
     }
 
     private void UpdateReload()
@@ -499,9 +558,32 @@ public class WeaponController : MonoBehaviour
     // InventoryTestBenchLink 가 진짜 인벤토리 데이터를 나중에 주입한 뒤 호출한다.
     // Start() 의 EquipSlot(0) 은 그 데이터가 도착하기 전에 실행돼서 빈 데이터로 실패하므로,
     // 데이터가 준비된 뒤 지금 장착 중이던(또는 기본 0번) 슬롯을 다시 조회해서 갱신한다.
+    // 인벤토리 데이터가 늦게 도착한 뒤(InventoryTestBenchLink) 다시 장착을 시도한다.
+    // 씬이 바뀌면 이 컴포넌트는 새로 생기므로, 마지막에 들고 있던 슬롯(lastSelectedSlotIndex)을 우선한다.
+    // 그 슬롯이 비어 있으면 다른 무기 슬롯을 시도한다 - 안 그러면 주 무기 칸이 빈 상태로 로비에 들어오면
+    // 아무 무기도 안 들려서 HUD 의 장탄수도 표시되지 않는다.
     public void RefreshEquippedWeapon()
     {
-        EquipSlot(equippedSlotIndex >= 0 ? equippedSlotIndex : 0);
+        int preferred = lastSelectedSlotIndex;
+
+        if (equippedSlotIndex >= 0)
+        {
+            preferred = equippedSlotIndex;
+        }
+
+        EquipSlot(preferred);
+
+        if (equippedSlotIndex < 0)
+        {
+            int other = 0;
+
+            if (preferred == 0)
+            {
+                other = 1;
+            }
+
+            EquipSlot(other);
+        }
     }
 
     // 1/2 키로 무기를 고를 때 부른다. 지금 손에 들고 있는 무기의 슬롯을 한 번 더 누르면 집어넣고,
@@ -554,6 +636,11 @@ public class WeaponController : MonoBehaviour
         equippedWeaponSlot = weaponSlot;
         equippedSlotIndex = weapon != null ? slotIndex : -1;
         selectedSlotIndex = slotIndex; // 무기가 없어도 "이 슬롯을 보고 있다"는 의도는 그대로 남긴다
+
+        if (weapon != null)
+        {
+            lastSelectedSlotIndex = slotIndex; // 씬이 바뀌어도 이 슬롯을 다시 들도록 기억한다
+        }
         nextFireReadyTime = 0f; // 무기를 바꾸면 발사 쿨다운은 리셋
         currentSpreadDegrees = 0f; // 이전 무기의 블룸은 안 이어받는다
 
@@ -674,7 +761,7 @@ public class WeaponController : MonoBehaviour
 
         // 크로스헤어와 실제 조준점(PlayerController)이 같은 방향으로 같이 튄다 - 무기의
         // maxSpread 가 클수록(퍼짐이 큰 무기일수록) 반동도 세진다.
-        recoilKickOffset += UnityEngine.Random.insideUnitCircle.normalized * (equippedWeapon.maxSpread * recoilKickPixelsPerSpreadDegree);
+        recoilKickOffset += UnityEngine.Random.insideUnitCircle.normalized * GetRecoilKickPixels();
 
         PlayWeaponSfx(true);
 

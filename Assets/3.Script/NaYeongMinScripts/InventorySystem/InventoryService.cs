@@ -145,7 +145,11 @@ namespace Birdkov.NaYeongMin.InventorySystem
             }
 
             // 양쪽 다 미개봉일 때만 합친다. 뜯다 만 박스끼리는 합치지 않는다.
-            if (destinationSlot.itemId == sourceSlot.itemId &&
+            // 스택이 안 되는 아이템(무기 / 방어구 / 특수)은 합칠 수 없으므로 이 경로로 들어가면
+            // 0개만 옮겨지고 아무 일도 일어나지 않는다. 같은 총기·같은 방어구끼리도 자리를 바꿀 수
+            // 있어야 하므로(내구도·잔탄이 서로 다르다) 그 경우는 아래 교환 처리로 넘긴다.
+            if (stackLimit > 1 &&
+                destinationSlot.itemId == sourceSlot.itemId &&
                 (destinationSlot.remainingRounds == 0 || sourceSlot.remainingRounds == 0))
             {
                 if (destinationSlot.remainingRounds == 0 && sourceSlot.remainingRounds > 0 &&

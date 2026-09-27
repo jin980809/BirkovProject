@@ -1,3 +1,4 @@
+using System;
 using Cinemachine;
 using UnityEngine;
 
@@ -13,10 +14,25 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerController))]
 public class WeaponCameraShake : MonoBehaviour
 {
+    // 무기별 화면 흔들림. 값이 0 이면 그 항목은 아래 공통 설정을 그대로 쓴다.
+    [Serializable]
+    public struct WeaponShake
+    {
+        public int weaponItemId;
+
+        [Tooltip("흔들림 세기. 0 이면 공통값")]
+        public float shakeForce;
+
+        [Tooltip("한 번 흔들리는 시간(초). 0 이면 공통값")]
+        public float shakeDuration;
+    }
+
     [Tooltip("흔들림 세기 (카메라가 밀리는 거리, 대략 월드 단위)")]
     [SerializeField] private float shakeForce = 0.15f;
     [Tooltip("한 번 흔들리는 시간(초). 연사 무기는 짧아야 흔들림이 뭉개지지 않는다")]
     [SerializeField] private float shakeDuration = 0.12f;
+    [Tooltip("무기별로 화면 흔들림을 따로 주고 싶을 때만 넣는다. 비워두면 모든 무기가 위의 공통값을 쓴다")]
+    [SerializeField] private WeaponShake[] weaponShakes = Array.Empty<WeaponShake>();
     [Tooltip("흔들림을 받을 vcam. 비우면 씬에서 찾는다")]
     [SerializeField] private CinemachineVirtualCamera vcam;
 
@@ -108,7 +124,49 @@ public class WeaponCameraShake : MonoBehaviour
 
         if (cameraSpaceDirection.sqrMagnitude > 0.0001f)
         {
-            impulseSource.GenerateImpulse(cameraSpaceDirection.normalized * shakeForce);
+            float force = shakeForce;
+            float duration = shakeDuration;
+
+            if (TryGetWeaponShake(out WeaponShake setting))
+            {
+                if (setting.shakeForce > 0f)
+                {
+                    force = setting.shakeForce;
+                }
+
+                if (setting.shakeDuration > 0f)
+                {
+                    duration = setting.shakeDuration;
+                }
+            }
+
+            // CinemachineImpulseDefinition 은 클래스라서 이 값을 바꾸면 소스에 바로 반영된다 (발사마다 갱신 가능)
+            impulseSource.m_ImpulseDefinition.m_ImpulseDuration = duration;
+            impulseSource.GenerateImpulse(cameraSpaceDirection.normalized * force);
         }
+    }
+
+    // 지금 장착한 무기에 따로 지정한 흔들림 설정을 찾는다 (없으면 false → 공통 설정 사용).
+    private bool TryGetWeaponShake(out WeaponShake setting)
+    {
+        setting = default;
+
+        if (weapon == null || !weapon.HasWeaponEquipped)
+        {
+            return false;
+        }
+
+        int itemId = weapon.EquippedWeaponItemId;
+
+        for (int i = 0; i < weaponShakes.Length; i++)
+        {
+            if (weaponShakes[i].weaponItemId == itemId)
+            {
+                setting = weaponShakes[i];
+                return true;
+            }
+        }
+
+        return false;
     }
 }

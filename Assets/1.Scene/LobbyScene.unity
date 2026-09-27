@@ -3473,6 +3473,102 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 383706972}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &430205955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 430205956}
+  - component: {fileID: 430205959}
+  - component: {fileID: 430205958}
+  - component: {fileID: 430205957}
+  m_Layer: 5
+  m_Name: ScopeOverlay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &430205956
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430205955}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1000849019}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -0.000061035156, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &430205957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430205955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 565a82a703c393047a32cb574a91dc95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SniperScopeOverlay
+  overlay: {fileID: 430205958}
+  holeRadius: 0.18
+  edgeSoftness: 0.03
+  dimColor: {r: 0, g: 0, b: 0, a: 0.85}
+  crossColor: {r: 0, g: 0, b: 0, a: 0.8}
+  crossThickness: 0.0015
+  crossLength: 1
+  fadeDuration: 0.15
+--- !u!114 &430205958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430205955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 2100000, guid: 4de44bdbb613a0042b888f5f23475c21, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &430205959
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430205955}
+  m_CullTransparentMesh: 1
 --- !u!1 &448978357
 GameObject:
   m_ObjectHideFlags: 0
@@ -7114,6 +7210,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 659887957}
+  - {fileID: 430205956}
   - {fileID: 1018783079}
   - {fileID: 779426280}
   - {fileID: 376855173}
@@ -37971,6 +38068,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   aimHeightOffset: 0.5
+  aimTargetMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   animator: {fileID: 0}
   animDamp: 0.12
   singleShotClip: {fileID: 0}
@@ -39345,6 +39445,23 @@ MonoBehaviour:
   zoomSpreadMultiplier: 0.25
   vcam: {fileID: 1145437849}
   zoomedFov: 35
+  weaponZoomFovs:
+  - weaponItemId: 10001
+    zoomedFov: 35
+    useScope: 0
+    scopeRadius: 0
+  - weaponItemId: 10002
+    zoomedFov: 35
+    useScope: 0
+    scopeRadius: 0
+  - weaponItemId: 10003
+    zoomedFov: 35
+    useScope: 0
+    scopeRadius: 0
+  - weaponItemId: 10004
+    zoomedFov: 60
+    useScope: 1
+    scopeRadius: 0
   normalFov: 0
   fovLerpSharpness: 10
 --- !u!222 &2270259639670432387
@@ -47440,6 +47557,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponCameraShake
   shakeForce: 0.05
   shakeDuration: 0.12
+  weaponShakes:
+  - weaponItemId: 10001
+    shakeForce: 0.06
+    shakeDuration: 0.05
+  - weaponItemId: 10002
+    shakeForce: 0.35
+    shakeDuration: 0.2
+  - weaponItemId: 10003
+    shakeForce: 0.09
+    shakeDuration: 0.06
+  - weaponItemId: 10004
+    shakeForce: 0.45
+    shakeDuration: 0.28
   vcam: {fileID: 1145437849}
 --- !u!1 &3024668251304026115
 GameObject:
@@ -48890,6 +49020,8 @@ MonoBehaviour:
   itemDatabase: {fileID: 3474504323161920600}
   dropTableDatabase: {fileID: 9018515762352850246}
   lootDropPool: {fileID: 3448305632541966860}
+  minDurabilityPercent: 0.35
+  maxDurabilityPercent: 1
   useFixedSeed: 0
   seed: 1234
 --- !u!114 &3200131883857307626
@@ -87247,6 +87379,19 @@ MonoBehaviour:
   aimBlendFarDistance: 2.5
   recoilKickPixelsPerSpreadDegree: 2
   recoilRecoverySharpness: 10
+  weaponRecoils:
+  - weaponItemId: 10001
+    kickPixels: 7
+    recoverySharpness: 16
+  - weaponItemId: 10002
+    kickPixels: 22
+    recoverySharpness: 9
+  - weaponItemId: 10003
+    kickPixels: 9
+    recoverySharpness: 13
+  - weaponItemId: 10004
+    kickPixels: 30
+    recoverySharpness: 5
   debugWeaponName: 
   debugAttackDamage: 0
   debugFireRate: 0

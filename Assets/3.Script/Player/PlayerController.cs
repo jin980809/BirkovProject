@@ -52,6 +52,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask groundMask = ~0;
     [Tooltip("캐릭터 회전/시야/카메라용 조준점을 계산하는 수평면 높이(바닥 기준). 총알 방향은 발사 순간의 실제 총구(FirePoint) 높이로 따로 계산하므로 여기와 맞출 필요 없다.")]
     [SerializeField] private float aimHeightOffset = 0.5f;
+    [Tooltip("커서 아래에 있으면 그 지점을 조준 대상으로 삼을 레이어 (적/마네킹/엄폐물/벽/바닥). 여기서 빠진 것은 통과해서 뒤쪽을 조준한다")]
+    [SerializeField] private LayerMask aimTargetMask = ~0;
 
     [Header("애니메이션")]
     [SerializeField] private Animator animator;
@@ -98,6 +100,10 @@ public class PlayerController : MonoBehaviour
     // 마지막 LateUpdate 에서 쓴 조준 레이 (TryGetAimPointAtHeight 가 총구 높이로 다시 교차시킬 때 쓴다)
     private Ray aimRay;
     private bool hasAimRay;
+
+    // 조준 레이 검사용. 매 프레임 여러 번(회전 보정 + 발사) 쓰므로 버퍼를 재사용해서 할당을 만들지 않는다.
+    private const float AimRayMaxDistance = 300f;
+    private readonly RaycastHit[] aimHits = new RaycastHit[16];
 
     // 달리기 중 방향 전환 틈(이동 입력이 잠깐 0 이 되는 구간)을 메우는 시간. 이 시간 안에는 계속 달리는 중으로 본다.
     private const float SprintInputGraceSeconds = 0.15f;
@@ -763,7 +769,47 @@ public class PlayerController : MonoBehaviour
 
         if (hasAimRay)
         {
+            // 커서가 실제 물체(적/마네킹/엄폐물/벽) 위에 있으면 그 지점의 수평 위치를 조준점으로 쓴다.
+            // 수평면 교차점만 쓰면 카메라가 비스듬한 만큼 원근 오차가 생긴다 - 키가 있는 대상의 몸통을
+            // 조준하면 교차점이 대상 뒤쪽으로 밀려서, 정확히 조준해도 총알이 옆으로 빗나간다.
+            if (TryFindAimTargetPoint(out Vector3 targetPoint))
+            {
+                point = new Vector3(targetPoint.x, worldY, targetPoint.z);
+                return true;
+            }
+
             found = RaycastHorizontalPlane(aimRay, worldY, out point);
+        }
+
+        return found;
+    }
+
+    // 조준 레이에 걸리는 것 중 가장 가까운 지점 (자기 자신과 트리거는 무시).
+    // 아무것도 없으면(허공) false - 그때는 수평면 교차점을 쓴다.
+    private bool TryFindAimTargetPoint(out Vector3 point)
+    {
+        point = Vector3.zero;
+
+        int hitCount = Physics.RaycastNonAlloc(aimRay, aimHits, AimRayMaxDistance, aimTargetMask,
+            QueryTriggerInteraction.Ignore);
+        float nearestDistance = float.MaxValue;
+        bool found = false;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit hit = aimHits[i];
+
+            if (hit.collider == null || hit.collider.transform.root == transform.root)
+            {
+                continue; // 플레이어 자신
+            }
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                point = hit.point;
+                found = true;
+            }
         }
 
         return found;

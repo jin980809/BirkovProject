@@ -16,6 +16,11 @@ namespace Birdkov.NaYeongMin.Rng
         [SerializeField] private DropTableDatabase dropTableDatabase;
         [SerializeField] private LootDropPool lootDropPool;
 
+        [Header("드롭 내구도")]
+        [Tooltip("드롭되는 무기·방어구의 남은 내구도 비율 범위. 0.35 = 35% 남은 상태. 둘을 같게 하면 항상 그 값")]
+        [SerializeField, Range(0f, 1f)] private float minDurabilityPercent = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float maxDurabilityPercent = 1f;
+
         [Header("추첨 시드")]
         [Tooltip("켜면 seed 값으로 고정 난수를 쓴다. 재현이 필요한 검증에서만 사용한다.")]
         [SerializeField] private bool useFixedSeed;
@@ -83,7 +88,11 @@ namespace Birdkov.NaYeongMin.Rng
             }
 
             // 카탈로그를 같이 넘겨서 헬멧·조끼가 부위당 한 개만 나오게 한다
-            return new DropRoller(randomSource, Catalog).Roll(dropTableDatabase.Entries, sourceType, sizePreset);
+            LootContainerData rolled = new DropRoller(randomSource, Catalog).Roll(
+                dropTableDatabase.Entries, sourceType, sizePreset);
+
+            ApplyRandomDurability(rolled);
+            return rolled;
         }
 
         // 추첨과 노란 오브제 배치를 한 번에. 풀이 비면 null 을 돌려주므로 호출 측에서 확인한다.
@@ -132,6 +141,7 @@ namespace Birdkov.NaYeongMin.Rng
                     if (IsDuplicateArmor(itemId, ref helmetPlaced, ref armorPlaced)) continue;
                     result.loot.slots[index].itemId = itemId;
                     result.loot.slots[index].amount = 1;
+                    ApplyRandomDurability(result.loot.slots[index]); // 적이 입고 있던 장비도 닳은 상태로 나온다
                     index++;
                 }
             }
@@ -143,10 +153,47 @@ namespace Birdkov.NaYeongMin.Rng
                 if (IsDuplicateArmor(slot.itemId, ref helmetPlaced, ref armorPlaced)) continue;
                 result.loot.slots[index].itemId = slot.itemId;
                 result.loot.slots[index].amount = slot.amount;
+                // 추첨 단계에서 정해진 내구도·개봉 상태를 그대로 가져간다 (예전에는 여기서 사라졌다)
+                result.loot.slots[index].remainingRounds = slot.remainingRounds;
+                result.loot.slots[index].durabilityDamage = slot.durabilityDamage;
                 index++;
             }
 
             return result;
+        }
+
+        // 컨테이너 안의 무기·방어구에 남은 내구도를 무작위로 넣는다 (내구도가 없는 아이템은 건드리지 않는다).
+        private void ApplyRandomDurability(LootContainerData container)
+        {
+            if (container == null)
+            {
+                return;
+            }
+
+            foreach (GridSlotData slot in container.loot.slots)
+            {
+                if (!slot.IsEmpty())
+                {
+                    ApplyRandomDurability(slot);
+                }
+            }
+        }
+
+        // 남은 내구도 = maxDurability × (min~max 사이 무작위 비율). durabilityDamage 는 "닳은 양"이라 그 차이를 넣는다.
+        // 최소 1 은 남겨서 줍는 즉시 부서진 상태로 나오지 않게 한다.
+        private void ApplyRandomDurability(GridSlotData slot)
+        {
+            if (Catalog == null || !Catalog.TryGetItem(slot.itemId, out ItemData item) || item.maxDurability <= 0)
+            {
+                return;
+            }
+
+            float minPercent = Mathf.Clamp01(Mathf.Min(minDurabilityPercent, maxDurabilityPercent));
+            float maxPercent = Mathf.Clamp01(Mathf.Max(minDurabilityPercent, maxDurabilityPercent));
+            float percent = minPercent + (float)randomSource.NextUnit() * (maxPercent - minPercent);
+
+            int remaining = Mathf.Clamp(Mathf.RoundToInt(item.maxDurability * percent), 1, item.maxDurability);
+            slot.durabilityDamage = item.maxDurability - remaining;
         }
 
         // 그 부위가 이미 채워져 있으면 true(건너뛴다). 아직 비어 있으면 채운 것으로 기록하고 false.

@@ -519,6 +519,27 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 return;
             }
 
+            // 무기 퀵슬롯끼리는 서로 맞바꾼다 (주 무기 <-> 보조 무기). 퀵슬롯은 장비 슬롯을 그대로
+            // 비추므로 실제로는 장비 슬롯 두 칸을 교환한다 - 둘 다 무기만 받는 칸이라 종류 검사는 필요 없다.
+            if (to == TestContainer.WeaponQuick && from == TestContainer.WeaponQuick)
+            {
+                if (fromIndex != toIndex)
+                {
+                    InventoryMoveResult swap = inventoryService.MoveItem(
+                        data.inventoryData.equipmentSlots, fromIndex, data.inventoryData.equipmentSlots, toIndex, 1);
+
+                    SetMessage(swap.Result == InventoryResult.Success
+                        ? "무기 퀵슬롯을 맞바꿨습니다."
+                        : "무기 퀵슬롯 교환 실패: 두 칸 모두 확인하세요.");
+
+                    playerService.SanitizeItemQuickSlots(data.inventoryData);
+                    WeaponQuickSlotsSwapped?.Invoke();
+                }
+
+                Refresh();
+                return;
+            }
+
             if (to == TestContainer.WeaponQuick || from == TestContainer.WeaponQuick)
             {
                 SetMessage("무기 퀵슬롯은 장비 슬롯을 그대로 비춥니다. 장비 슬롯에 무기를 넣어 보세요.");

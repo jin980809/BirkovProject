@@ -124,6 +124,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         {
             input.WeaponSelected += HandleWeaponSelected;
         }
+
+        // 인벤토리에서 무기 퀵슬롯을 맞바꾸면 들고 있는 무기가 바뀐다. 벤치가 알려주면 다시 장착한다.
+        InventoryTestBench.WeaponQuickSlotsSwapped += HandleWeaponQuickSlotsSwapped;
     }
 
     private void OnDisable()
@@ -138,6 +141,17 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         if (input != null)
         {
             input.WeaponSelected -= HandleWeaponSelected;
+        }
+
+        InventoryTestBench.WeaponQuickSlotsSwapped -= HandleWeaponQuickSlotsSwapped;
+    }
+
+    // 무기 퀵슬롯을 인벤토리에서 맞바꾼 직후. 장착 정보(무기·잔탄 슬롯)가 낡았으므로 다시 장착한다.
+    private void HandleWeaponQuickSlotsSwapped()
+    {
+        if (weaponController != null)
+        {
+            weaponController.RefreshEquippedWeapon();
         }
     }
 
