@@ -220,6 +220,13 @@ public class WeaponController : MonoBehaviour
         get { return equippedSlotIndex; }
     }
 
+    // 1/2 키로 고른 무기 슬롯 (그 칸이 비어 있어 빈손이어도 값은 그대로 남는다).
+    // 벤치 퀵슬롯 하이라이트는 이 값을 따라간다.
+    public int SelectedSlotIndex
+    {
+        get { return selectedSlotIndex; }
+    }
+
     // 지금 장착 중인 무기의 itemId (없으면 -1). WeaponVisual 이 어떤 모델을 보여줄지 결정할 때 쓴다.
     public int EquippedWeaponItemId
     {
@@ -399,12 +406,11 @@ public class WeaponController : MonoBehaviour
         {
             EquipSlot(equippedSlotIndex);
         }
-        // 선택은 해 뒀는데 그 슬롯이 비어 있어서 손에 든 게 없던 경우(집어넣은 상태는 제외) - 그 사이
-        // 드래그 장착 등으로 그 슬롯에 무기가 들어왔으면 바로 집어 든다.
-        else if (equippedWeapon == null && !isHolstered && selectedSlotIndex >= 0 &&
-                 inventoryBridge != null && inventoryBridge.TryGetEquippedWeapon(selectedSlotIndex, out _))
+        // 손에 든 게 없던 경우(빈 슬롯을 골라 집어넣은 상태 포함) - 그 사이 드래그 장착 등으로
+        // 무기 슬롯에 무기가 들어왔으면 바로 집어 든다.
+        else if (equippedWeapon == null)
         {
-            EquipSlot(selectedSlotIndex);
+            TryAutoEquipAvailableSlot();
         }
 
         RecoverBloom();
@@ -430,6 +436,50 @@ public class WeaponController : MonoBehaviour
         }
 
         recoilKickOffset = Vector2.Lerp(recoilKickOffset, Vector2.zero, 1f - Mathf.Exp(-sharpness * Time.deltaTime));
+    }
+
+    // 손에 든 무기가 없는 동안, 무기 슬롯에 무기가 들어오면 바로 집어 든다.
+    // 보고 있던 슬롯(selectedSlotIndex)을 먼저 보고, 없으면 다른 무기 슬롯도 확인한다.
+    // 한쪽만 보면 "1번 칸에 넣었는데 안 들리고 2번 칸에 넣으면 들리는" 어긋남이 생긴다
+    // (빈 슬롯 자동 전환으로 selectedSlotIndex 가 2번을 보고 있을 수 있기 때문).
+    private void TryAutoEquipAvailableSlot()
+    {
+        if (inventoryBridge == null)
+        {
+            return;
+        }
+
+        int preferred = selectedSlotIndex;
+
+        if (preferred < 0)
+        {
+            preferred = 0;
+        }
+
+        if (inventoryBridge.TryGetEquippedWeapon(preferred, out _))
+        {
+            isHolstered = false; // 보고 있던 빈 슬롯에 무기가 들어왔으니 다시 꺼내 든다
+            EquipSlot(preferred);
+            return;
+        }
+
+        // 빈 슬롯을 직접 골라 집어넣은 상태에서는 다른 슬롯 무기를 멋대로 꺼내 들지 않는다.
+        if (isHolstered)
+        {
+            return;
+        }
+
+        int other = 0;
+
+        if (preferred == 0)
+        {
+            other = 1;
+        }
+
+        if (inventoryBridge.TryGetEquippedWeapon(other, out _))
+        {
+            EquipSlot(other);
+        }
     }
 
     // 지금 장착한 무기에 따로 지정한 반동 설정을 찾는다 (없으면 false → 공통 설정 사용).
@@ -586,20 +636,21 @@ public class WeaponController : MonoBehaviour
         }
     }
 
-    // 1/2 키로 무기를 고를 때 부른다. 지금 손에 들고 있는 무기의 슬롯을 한 번 더 누르면 집어넣고,
-    // 그 외(다른 슬롯 / 집어넣은 상태에서 누름)에는 그 슬롯의 무기를 꺼내 든다.
+    // 1/2 키로 무기를 고를 때 부른다. 그 슬롯에 무기가 있으면 꺼내 들고, 비어 있으면 빈손이 된다.
+    // 들고 있는 슬롯을 한 번 더 눌러도 집어넣지 않는다 (그 무기를 계속 들고 있는다).
     public void SelectSlot(int slotIndex)
     {
-        PlaySfx(SwapSfxName);   //같은 슬롯을 다시 눌러(집어넣기) 도 울린다
-
-        if (equippedWeapon != null && equippedSlotIndex == slotIndex && !isHolstered)
-        {
-            Holster();
-            return;
-        }
+        PlaySfx(SwapSfxName);   // 빈 슬롯을 골라 집어넣을 때도 울린다
 
         isHolstered = false;
         EquipSlot(slotIndex);
+
+        // 고른 슬롯이 비어 있으면 빈손으로 둔다. 2번 무기를 들고 있다가 빈 1번을 누르면
+        // 2번 무기를 계속 든 채로 있는 것이 아니라 집어넣는다.
+        if (equippedWeapon == null)
+        {
+            Holster();
+        }
     }
 
     private void Holster()

@@ -80,6 +80,10 @@ public class PlayerZoom : MonoBehaviour
     private void Update()
     {
         UpdateZoomState();
+
+        // 스코프는 매 프레임 다시 판단한다. 줌 상태가 바뀌는 순간에만 갱신하면, 줌을 유지한 채
+        // 무기를 바꿨을 때(퀵슬롯 1/2) 스코프가 그대로 남는다. FOV 도 원래 매 프레임 갱신한다.
+        UpdateScopeOverlay();
         UpdateCameraFov();
     }
 
@@ -111,8 +115,6 @@ public class PlayerZoom : MonoBehaviour
         {
             crosshair.SetZoomVisual(IsZoomed);
         }
-
-        UpdateScopeOverlay();
     }
 
     // 스코프 설정이 있는 무기로 조준하는 동안에만 커서 주변만 보이는 오버레이를 켠다.

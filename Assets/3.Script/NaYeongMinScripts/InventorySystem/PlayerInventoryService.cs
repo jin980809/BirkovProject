@@ -75,7 +75,10 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return new InventoryMoveResult(InventoryResult.ItemNotFound, 0, 1);
             }
 
-            int targetIndex = ResolveWeaponTargetSlot(playerData, equipmentSlotIndex);
+            // 드래그로 올린 칸에 그대로 넣는다 (예전에는 두 무기 칸이 모두 비어 있으면 무조건 주 무기 칸으로
+            // 돌려보냈다 - 2번 칸에 넣어도 1번에 들어가서 의도와 달랐다).
+            int targetIndex = equipmentSlotIndex;
+
             if (!EquipmentSlots.Accepts(targetIndex, item))
             {
                 return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 1);
@@ -458,18 +461,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
         }
 
         // ----------------------------------------------------------------------
-        private static int ResolveWeaponTargetSlot(PlayerInventoryData playerData, int equipmentSlotIndex)
-        {
-            if (!EquipmentSlots.IsWeaponSlot(equipmentSlotIndex))
-            {
-                return equipmentSlotIndex;
-            }
-
-            bool primaryEmpty = playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].IsEmpty();
-            bool secondaryEmpty = playerData.equipmentSlots.slots[EquipmentSlots.SecondaryWeapon].IsEmpty();
-
-            return primaryEmpty && secondaryEmpty ? EquipmentSlots.PrimaryWeapon : equipmentSlotIndex;
-        }
 
         private static bool IsValidItemQuickIndex(PlayerInventoryData playerData, int quickIndex)
         {
