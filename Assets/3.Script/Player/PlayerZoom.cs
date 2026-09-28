@@ -16,8 +16,9 @@ public class PlayerZoom : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float zoomMoveSpeedMultiplier = 0.5f;
 
     [Header("반동 / 퍼짐")]
-    [Tooltip("줌 중 무기 최대 퍼짐(maxSpread) 배율 - 작을수록 정확해짐")]
-    [SerializeField, Range(0.1f, 1f)] private float zoomSpreadMultiplier = 0.5f;
+    [Tooltip("줌 중 무기 최대 퍼짐(maxSpread) 배율 - 작을수록 정확해짐. 아래 Weapon Zoom Fov 에 그 무기 항목이 " +
+             "없거나 Spread Multiplier 를 0으로 남겨두면(=미설정) 이 공통값을 대신 쓴다")]
+    [SerializeField, Range(0f, 1f)] private float zoomSpreadMultiplier = 0.5f;
 
     // 무기별 줌 FOV. 기본 FOV 보다 큰 값을 주면 조준할 때 오히려 화면이 넓어진다(줌아웃) -
     // 스나이퍼처럼 멀리 보는 무기에 쓴다. ItemData.csv 기준 10001 기관권총 / 10002 샷건 /
@@ -33,6 +34,9 @@ public class PlayerZoom : MonoBehaviour
 
         [Tooltip("구멍 반지름 - 화면 높이 기준 비율. 0 이면 SniperScopeOverlay 의 기본값을 쓴다")]
         public float scopeRadius;
+
+        [Tooltip("이 무기 전용 줌 퍼짐 배율. 0 이면 미설정으로 보고 공통 Zoom Spread Multiplier 를 대신 쓴다")]
+        [Range(0f, 1f)] public float spreadMultiplier;
     }
 
     [Header("카메라 줌")]
@@ -81,10 +85,12 @@ public class PlayerZoom : MonoBehaviour
     {
         UpdateZoomState();
 
-        // 스코프는 매 프레임 다시 판단한다. 줌 상태가 바뀌는 순간에만 갱신하면, 줌을 유지한 채
-        // 무기를 바꿨을 때(퀵슬롯 1/2) 스코프가 그대로 남는다. FOV 도 원래 매 프레임 갱신한다.
+        // 스코프/퍼짐배율은 매 프레임 다시 판단한다. 줌 상태가 바뀌는 순간에만 갱신하면, 줌을 유지한 채
+        // 무기를 바꿨을 때(퀵슬롯 1/2) 이전 무기 값이 그대로 남는다 - 퍼짐배율도 이제 무기별로 다르므로
+        // 마찬가지다. FOV 도 원래 매 프레임 갱신한다.
         UpdateScopeOverlay();
         UpdateCameraFov();
+        UpdateAimSpreadMultiplier();
     }
 
     private void UpdateZoomState()
@@ -106,15 +112,29 @@ public class PlayerZoom : MonoBehaviour
 
         player.SetSpeedMultiplier(IsZoomed ? zoomMoveSpeedMultiplier : 1f);
 
-        if (weapon != null)
-        {
-            weapon.SetAimSpreadMultiplier(IsZoomed ? zoomSpreadMultiplier : 1f);
-        }
-
         if (crosshair != null)
         {
             crosshair.SetZoomVisual(IsZoomed);
         }
+    }
+
+    private void UpdateAimSpreadMultiplier()
+    {
+        if (weapon != null)
+        {
+            weapon.SetAimSpreadMultiplier(IsZoomed ? GetZoomSpreadMultiplier() : 1f);
+        }
+    }
+
+    // 지금 든 무기 전용 줌 퍼짐 배율이 있으면 그것을, 없으면(0 = 미설정) 공통 zoomSpreadMultiplier 를 쓴다.
+    private float GetZoomSpreadMultiplier()
+    {
+        if (TryGetWeaponZoom(out WeaponZoomFov setting) && setting.spreadMultiplier > 0f)
+        {
+            return setting.spreadMultiplier;
+        }
+
+        return zoomSpreadMultiplier;
     }
 
     // 스코프 설정이 있는 무기로 조준하는 동안에만 커서 주변만 보이는 오버레이를 켠다.
