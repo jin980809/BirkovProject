@@ -18,6 +18,6 @@ MonoBehaviour:
   minBulletsPerBurst: 1
   maxBulletsPerBurst: 1
   spreadAngle: 7
-  fireInterval: 0.8
+  fireInterval: 0.08
   magazineSize: 50
   reloadTime: 2
