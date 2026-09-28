@@ -211,10 +211,11 @@ public class GameSession : MonoBehaviour
             yield return null;
         }
 
-        // 씬에 있는 모든 셰이더 변형을 지금(검은 화면 뒤) 미리 컴파일시킨다. 안 그러면 노멀맵 등
-        // 텍스처가 준비되기 전에 화면이 밝아져서 기본값(연한 파란색 등)이 잠깐 노출된다 - 특히
-        // 그 프로젝트를 처음 여는 컴퓨터나 느린 GPU에서는 컴파일이 몇 프레임보다 오래 걸린다.
-        Shader.WarmupAllShaders();
+        // Shader.WarmupAllShaders() 로 미리 컴파일시키는 시도를 했었지만(검은 화면 뒤 노멀맵 등 텍스처
+        // 준비 전 노출 방지 목적), 이 프로젝트처럼 SpeedTree 나무 셰이더(URP)가 있으면 그 함수 자체가
+        // 유니티 엔진 내부 버그로 "State comes from an incompatible keyword space" / "Keyword state
+        // size mismatch" 에러 창을 나무 변형 개수만큼(수십 개) 띄워서 로딩이 막힌다. 그래서 뺐다 -
+        // 대신 아래 SettleFramesAfterActivation 프레임 대기만으로 화면 노출을 가린다.
 
         // 새 씬의 Awake/Start 가 한 번 돈 뒤에 밝히기 시작한다 (UI 재연결 등이 끝난 화면을 보여주기 위해).
         // 무거운 씬은 활성화 직후 몇 프레임이 라이트맵 등 준비로 끊기므로, 그 프레임들을 검은 화면 뒤에서

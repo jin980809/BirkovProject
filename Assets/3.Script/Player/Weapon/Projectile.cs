@@ -51,9 +51,6 @@ public class Projectile : MonoBehaviour
 
         // 피격 이펙트 풀도 마찬가지로 스스로 찾는다. 씬에 없으면 이펙트만 생략한다.
         impactPool = FindAnyObjectByType<ImpactEffectPool>();
-
-        // 피격 확인(HitCrossHair) 표시도 마찬가지로 스스로 찾는다. 씬에 없으면 표시만 생략한다.
-        crosshairUI = FindAnyObjectByType<CrosshairUI>();
     }
 
     // 풀에서 빌려줄 때 호출: 위치/회전 세팅 + 활성화 + 이전 사용 흔적 제거
@@ -271,8 +268,16 @@ public class Projectile : MonoBehaviour
     }
 
     // 피해가 들어가는 대상을 실제로 맞췄을 때 크로스헤어의 피격 확인 표시(HitCrossHair)를 재생한다.
+    // 크로스헤어는 처음 맞혔을 때 찾아 둔다. Awake 에서 찾으면 씬이 로드되는 순간(풀이 총알을 미리 만들 때)이라
+    // 곧 파괴될 새 씬의 중복 캔버스 쪽 CrosshairUI 를 잡을 수 있다 - 그러면 그 총알은 끝까지 표시가 안 뜬다.
+    // 유지되는 캔버스(PersistentUiRoot)에서 꺼져 있어도 찾는다. 씬에 없으면 표시만 생략한다.
     private void PlayHitMarker()
     {
+        if (crosshairUI == null)
+        {
+            crosshairUI = PersistentUiRoot.Find<CrosshairUI>();
+        }
+
         if (crosshairUI != null)
         {
             crosshairUI.PlayHitMarker();
