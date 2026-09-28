@@ -21,6 +21,7 @@ public class Projectile : MonoBehaviour
     private Collider ownCollider;
     private BulletPool pool;
     private ImpactEffectPool impactPool;
+    private CrosshairUI crosshairUI;
 
     // 발사한 플레이어. 스윕에서 자기 자신의 다른 콜라이더에 맞지 않도록 구분하는 데 쓴다
     private PlayerController ownerPlayer;
@@ -50,6 +51,9 @@ public class Projectile : MonoBehaviour
 
         // 피격 이펙트 풀도 마찬가지로 스스로 찾는다. 씬에 없으면 이펙트만 생략한다.
         impactPool = FindAnyObjectByType<ImpactEffectPool>();
+
+        // 피격 확인(HitCrossHair) 표시도 마찬가지로 스스로 찾는다. 씬에 없으면 표시만 생략한다.
+        crosshairUI = FindAnyObjectByType<CrosshairUI>();
     }
 
     // 풀에서 빌려줄 때 호출: 위치/회전 세팅 + 활성화 + 이전 사용 흔적 제거
@@ -214,6 +218,7 @@ public class Projectile : MonoBehaviour
         {
             target.TakeDamage(damage);
             PlayHitOutline(hit.collider);
+            PlayHitMarker();
         }
 
         if (impactPool != null)
@@ -245,6 +250,7 @@ public class Projectile : MonoBehaviour
         {
             target.TakeDamage(damage);
             PlayHitOutline(other);
+            PlayHitMarker();
         }
 
         PlayImpactEffect(other, target != null);
@@ -261,6 +267,15 @@ public class Projectile : MonoBehaviour
         if (outline != null)
         {
             outline.Play();
+        }
+    }
+
+    // 피해가 들어가는 대상을 실제로 맞췄을 때 크로스헤어의 피격 확인 표시(HitCrossHair)를 재생한다.
+    private void PlayHitMarker()
+    {
+        if (crosshairUI != null)
+        {
+            crosshairUI.PlayHitMarker();
         }
     }
 

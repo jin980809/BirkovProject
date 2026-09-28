@@ -22,6 +22,14 @@ public class CrosshairUI : MonoBehaviour, ISceneRebindable
     [SerializeField] private RectTransform leftArm;
     [SerializeField] private RectTransform rightArm;
 
+    [Header("피격 확인 표시")]
+    [Tooltip("Projectile 이 IDamageable 대상에게 실제로 피해를 입혔을 때 재생할 애니메이터 (HitCrossHair 컨트롤러). " +
+             "벽 등 데미지가 안 들어가는 대상은 호출되지 않는다")]
+    [SerializeField] private Animator hitMarkerAnimator;
+    [Tooltip("위 애니메이터에 있는 Trigger 파라미터 이름 (Animator 창에서 같은 이름의 Trigger 를 만들고, " +
+             "AnyState → HitCrossHair 트랜지션의 조건으로 걸어줘야 실제로 재생된다)")]
+    [SerializeField] private string hitMarkerTrigger = "Hit";
+
     [Header("줌 UI 교체")]
     [Tooltip("평소(줌 아닐 때) 크로스헤어 화살표+중앙점을 담은 그룹")]
     [SerializeField] private GameObject normalCrosshairRoot;
@@ -77,6 +85,16 @@ public class CrosshairUI : MonoBehaviour, ISceneRebindable
     {
         Cursor.visible = !active;
         gameObject.SetActive(active);
+    }
+
+    // Projectile 이 피해가 들어가는 대상(IDamageable)을 맞췄을 때 호출한다. 벽 등 데미지가 없는
+    // 대상에 맞았을 때는 호출되지 않으므로, 여기서는 항상 재생만 하면 된다.
+    public void PlayHitMarker()
+    {
+        if (hitMarkerAnimator != null)
+        {
+            hitMarkerAnimator.SetTrigger(hitMarkerTrigger);
+        }
     }
 
     // PlayerZoom 이 줌 시작/종료마다 호출한다 - 평소 크로스헤어와 줌 UI를 서로 바꿔 켠다
