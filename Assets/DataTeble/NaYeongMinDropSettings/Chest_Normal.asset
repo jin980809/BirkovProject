@@ -66,18 +66,6 @@ MonoBehaviour:
     chancePercent: 1
     minAmount: 1
     maxAmount: 1
-  - itemId: 24002
-    chancePercent: 1
-    minAmount: 1
-    maxAmount: 1
-  - itemId: 24003
-    chancePercent: 1
-    minAmount: 1
-    maxAmount: 1
-  - itemId: 24004
-    chancePercent: 1
-    minAmount: 1
-    maxAmount: 1
   - itemId: 10001
     chancePercent: 5
     minAmount: 1

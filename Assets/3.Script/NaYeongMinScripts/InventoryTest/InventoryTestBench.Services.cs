@@ -125,9 +125,41 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
             merchantRepairButton.gameObject.SetActive(merchantKind == MerchantKind.Weapons);
             merchantRepairButton.targetGraphic.color = new Color(0.75f, 0.38f, 0.08f, 1f);
+            if (ui != null && ui.shopSell != null)
+            {
+                RectTransform sellRect = (RectTransform)ui.shopSell.transform;
+                sellRect.sizeDelta = new Vector2(420, 54);
+                sellRect.anchoredPosition = new Vector2(20, -578);
+                ApplySkin((Image)ui.shopSell.targetGraphic, honetiButtonSprite, Color.white, Color.white);
+                ColorBlock sellColors = ui.shopSell.colors;
+                sellColors.normalColor = new Color(0.20f, 0.78f, 0.90f, 1f);
+                sellColors.highlightedColor = new Color(0.42f, 0.92f, 1f, 1f);
+                sellColors.selectedColor = sellColors.normalColor;
+                sellColors.pressedColor = new Color(0.12f, 0.55f, 0.68f, 1f);
+                sellColors.disabledColor = new Color(0.25f, 0.29f, 0.32f, 1f);
+                sellColors.colorMultiplier = 1f;
+                ui.shopSell.transition = Selectable.Transition.ColorTint;
+                ui.shopSell.colors = sellColors;
+                Text sellLabel = ui.shopSell.GetComponentInChildren<Text>();
+                if (sellLabel != null)
+                {
+                    sellLabel.text = "1개 판매\n<size=14>가방 / 창고에서 판매할 아이템 선택</size>";
+                    sellLabel.supportRichText = true;
+                    sellLabel.fontSize = 18;
+                    sellLabel.fontStyle = FontStyle.Bold;
+                    sellLabel.color = Color.white;
+                    sellLabel.alignment = TextAnchor.MiddleCenter;
+                    sellLabel.resizeTextForBestFit = false;
+                    sellLabel.rectTransform.anchorMin = Vector2.zero;
+                    sellLabel.rectTransform.anchorMax = Vector2.one;
+                    sellLabel.rectTransform.offsetMin = new Vector2(8, 4);
+                    sellLabel.rectTransform.offsetMax = new Vector2(-8, -4);
+                }
+            }
+            ((RectTransform)merchantRepairButton.transform).anchoredPosition = new Vector2(20, -642);
             Transform legacyRepair = shopPanel.transform.Find("Button_선택 총기 수리 1G");
             if (legacyRepair != null) legacyRepair.gameObject.SetActive(merchantKind != MerchantKind.General);
-            ((RectTransform)shopPanel.transform).sizeDelta = new Vector2(460, merchantKind == MerchantKind.Weapons ? 674 : 640);
+            ((RectTransform)shopPanel.transform).sizeDelta = new Vector2(460, merchantKind == MerchantKind.Weapons ? 698 : 648);
             Transform list = shopPanel.transform.Find("ListScroll/ListContent");
             if (list != null)
             {

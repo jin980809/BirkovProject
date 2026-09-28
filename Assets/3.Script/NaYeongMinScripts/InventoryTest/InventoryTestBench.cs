@@ -383,7 +383,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             // 제작 결과와 구매 아이템을 넣을 칸이 남지 않는다. 같은 품목이 창고로 들어간다.
             if (!useExternalTestSeeder && !seedExtendedTestStock)
             {
-                foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 24002, 20001 })
+                foreach (int id in new[] { 21001, 21002, 22001, 23001, 23002, 23003, 20001 })
                 {
                     playerService.AddToInventory(data.inventoryData, id, id == 21001 ? 4 : 1);
                 }
