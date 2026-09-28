@@ -1047,7 +1047,6 @@ GameObject:
   - component: {fileID: 244782575755238892}
   - component: {fileID: 6358909204940663855}
   - component: {fileID: 3574571339950027155}
-  - component: {fileID: 9047448883543324440}
   - component: {fileID: 1262902557484568421}
   m_Layer: 8
   m_Name: Player
@@ -1881,19 +1880,6 @@ MonoBehaviour:
   duration: 0.25
   decayPower: 2.5
   excludedRoots: []
---- !u!114 &9047448883543324440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4560609864491932998}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38d027f0bdf05a54bb645e1bbe4c700b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerArmorBridge
-  itemDatabase: {fileID: 0}
 --- !u!114 &1262902557484568421
 MonoBehaviour:
   m_ObjectHideFlags: 0
