@@ -78,21 +78,21 @@ public class EnemyDetect : MonoBehaviour, IHearing
         enemyState = EnemyState.Patrol;
         rayDistance = Mathf.Max(0f, rayDistance);
 
-        if (playerTarget == null)
-        {
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-
-            if (playerObject != null)
-            {
-                playerTarget = playerObject.transform;
-            }
-            else
-            {
-                Debug.LogWarning(
-                    $"{gameObject.name} : Player 태그를 가진 오브젝트를 찾지 못했습니다."
-                );
-            }
-        }
+        //if (playerTarget == null)
+        //{
+        //    GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        //
+        //    if (playerObject != null)
+        //    {
+        //        playerTarget = playerObject.transform;
+        //    }
+        //    else
+        //    {
+        //        Debug.LogWarning(
+        //            $"{gameObject.name} : Player 태그를 가진 오브젝트를 찾지 못했습니다."
+        //        );
+        //    }
+        //}
     }
 
     private void Start()
@@ -109,12 +109,12 @@ public class EnemyDetect : MonoBehaviour, IHearing
             currentDetection -= decrease * Time.deltaTime;
         }
 
+        //근접 강제 발견
         if (playerTarget != null)
         {
-            float distanceToPlayer =
-                Vector3.Distance(transform.position, playerTarget.position);
-
-            if (distanceToPlayer <= forceBattleDistance)
+            float distanceToPlayer = Vector3.Distance(transform.position, playerTarget.position);
+        
+            if (distanceToPlayer <= forceBattleDistance && visibleTargets == null)
             {
                 ForceDetectPlayer();
             }
@@ -161,8 +161,8 @@ public class EnemyDetect : MonoBehaviour, IHearing
         visibleTargetsV3 = source;
 
         float distanceFromNoise = Vector3.Distance(transform.position, source);
-
-        if (distanceFromNoise <= forceBattleDistance)
+        
+        if (distanceFromNoise <= forceBattleDistance && visibleTargets == null)
         {
             ForceDetectPlayer();
         }
@@ -189,10 +189,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
         currentDetection = 100f;
 
         // 최초 발견 처리
-        if (!firstCheck)
-        {
-            firstCheck = true;
-        }
+        firstCheck = true;
 
         // 탐색 종료
         searchCheck = true;

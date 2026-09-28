@@ -15,8 +15,8 @@ MonoBehaviour:
   maxHealth: 50
   moveSpeed: 4
   angleSpeed: 2000
-  rayDistance: 20
-  viewAngle: 90
+  rayDistance: 15
+  viewAngle: 180
   minDistance: 2
   moveDistance: 7
   rayCount: 20
