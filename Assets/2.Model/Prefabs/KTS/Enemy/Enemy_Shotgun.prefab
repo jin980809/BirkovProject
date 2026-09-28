@@ -20679,7 +20679,7 @@ GameObject:
   - component: {fileID: 7832307296539728006}
   - component: {fileID: 4359247256867134686}
   - component: {fileID: 5365034070935615663}
-  - component: {fileID: 3460017067274049090}
+  - component: {fileID: 5043279484307030211}
   - component: {fileID: 4198936148777164937}
   - component: {fileID: 4460405895753044223}
   - component: {fileID: 4380137059412380874}
@@ -20792,7 +20792,7 @@ CapsuleCollider:
   m_Height: 1.6
   m_Direction: 1
   m_Center: {x: 0, y: 0.65, z: 0}
---- !u!136 &3460017067274049090
+--- !u!136 &5043279484307030211
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20811,10 +20811,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.3
+  m_Radius: 1
   m_Height: 3
   m_Direction: 2
-  m_Center: {x: 0, y: 1.3, z: 0}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!195 &4198936148777164937
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -20824,7 +20824,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 3592570976236322626}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 1.5
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50

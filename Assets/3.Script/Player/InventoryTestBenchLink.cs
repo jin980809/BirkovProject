@@ -33,6 +33,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
     [SerializeField] private ArmorDurabilityBridge armorDurabilityBridge;
 
     private bool didLinkWeaponData;
+
+    // 벤치 하이라이트를 마지막으로 맞춘 무기 슬롯 (-1 = 아직 없음). 값이 바뀔 때만 벤치를 갱신한다.
+    private int lastHighlightedWeaponSlot = -1;
     private PlayerInventoryData linkedData;
 
     // 벤치는 Awake 가 아니라 여기서 찾는다 - 씬 전환으로 들어온 경우 이 씬에 있던 중복 UI 캔버스를
@@ -124,6 +127,9 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         {
             input.WeaponSelected += HandleWeaponSelected;
         }
+
+        // 인벤토리에서 무기 퀵슬롯을 맞바꾸면 들고 있는 무기가 바뀐다. 벤치가 알려주면 다시 장착한다.
+        InventoryTestBench.WeaponQuickSlotsSwapped += HandleWeaponQuickSlotsSwapped;
     }
 
     private void OnDisable()
@@ -138,6 +144,57 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         if (input != null)
         {
             input.WeaponSelected -= HandleWeaponSelected;
+        }
+
+        InventoryTestBench.WeaponQuickSlotsSwapped -= HandleWeaponQuickSlotsSwapped;
+    }
+
+    // 무기 퀵슬롯을 인벤토리에서 맞바꾼 직후. 장착 정보(무기·잔탄 슬롯)가 낡았으므로 다시 장착한다.
+    private void HandleWeaponQuickSlotsSwapped()
+    {
+        if (weaponController != null)
+        {
+            weaponController.RefreshEquippedWeapon();
+            SyncSelectedWeaponHighlight();
+        }
+    }
+
+    // 고른 무기 슬롯이 바뀌면 벤치의 퀵슬롯 하이라이트도 따라가게 한다.
+    // 장착은 여러 경로(키 1/2, 데이터 연결, 퀵슬롯 교환, 빈 칸일 때 자동 전환)로 바뀌는데
+    // 그 전부를 개별로 챙기면 한 곳이라도 빠지면 "하이라이트는 1번인데 장탄수는 2번" 같은 어긋남이 생긴다.
+    // 그래서 결과(SelectedSlotIndex)만 보고 매 프레임 맞춘다 - 값이 바뀔 때만 벤치를 건드린다.
+    // 빈 칸을 골라 빈손이 된 경우에도 하이라이트는 그 칸으로 옮겨간다.
+    private void WatchEquippedWeaponSlot()
+    {
+        if (weaponController == null || inventoryBench == null || !inventoryBench.IsReady)
+        {
+            return;
+        }
+
+        int selectedSlot = weaponController.SelectedSlotIndex;
+
+        if (selectedSlot >= 0 && selectedSlot != lastHighlightedWeaponSlot)
+        {
+            lastHighlightedWeaponSlot = selectedSlot;
+            inventoryBench.SelectWeapon(selectedSlot);
+        }
+    }
+
+    // 실제로 장착된 슬롯과 벤치의 퀵슬롯 하이라이트를 맞춘다.
+    // WeaponController 는 주 무기 칸이 비어 있으면 보조 무기 칸을 자동으로 들기 때문에,
+    // 맞춰주지 않으면 하이라이트는 1번인데 손에 든 무기와 HUD 장탄수는 2번인 상태가 된다.
+    private void SyncSelectedWeaponHighlight()
+    {
+        if (inventoryBench == null || weaponController == null)
+        {
+            return;
+        }
+
+        int equippedSlot = weaponController.EquippedSlotIndex;
+
+        if (equippedSlot >= 0)
+        {
+            inventoryBench.SelectWeapon(equippedSlot);
         }
     }
 
@@ -167,6 +224,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
         }
 
         DisableDurabilityInLobby();
+        WatchEquippedWeaponSlot();
 
         // 저장 불러오기나 초기화로 벤치의 PlayerInventoryData 가 새 객체로 바뀌면 그 데이터로 다시 연결한다.
         // 안 그러면 무기/방어구 브리지가 옛 데이터를 계속 봐서 불러온 장비가 장착되지 않는다.
@@ -199,6 +257,7 @@ public class InventoryTestBenchLink : MonoBehaviour, IRecoveryTarget
             if (weaponController != null)
             {
                 weaponController.RefreshEquippedWeapon();
+                SyncSelectedWeaponHighlight(); // 자동으로 다른 슬롯을 들었으면 하이라이트도 그 슬롯으로
             }
         }
     }

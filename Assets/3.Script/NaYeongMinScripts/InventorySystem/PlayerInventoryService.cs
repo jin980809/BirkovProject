@@ -75,7 +75,10 @@ namespace Birdkov.NaYeongMin.InventorySystem
                 return new InventoryMoveResult(InventoryResult.ItemNotFound, 0, 1);
             }
 
-            int targetIndex = ResolveWeaponTargetSlot(playerData, equipmentSlotIndex);
+            // 드래그로 올린 칸에 그대로 넣는다 (예전에는 두 무기 칸이 모두 비어 있으면 무조건 주 무기 칸으로
+            // 돌려보냈다 - 2번 칸에 넣어도 1번에 들어가서 의도와 달랐다).
+            int targetIndex = equipmentSlotIndex;
+
             if (!EquipmentSlots.Accepts(targetIndex, item))
             {
                 return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 1);
@@ -96,6 +99,21 @@ namespace Birdkov.NaYeongMin.InventorySystem
             if (playerData == null || !EquipmentSlots.IsValidSlot(equipmentSlotIndex))
             {
                 return new InventoryMoveResult(InventoryResult.InvalidSlot, 0, 1);
+            }
+
+            // 가방 칸이 비어 있지 않으면 MoveItem 이 두 칸을 맞바꾼다. 그러면 그 가방 아이템이
+            // 장비 슬롯으로 들어오므로, 그 칸이 받을 수 있는 종류인지 먼저 확인한다.
+            // (확인하지 않으면 무기칸에 회복약이, 방어구칸에 탄약이 들어간다)
+            // 같은 아이템이면 교환이 아니라 합치기이므로 통과시킨다.
+            if (TryGetItem(playerData.inventory, inventoryIndex, out ItemData incoming))
+            {
+                bool sameItem = TryGetItem(playerData.equipmentSlots, equipmentSlotIndex, out ItemData equipped) &&
+                                equipped.itemId == incoming.itemId;
+
+                if (!sameItem && !EquipmentSlots.Accepts(equipmentSlotIndex, incoming))
+                {
+                    return new InventoryMoveResult(InventoryResult.DestinationRejected, 0, 1);
+                }
             }
 
             InventoryMoveResult result = inventoryService.MoveItem(
@@ -443,18 +461,6 @@ namespace Birdkov.NaYeongMin.InventorySystem
         }
 
         // ----------------------------------------------------------------------
-        private static int ResolveWeaponTargetSlot(PlayerInventoryData playerData, int equipmentSlotIndex)
-        {
-            if (!EquipmentSlots.IsWeaponSlot(equipmentSlotIndex))
-            {
-                return equipmentSlotIndex;
-            }
-
-            bool primaryEmpty = playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].IsEmpty();
-            bool secondaryEmpty = playerData.equipmentSlots.slots[EquipmentSlots.SecondaryWeapon].IsEmpty();
-
-            return primaryEmpty && secondaryEmpty ? EquipmentSlots.PrimaryWeapon : equipmentSlotIndex;
-        }
 
         private static bool IsValidItemQuickIndex(PlayerInventoryData playerData, int quickIndex)
         {

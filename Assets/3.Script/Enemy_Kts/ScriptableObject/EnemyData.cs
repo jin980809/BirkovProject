@@ -35,7 +35,8 @@ public class EnemyData : ScriptableObject
     public float delayTime = 2f;
 
     [Header("¼øÂû Äð")]
-    public float patrolWaitingTime = 10;
+    public float minPatrolWaitingTime = 7;
+    public float maxPatrolWaitingTime = 15;
 
     [Header("½ºÆù È®·ü")]
     public int probability = 10;

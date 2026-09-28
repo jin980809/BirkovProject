@@ -26,7 +26,8 @@ MonoBehaviour:
   runPoints: 40
   shotPoints: 50
   delayTime: 2
-  patrolWaitingTime: 10
+  minPatrolWaitingTime: 10
+  maxPatrolWaitingTime: 20
   probability: 10
   oneHelmet: 25
   twoHelmet: 50

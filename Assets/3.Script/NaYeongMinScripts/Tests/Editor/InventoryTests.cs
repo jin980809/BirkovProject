@@ -153,15 +153,16 @@ namespace Birdkov.NaYeongMin.Tests
         }
 
         [Test]
-        public void Equip_BothWeaponSlotsEmpty_AlwaysFillsPrimaryFirst()
+        public void Equip_BothWeaponSlotsEmpty_UsesRequestedSlot()
         {
             PutInBag(0, PistolId);
 
-            // 보조 무기 칸에 놓아도 둘 다 비어 있으면 주 무기 칸으로 들어간다.
+            // 기획 변경: 두 무기 칸이 모두 비어 있어도 놓은 칸에 그대로 들어간다.
+            // (예전에는 무조건 주 무기 칸으로 돌려보내서 2번 칸에 넣어도 1번에 들어갔다.)
             service.EquipFromInventory(playerData, 0, EquipmentSlots.SecondaryWeapon);
 
-            Assert.AreEqual(PistolId, playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].itemId);
-            Assert.IsTrue(playerData.equipmentSlots.slots[EquipmentSlots.SecondaryWeapon].IsEmpty());
+            Assert.AreEqual(PistolId, playerData.equipmentSlots.slots[EquipmentSlots.SecondaryWeapon].itemId);
+            Assert.IsTrue(playerData.equipmentSlots.slots[EquipmentSlots.PrimaryWeapon].IsEmpty());
         }
 
         [Test]

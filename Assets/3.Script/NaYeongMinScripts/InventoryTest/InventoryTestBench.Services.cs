@@ -19,6 +19,10 @@ namespace Birdkov.NaYeongMin.InventoryTest
         // 직접 부를 수 없다. 대신 이 이벤트를 바깥(PlayerInventoryToggle)에서 받아 효과음을 낸다.
         public static event System.Action ServiceSucceeded;
 
+        // 무기 퀵슬롯(주 무기 <-> 보조 무기)을 맞바꿨을 때 알린다.
+        // 들고 있는 무기가 바뀌므로 바깥(WeaponController)이 다시 장착해야 한다.
+        public static event System.Action WeaponQuickSlotsSwapped;
+
         private void NotifyServiceSucceeded()
         {
             if (ServiceSucceeded != null) ServiceSucceeded();

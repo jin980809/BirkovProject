@@ -575,7 +575,6 @@ GameObject:
   - component: {fileID: 249564813}
   - component: {fileID: 249564812}
   - component: {fileID: 249564811}
-  - component: {fileID: 249564814}
   m_Layer: 7
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -675,22 +674,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 249564809}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!208 &249564814
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 249564809}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1 &343668438
 GameObject:
   m_ObjectHideFlags: 0
@@ -823,7 +806,6 @@ GameObject:
   - component: {fileID: 355695717}
   - component: {fileID: 355695716}
   - component: {fileID: 355695715}
-  - component: {fileID: 355695718}
   m_Layer: 7
   m_Name: Cube (2)
   m_TagString: Untagged
@@ -923,22 +905,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 355695713}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!208 &355695718
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 355695713}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1001 &375463582
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1119,7 +1085,6 @@ GameObject:
   - component: {fileID: 410727191}
   - component: {fileID: 410727190}
   - component: {fileID: 410727189}
-  - component: {fileID: 410727192}
   m_Layer: 7
   m_Name: Cube (3)
   m_TagString: Untagged
@@ -1219,22 +1184,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410727187}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!208 &410727192
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 410727187}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1 &455164213
 GameObject:
   m_ObjectHideFlags: 0
@@ -3155,7 +3104,6 @@ GameObject:
   - component: {fileID: 959968928}
   - component: {fileID: 959968927}
   - component: {fileID: 959968926}
-  - component: {fileID: 959968929}
   m_Layer: 7
   m_Name: Cube (4)
   m_TagString: Untagged
@@ -3255,22 +3203,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 959968924}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!208 &959968929
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 959968924}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1 &967908940
 GameObject:
   m_ObjectHideFlags: 0
@@ -3329,6 +3261,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   aimHeightOffset: 0.5
+  aimTargetMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   animator: {fileID: 0}
   animDamp: 0.12
   singleShotClip: {fileID: 0}
@@ -3382,6 +3317,7 @@ MonoBehaviour:
   aimBlendFarDistance: 2.5
   recoilKickPixelsPerSpreadDegree: 2
   recoilRecoverySharpness: 10
+  weaponRecoils: []
   debugWeaponName: 
   debugAttackDamage: 0
   debugFireRate: 0
@@ -3436,6 +3372,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponCameraShake
   shakeForce: 0.05
   shakeDuration: 0.12
+  weaponShakes: []
   vcam: {fileID: 876107145}
 --- !u!114 &967908947
 MonoBehaviour:
@@ -3542,6 +3479,7 @@ MonoBehaviour:
   zoomSpreadMultiplier: 0.25
   vcam: {fileID: 876107145}
   zoomedFov: 35
+  weaponZoomFovs: []
   normalFov: 0
   fovLerpSharpness: 10
 --- !u!114 &967908953

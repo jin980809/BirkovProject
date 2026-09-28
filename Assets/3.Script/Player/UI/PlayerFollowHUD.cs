@@ -105,7 +105,8 @@ public class PlayerFollowHUD : MonoBehaviour, ISceneRebindable
 
         if (vitals == null)
         {
-            Debug.LogWarning("PlayerFollowHUD: 씬에서 PlayerVitals 를 찾지 못해 플레이어를 따라갈 수 없습니다.", this);
+            // 플레이어가 없는 씬(시작 화면 등)에서는 정상이다. 이 UI 는 PersistentUiRoot 가 통째로
+            // 숨기므로 여기서 할 일이 없다 - 경고를 찍지 않는다 (씬 전환마다 콘솔이 지저분해진다).
         }
         else if (followAnchor == null)
         {

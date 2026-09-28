@@ -37291,7 +37291,7 @@ MonoBehaviour:
     volume: 1
   - Name: Shotgun_Fire
     clips:
-    - {fileID: 8300000, guid: 587f486537cf483478c3e629258a2a54, type: 3}
+    - {fileID: 8300000, guid: 07d7444142a932a43a9df32909c227f3, type: 3}
     volume: 1
   - Name: Shotgun_Reload
     clips:
@@ -37307,7 +37307,7 @@ MonoBehaviour:
     volume: 1
   - Name: Sniper_Fire
     clips:
-    - {fileID: 8300000, guid: 587f486537cf483478c3e629258a2a54, type: 3}
+    - {fileID: 8300000, guid: cd0cf93d9f928954ba991852d497759d, type: 3}
     volume: 1
   - Name: Sniper_Reload
     clips:

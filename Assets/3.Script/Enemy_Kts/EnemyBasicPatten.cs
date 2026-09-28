@@ -56,7 +56,7 @@ public class EnemyBasicPatten : MonoBehaviour
     {
         agent.speed = moveSpeed;
         agent.angularSpeed = angleSpeed;
-        patrolWaitingTime = enemyData.patrolWaitingTime;
+        patrolWaitingTime = Random.Range(enemyData.minPatrolWaitingTime, enemyData.maxPatrolWaitingTime);
 
         patrolWaitingTimeWfs = new WaitForSeconds(patrolWaitingTime);
         exclamationTimeWfs = new WaitForSeconds(0.7f);
