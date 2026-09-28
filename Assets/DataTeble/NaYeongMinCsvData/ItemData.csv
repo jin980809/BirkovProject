@@ -27,7 +27,7 @@
 24003,Special,위고비,허기 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,Assets/4.Sprite/ICONs/Images/_Icons/Fantasy/icon_potion-globe_LP.png,,1,1,FALSE,1,,,,,,,,,,,,,0,0,0,0,10
 24004,Special,알로에즙,수분 감소를 60초 동안 동결한다. 재사용 시 남은 시간을 60초로 갱신한다.,12,,,Assets/4.Sprite/ICONs/Images/_Icons/Drinks/icon_drink-coconut_LP.png,,1,1,FALSE,1,,,,,,,,,,,,,0,0,0,0,10
 25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
-26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/ICon/_Icons/item-feather.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/ICon/item-feather.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_stone_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,Assets/4.Sprite/ICONs/ICon/Glass_Shard.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-red.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,
