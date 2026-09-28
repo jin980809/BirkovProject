@@ -24,7 +24,7 @@
 23002,Consumable,수박,최대 허기의 40%를 회복한다.,2,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_melon-slice_LP.png,,1,1,TRUE,5,,,,,,,,,,,,,0,0,12,0,3
 23003,Consumable,호박,최대 허기의 90%를 회복한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Food/icon_pumkin_LP.png,,1,1,TRUE,3,,,,,,,,,,,,,0,0,27,0,5
 25001,Material,화약,총알 자체제작 조합용. 상점에서만 구매한다.,1,,,Assets/4.Sprite/ICONs/Images/_Icons/Barrels/icon_barrel-red-closed_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
-26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/ICon/_Icons/item-feather.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
+26001,Sale,깃털,판매 시 지푸라기를 제공한다.,3,,,Assets/4.Sprite/ICONs/ICon/item-feather.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 26002,Sale,돌,판매 시 지푸라기를 제공한다.,5,,,Assets/4.Sprite/ICONs/Images/_Icons/Resources/icon_stone_LP.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 26003,Sale,거울 조각,판매 시 지푸라기를 제공한다.,7,,,Assets/4.Sprite/ICONs/ICon/Glass_Shard.png,,1,1,TRUE,30,,,,,,,,,,,,,0,0,0,0,
 27001,Material,빨간 버섯,기관권총 총알 자체제작 조합용. 채집으로만 획득한다.,,,,Assets/4.Sprite/ICONs/ICon/mushroom-red.png,,1,1,TRUE,10,,,,,,,,,,,,,0,0,0,0,
