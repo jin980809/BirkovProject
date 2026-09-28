@@ -77,6 +77,15 @@ namespace Birdkov.NaYeongMin.Tests
             player.currency = 0; Assert.IsFalse(shop.Buy(player, 10001));
         }
 
+        [Test] public void Shop_SellsOneFromWarehouseSlot()
+        {
+            var data = new PlayerSaveData(); var shop = new ShopService(catalog);
+            inventory.AddItem(data.warehouseData, 21001, 3);
+            Assert.IsTrue(shop.Sell(data.inventoryData, data.warehouseData, 0));
+            Assert.AreEqual(2, data.warehouseData.slots[0].amount);
+            catalog.TryGetItem(21001, out ItemData item); Assert.AreEqual(item.price, data.inventoryData.currency);
+        }
+
         [TestCase(10001, MerchantKind.Weapons)]
         [TestCase(11001, MerchantKind.Weapons)]
         [TestCase(12001, MerchantKind.Weapons)]

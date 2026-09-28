@@ -49,13 +49,16 @@ namespace Birdkov.NaYeongMin.InventorySystem
             return true;
         }
 
-        public bool Sell(PlayerInventoryData player, int index)
+        public bool Sell(PlayerInventoryData player, int index) => Sell(player, player?.inventory, index);
+
+        // 가방뿐 아니라 상점 옆에 같이 열리는 창고 칸에서도 판다. 대금은 플레이어 화폐로 들어간다.
+        public bool Sell(PlayerInventoryData player, GridContainerData container, int index)
         {
-            if (player?.inventory?.slots == null || index < 0 || index >= player.inventory.slots.Count) return false;
-            GridSlotData slot = player.inventory.slots[index];
+            if (player == null || container?.slots == null || index < 0 || index >= container.slots.Count) return false;
+            GridSlotData slot = container.slots[index];
             if (slot.IsEmpty() || !catalog.TryGetItem(slot.itemId, out ItemData item) || !Accepts(item, merchantKind) ||
                 player.currency > int.MaxValue - item.price || slot.amount < TradeAmount(item)) return false;
-            if (inventory.RemoveItem(player.inventory, index, TradeAmount(item)).Result != InventoryResult.Success) return false;
+            if (inventory.RemoveItem(container, index, TradeAmount(item)).Result != InventoryResult.Success) return false;
             player.currency += item.price;
             return true;
         }

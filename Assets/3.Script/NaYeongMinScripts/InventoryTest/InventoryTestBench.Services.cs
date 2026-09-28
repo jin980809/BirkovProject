@@ -44,7 +44,12 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private Text shopSelection;
         private int shopPage;
         private int selectedShopBagIndex = -1;
-        private bool selectedShopEquipment;
+        private TestContainer selectedShopContainer = TestContainer.Bag;
+        [Tooltip("판매 팝업이 떠 있는 시간(초). 팝업 모양은 Root 밑 SellPopup 오브젝트에서 고친다. 없으면 기본 모양으로 만든다.")]
+        [SerializeField] private float sellPopupSeconds = 1.5f;
+        private GameObject sellPopup;
+        private Text sellPopupText;
+        private float sellPopupUntil;
         private int selectedShopRow;
         private int selectedCraftRow;
         private MerchantKind merchantKind;
@@ -100,7 +105,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             EnsureShopPanel();
             serviceAnchor = anchor;
             selectedShopBagIndex = -1;
-            selectedShopEquipment = false;
+            selectedShopContainer = TestContainer.Bag;
             selectedShopRow = 0;
             shopPage = 0;
             shopPanel.SetActive(true);
@@ -279,7 +284,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             if (ui == null || ui.repairPanel == null) { SetMessage("수리대 UI 참조 없음: RepairPanel 확인"); return; }
             serviceAnchor = anchor;
             selectedShopBagIndex = -1;
-            selectedShopEquipment = false;
+            selectedShopContainer = TestContainer.Bag;
             ui.repairPanel.SetActive(true);
             if (merchantBackButton != null) merchantBackButton.gameObject.SetActive(false);
             Bind(ui.repairButton, RepairSelectedWeapon);
@@ -495,15 +500,74 @@ namespace Birdkov.NaYeongMin.InventoryTest
         private void SellSelectedShopItem()
         {
             if (shopPanel == null || !shopPanel.activeSelf) return;
-            bool success = !selectedShopEquipment && new ShopService(catalog, merchantKind).Sell(PlayerData, selectedShopBagIndex);
+            GridSlotData picked = SelectedSlot();
+            int soldItemId = picked != null ? picked.itemId : -1;
+            bool success = selectedShopContainer != TestContainer.Equipment &&
+                new ShopService(catalog, merchantKind).Sell(PlayerData, GetContainer(selectedShopContainer), selectedShopBagIndex);
+            if (success && catalog.TryGetItem(soldItemId, out ItemData sold))
+                ShowSellPopup(SoldText(DisplayName(soldItemId), ShopService.TradeAmount(sold)));
             SetMessage(success ? "판매 완료" : "판매 불가: 이 상인의 취급 품목과 가방 선택을 확인하세요. 탄약은 20발 단위로 팝니다.");
             Refresh();
         }
 
-        // 가방이든 장비 칸이든 마지막으로 누른 칸 하나를 판매/수리 대상으로 쓴다.
+        // "회복약을 판매했습니다" / "물를" 이 아니라 받침에 맞춰 을/를. 탄약은 "샷건 총알 20발을".
+        private static string SoldText(string name, int amount)
+        {
+            string noun = amount > 1 ? name + " " + amount + "발" : name;
+            char last = noun.Length > 0 ? noun[noun.Length - 1] : ' ';
+            string josa = last >= '가' && last <= '힣' ? ((last - '가') % 28 == 0 ? "를" : "을") : "을(를)";
+            return noun + josa + " 판매했습니다";
+        }
+
+        private void ShowSellPopup(string text)
+        {
+            if (sellPopup == null && screen != null)
+            {
+                Transform found = screen.Find("SellPopup");
+                sellPopup = found != null ? found.gameObject : BuildSellPopup();
+                sellPopupText = sellPopup.GetComponentInChildren<Text>(true);
+            }
+            if (sellPopup == null || sellPopupText == null) return;
+            sellPopupText.text = text;
+            sellPopup.transform.SetAsLastSibling();
+            sellPopup.SetActive(true);
+            sellPopupUntil = Time.unscaledTime + sellPopupSeconds;
+        }
+
+        private void HideSellPopupWhenDue()
+        {
+            if (sellPopup != null && sellPopup.activeSelf && Time.unscaledTime > sellPopupUntil) sellPopup.SetActive(false);
+        }
+
+        // 팀원 씬처럼 Root 에 SellPopup 이 없을 때만 쓰는 기본 모양. 클릭을 막지 않는다.
+        private GameObject BuildSellPopup()
+        {
+            var popup = new GameObject("SellPopup", typeof(RectTransform), typeof(Image));
+            var rect = (RectTransform)popup.transform;
+            rect.SetParent(screen, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(560, 84);
+            var background = popup.GetComponent<Image>();
+            background.color = new Color(0f, 0f, 0f, 0.78f);
+            background.raycastTarget = false;
+            var label = new GameObject("Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
+            label.rectTransform.SetParent(rect, false);
+            label.rectTransform.anchorMin = Vector2.zero;
+            label.rectTransform.anchorMax = Vector2.one;
+            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            label.font = status != null ? status.font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 28;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white;
+            label.raycastTarget = false;
+            popup.SetActive(false);
+            return popup;
+        }
+
+        // 가방·장비·창고 중 마지막으로 누른 칸 하나를 판매/수리 대상으로 쓴다. 장비 칸은 수리만 된다.
         private GridSlotData SelectedSlot()
         {
-            GridContainerData container = selectedShopEquipment ? PlayerData.equipmentSlots : PlayerData.inventory;
+            GridContainerData container = GetContainer(selectedShopContainer);
             return selectedShopBagIndex >= 0 && selectedShopBagIndex < container.slots.Count
                 ? container.slots[selectedShopBagIndex] : null;
         }

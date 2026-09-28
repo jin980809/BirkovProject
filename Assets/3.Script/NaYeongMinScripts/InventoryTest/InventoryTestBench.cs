@@ -92,6 +92,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
         public Color slotWeaponQuick = new Color(0.18f, 0.22f, 0.26f, 0.9f);
         public Color slotSelectedWeapon = new Color(0.16f, 0.45f, 0.42f, 0.95f);
         public Color slotCraftMaterial = new Color(0.2f, 0.65f, 0.3f, 0.95f);
+        [Tooltip("상점이 열려 있을 때 이 상인에게 팔 수 있는 가방·창고 칸")]
+        public Color slotSellable = new Color(0.2f, 0.65f, 0.3f, 0.95f);
         public Color slotSelected = new Color(0.25f, 0.72f, 0.36f, 1f);
 
         [Header("상점·제작 목록 행")]
@@ -635,9 +637,11 @@ namespace Birdkov.NaYeongMin.InventoryTest
         {
             HideContextMenu();
             if (IsServicePanelOpen &&
-                (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment))
+                (slot.container == TestContainer.Bag || slot.container == TestContainer.Equipment ||
+                 slot.container == TestContainer.Warehouse))
             {
-                selectedShopEquipment = slot.container == TestContainer.Equipment;
+                // 상점을 열면 스크롤이 창고 쪽으로 내려가 있어 창고 칸을 먼저 누르게 된다. 창고 칸도 판매/수리 대상.
+                selectedShopContainer = slot.container;
                 selectedShopBagIndex = slot.index;
                 SelectSlot(slot);
                 RefreshShop();
@@ -992,6 +996,7 @@ namespace Birdkov.NaYeongMin.InventoryTest
             {
                 status.text = string.Empty;
             }
+            HideSellPopupWhenDue();
             PositionItemPopup();
         }
 
@@ -1075,6 +1080,8 @@ namespace Birdkov.NaYeongMin.InventoryTest
                 if (found && craftPanel != null && craftPanel.activeSelf &&
                     (itemId == CraftingService.GunpowderItemId || (itemId >= 27001 && itemId <= 27004)))
                     view.background.color = colors.slotCraftMaterial;
+                if (found && IsSellableHere(view, item, amount))
+                    view.background.color = colors.slotSellable;
                 if (found &&
                     (view.container == TestContainer.Bag || view.container == TestContainer.Equipment || view.container == TestContainer.Warehouse))
                 {
@@ -1122,6 +1129,15 @@ namespace Birdkov.NaYeongMin.InventoryTest
             }
 
             return string.Empty;
+        }
+
+        // 제작대의 재료 강조처럼, 상점에서는 지금 상인에게 팔리는 칸을 강조한다. 선택한 칸 색은 그대로 둔다.
+        private bool IsSellableHere(TestSlotView view, ItemData item, int amount)
+        {
+            return shopPanel != null && shopPanel.activeSelf &&
+                (view.container == TestContainer.Bag || view.container == TestContainer.Warehouse) &&
+                !(view.container == selectedContainer && view.index == selectedIndex) &&
+                ShopService.Accepts(item, merchantKind) && amount >= ShopService.TradeAmount(item);
         }
 
         private Color SlotColor(TestSlotView view, bool filled)
