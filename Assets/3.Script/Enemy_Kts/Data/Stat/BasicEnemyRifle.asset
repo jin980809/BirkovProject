@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91817b9e9b91d854b94f6d5540c2ab52, type: 3}
   m_Name: BasicEnemyRifle
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  maxHealth: 50
+  maxHealth: 100
   moveSpeed: 2
-  angleSpeed: 1000
+  angleSpeed: 2000
   rayDistance: 20
   viewAngle: 90
   minDistance: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   delayTime: 2
   minPatrolWaitingTime: 10
   maxPatrolWaitingTime: 20
-  probability: 10
+  probability: 8
   oneHelmet: 25
   twoHelmet: 50
   threeHelmet: 75

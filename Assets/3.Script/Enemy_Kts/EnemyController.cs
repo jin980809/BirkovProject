@@ -68,7 +68,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         currentHealth -= amount * enemyArmor.declineRate;
         hitParticle.Play();
         hpEffect.SetHealth(currentHealth);
-        Debug.Log(gameObject.name + " 이(가) " + amount * enemyArmor.declineRate + " 대미지를 입었습니다.", this);
+        //Debug.Log(gameObject.name + " 이(가) " + amount * enemyArmor.declineRate + " 대미지를 입었습니다.", this);
 
         if (currentHealth < 0)
         {
