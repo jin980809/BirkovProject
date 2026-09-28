@@ -39,11 +39,17 @@ public class EnemyBasicPatten : MonoBehaviour
     [SerializeField] private GameObject questionMark;
     [SerializeField] private GameObject exclamationMark;
 
+    [Header("·£´ý ÆÐÅÏ È®·ü(1~10)")]
+    [SerializeField] private int rndMovementProbability;
+    [SerializeField] private int forwardMovementProbability;
+
     private void Awake()
     {
         //Àû µ¥ÀÌÅ¸ Ä³½Ì---------------------------------------
         moveSpeed = enemyData.moveSpeed;
         angleSpeed = enemyData.angleSpeed;
+        rndMovementProbability = enemyData.rndMovementProbability;
+        forwardMovementProbability = enemyData.forwardMovementProbability;
         //-----------------------------------------------------
         TryGetComponent(out agent);
         TryGetComponent(out ani);
@@ -172,7 +178,7 @@ public class EnemyBasicPatten : MonoBehaviour
     {
         canBattle = false;
     
-        int a = Random.Range(0, 2);
+        int a = Random.Range(0, 10);
 
         if (enemyDetect.FirstCheck())
         {
@@ -200,26 +206,25 @@ public class EnemyBasicPatten : MonoBehaviour
         }
         else if (Vector3.Distance(target.position, transform.position) < enemyData.moveDistance)
         {
-            switch (a)
+            if(a < rndMovementProbability)
             {
-                case 0:
-                    yield return StartCoroutine(Patten3_co());
-                    break;
-                case 1:
-                    yield return StartCoroutine(Patten2_co());
-                    break;
+                yield return StartCoroutine(Patten3_co());
+            }
+            else
+            {
+                yield return StartCoroutine(Patten2_co());
+
             }
         }
         else if(Vector3.Distance(target.position, transform.position) < enemyData.rayDistance)
         {
-            switch (a)
+            if (a < forwardMovementProbability)
             {
-                case 0:
-                    yield return StartCoroutine(Patten1_co());
-                    break;
-                case 1:
-                    yield return StartCoroutine(Patten2_co());
-                    break;
+                yield return StartCoroutine(Patten1_co());
+            }
+            else
+            {
+                yield return StartCoroutine(Patten2_co());
             }
         }
         else

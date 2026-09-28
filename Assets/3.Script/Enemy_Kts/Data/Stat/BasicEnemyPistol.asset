@@ -29,6 +29,8 @@ MonoBehaviour:
   minPatrolWaitingTime: 10
   maxPatrolWaitingTime: 20
   probability: 8
+  rndMovementProbability: 5
+  forwardMovementProbability: 7
   oneHelmet: 25
   twoHelmet: 50
   threeHelmet: 75
