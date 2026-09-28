@@ -12368,8 +12368,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.5192084, y: 1.994637, z: 5.28084}
-  m_Center: {x: 0, y: 0.8187569, z: 0}
+  m_Size: {x: 4.5192084, y: 0.5625122, z: 5.28084}
+  m_Center: {x: 0, y: 0.10269499, z: 0}
 --- !u!1 &28948835
 GameObject:
   m_ObjectHideFlags: 0
@@ -180703,8 +180703,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.5192084, y: 1.994637, z: 5.28084}
-  m_Center: {x: 0, y: 0.8187569, z: 0}
+  m_Size: {x: 4.5192084, y: 0.80797786, z: 5.28084}
+  m_Center: {x: 0, y: 0.22542754, z: 0}
 --- !u!1 &439711445
 GameObject:
   m_ObjectHideFlags: 0
@@ -201816,8 +201816,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.5192084, y: 1.1523881, z: 5.28084}
-  m_Center: {x: 0, y: 0.39763266, z: 0}
+  m_Size: {x: 4.5192084, y: 0.9047302, z: 5.28084}
+  m_Center: {x: 0, y: 0.27380374, z: 0}
 --- !u!1 &529592858
 GameObject:
   m_ObjectHideFlags: 0
@@ -410174,8 +410174,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.5192084, y: 1.1523881, z: 5.28084}
-  m_Center: {x: 0, y: 0.39763266, z: 0}
+  m_Size: {x: 4.5192084, y: 0.8552464, z: 5.28084}
+  m_Center: {x: 0, y: 0.24906218, z: 0}
 --- !u!1 &1218988252
 GameObject:
   m_ObjectHideFlags: 0
@@ -511521,7 +511521,7 @@ MonoBehaviour:
   aimHeightOffset: 0.5
   aimTargetMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 512
   animator: {fileID: 0}
   animDamp: 0.12
   singleShotClip: {fileID: 0}
