@@ -243,8 +243,19 @@ public class EnemyBasicPatten : MonoBehaviour
         ani.SetBool("Run", true);
         agent.isStopped = false;
 
-        agent.destination = enemyDetect.VisibleTargets().position;
+        if (enemyDetect.VisibleTargets() != null)
+        {
+            agent.destination = enemyDetect.VisibleTargets().position;
+        }
+        else
+        {
+            Debug.Log("«√∑π¿ÃæÓ √ﬂ¿˚¿ª ∏ÿ√„");
+            agent.isStopped = true;
+            ani.SetBool("Run", false);
 
+            yield break;
+        }
+        
         yield return delayTimeWfs;
 
         agent.isStopped = true;
