@@ -265,6 +265,7 @@ public class EnemyDetect : MonoBehaviour, IHearing
             {
                 continue;
             }
+
         }
     }
     //Layer∆«¥‹

@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea8193d9c6bcad4e8d8f8868cb7ca19, type: 3}
   m_Name: GunRifle
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
-  damage: 7
-  minBulletsPerShot: 5
-  maxBulletsPerShot: 10
+  damage: 8
+  minBulletsPerShot: 10
+  maxBulletsPerShot: 15
   minBulletsPerBurst: 1
   maxBulletsPerBurst: 1
   spreadAngle: 7
-  fireInterval: 0.1
-  magazineSize: 30
+  fireInterval: 0.8
+  magazineSize: 50
   reloadTime: 2

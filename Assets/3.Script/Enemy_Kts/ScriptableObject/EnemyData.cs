@@ -41,6 +41,10 @@ public class EnemyData : ScriptableObject
     [Header("½ºÆù È®·ü")]
     public int probability = 10;
 
+    [Header("·£´ý ÆÐÅÏ È®·ü(1~10)")]
+    public int rndMovementProbability = 5;
+    public int forwardMovementProbability = 5;
+
     [Header("Çï¸ä È®·ü(0~99)")]
     public int oneHelmet = 25;
     public int twoHelmet = 50;

@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea8193d9c6bcad4e8d8f8868cb7ca19, type: 3}
   m_Name: GunShotgoun
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
-  damage: 6
+  damage: 8
   minBulletsPerShot: 1
   maxBulletsPerShot: 1
-  minBulletsPerBurst: 5
-  maxBulletsPerBurst: 8
+  minBulletsPerBurst: 6
+  maxBulletsPerBurst: 10
   spreadAngle: 20
   fireInterval: 0.1
   magazineSize: 30
