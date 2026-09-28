@@ -238,6 +238,8 @@ public class EnemyBasicPatten : MonoBehaviour
     //전진 공격 패턴
     private IEnumerator Patten1_co()
     {
+        yield return StartCoroutine(enemyShot.Fire_co());
+
         ani.SetBool("Run", true);
         agent.isStopped = false;
 
@@ -248,20 +250,22 @@ public class EnemyBasicPatten : MonoBehaviour
         agent.isStopped = true;
         ani.SetBool("Run", false);
 
-        yield return StartCoroutine(enemyShot.Fire_co());
     }
 
     //정지 공격 패턴
     private IEnumerator Patten2_co()
     {
+        yield return StartCoroutine(enemyShot.Fire_co());
+
         yield return delayTimeWfs;
 
-        yield return StartCoroutine(enemyShot.Fire_co());
     }
 
     //랜덤 위치 이동 패턴
     private IEnumerator Patten3_co()
     {
+        yield return StartCoroutine(enemyShot.Fire_co());
+
         ani.SetBool("Run", true);
         agent.isStopped = false;
 
@@ -271,9 +275,6 @@ public class EnemyBasicPatten : MonoBehaviour
 
         agent.isStopped = true;
         ani.SetBool("Run", false);
-
-
-        yield return StartCoroutine(enemyShot.Fire_co());
 
     }
     //랜덤 위치 이동
