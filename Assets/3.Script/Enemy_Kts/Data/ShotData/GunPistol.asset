@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GunPistol
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShotData
   damage: 5
-  minBulletsPerShot: 1
+  minBulletsPerShot: 2
   maxBulletsPerShot: 3
   minBulletsPerBurst: 1
   maxBulletsPerBurst: 1
