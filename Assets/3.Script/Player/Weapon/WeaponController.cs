@@ -997,7 +997,11 @@ public class WeaponController : MonoBehaviour
         // 연사 블룸 누적치(currentSpreadDegrees)와 상관없이 매번 무기 자체의 최대 퍼짐(maxSpread)
         // 범위에서 각자 독립적으로 흩어지게 한다. 첫 발엔 블룸이 0이라 이걸 안 하면 펠릿들이
         // 전부 완전히 같은 방향으로 나가 서로 겹쳐 보인다. 펠릿이 1개인 무기는 기존처럼 블룸을 쓴다.
-        float spreadDegrees = equippedWeapon.pelletCount > 1 ? EffectiveMaxSpread : currentSpreadDegrees;
+        // 스나이퍼는 한 발씩 천천히 쏘는 무기라 블룸이 매번 0으로 회복돼서 사실상 항상 완벽한 정조준이
+        // 되어버린다 - 그래서 스나이퍼는 예외로 처음부터(블룸 누적과 무관하게) maxSpread 를 그대로 쓴다.
+        float spreadDegrees = equippedWeapon.pelletCount > 1 || equippedWeapon.itemId == SniperItemId
+            ? EffectiveMaxSpread
+            : currentSpreadDegrees;
         Vector3 direction = ApplySpread(baseDirection, spreadDegrees);
 
         Projectile projectile = bulletPool.Rent(shotPoint.position, Quaternion.LookRotation(direction));
